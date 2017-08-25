@@ -10,7 +10,7 @@ import clyngor
 from clyngor.answers import Answers
 
 
-def solve(files:iter, options:iter=[], nb_model:int=0,
+def solve(files:iter=(), options:iter=[], nb_model:int=0,
           subproc_shell:bool=False, print_command:bool=False,
           inline:str=None) -> iter:
     """Run the solver on given files, with given options, and return
