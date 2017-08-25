@@ -30,37 +30,51 @@ class Answers:
 
     @property
     def first_arg_only(self):
+        """Keep only the first argument, and do not enclose it in a tuple."""
         self._first_arg_only = True
         return self
 
     @property
     def by_predicate(self):
+        """Group atoms by predicate. Answer sets are then dict with predicate
+        as keys and collection of args as value."""
         self._group_atoms = True
         return self
 
     @property
     def as_pyasp(self):
+        """Return Term and TermSet object offering a pyasp-like interface"""
         self._as_pyasp = True
         return self
 
     @property
     def sorted(self):
+        """Sort the atom (or the args when grouped)"""
         self._sorted = True
         return self
 
     @property
     def careful_parsing(self):
+        """Use robust parser"""
         self._careful_parsing = True
         return self
 
     @property
     def atoms_as_string(self):
+        """All atoms are encoded as ASP strings, left unparsed."""
         self._collapse_atoms = True
         self._collapse_args = True
         return self
 
     @property
     def parse_args(self):
+        """Parse the arguments as well, so if an atom is argument of another
+        one, it will be parsed as any atom instead of being understood
+        as a string.
+
+        Will use the robust parser.
+
+        """
         self._careful_parsing = True  # needed to implement the collapse
         self._collapse_atoms = False
         self._collapse_args = False
