@@ -62,3 +62,27 @@ def solve(files:iter, options:iter=[], nb_model:int=0,
                 current_answer.add((pred, tuple(args.split(','))))
             if current_answer:
                 yield current_answer
+
+
+def clingo_version() -> dict:
+    """Return clingo's version information in a dict"""
+    clingo = subprocess.Popen(
+        [clyngor.CLINGO_BIN_PATH, '--version', '--outf=2'],
+        stderr = subprocess.PIPE,
+        stdout = subprocess.PIPE,
+    )
+    fields = {
+        'address model': re.compile(r'Address model: ([3264]{2})-bit'),
+        'clingo version': re.compile(r'clingo version ([0-9\.]+)'),
+        'libgringo': re.compile(r'libgringo version ([0-9\.]+)'),
+        'libclasp': re.compile(r'libclasp version ([0-9\.]+)'),
+        'libpotassco': re.compile(r'libpotassco version ([0-9\.]+)'),
+        'python': re.compile(r'with[out]{0,3}\sPython\s?([0-9\.]+)?'),
+        'lua': re.compile(r'with[out]{0,3}\sLua\s?([0-9\.]+)?'),
+    }
+    stdout = clingo.communicate()[0].decode()
+
+    return {
+        field: reg.search(stdout).groups()[0]
+        for field, reg in fields.items()
+    }
