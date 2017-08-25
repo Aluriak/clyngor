@@ -22,18 +22,27 @@ Clyngor offers multiple interfaces. The followings are all equivalent.
     for answer in answers:
         print(answer)
 
+The same, but with the lower level function expecting files:
+
+    answers = solve(inline="""
+    rel(a,(c;d)). rel(b,(d;e)).
+    obj(X):- rel(X,_) ; rel(X,Y): att(Y).
+    att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
+    :- not obj(X):obj(X).
+    :- not att(Y):att(Y).
+    """)
+
 More traditional interface, using file containing the ASP source code:
 
-    for answer in solve('concepts.lp'):  # also accepts list of file
-        print(answer)
+    answers = solve('concepts.lp'):  # also accepts list of file
 
 More examples are available in [the unit tests](clyngor/test/).
 
 
 
-
 ## Chaining
-Clyngor allows you to specify the answer sets format using builtin methods:
+Once you get your answers, clyngor allows you to specify
+the answer sets format using builtin methods:
 
     for answer in answers.by_predicate.first_arg_only:
         print('{' + ','.join(answer['obj']) + '} × {' + ','.join(answer['att']) + '}')
