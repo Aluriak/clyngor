@@ -88,10 +88,8 @@ class Answers:
     def __iter__(self):
         """Yield answer sets"""
         for answer_set in self._answers:
-            print('ASTPDET: ANSWERSET:', answer_set)
             answer_set = self._parse_answer(answer_set)
             answer_set = tuple(answer_set)
-            print('ASTPBFT: ANSWERSET:', answer_set)
             yield self._format(answer_set)
 
 
