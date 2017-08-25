@@ -43,3 +43,13 @@ And if you need a [*pyasp-like*](https://github.com/sthiele/pyasp) interface:
 
 ## Alternatives
 [pyasp](https://github.com/sthiele/pyasp) comes into mind, but do not (yet) supports clingo alone.
+
+
+## Installation
+
+    pip install clyngor
+
+You must have `clingo` in your path. Depending on your OS, it might be done with a system installation,
+or through downloading and (compilation and) manual installation.
+
+[See the doc](https://potassco.org/doc/start/).
