@@ -4,7 +4,6 @@
 
 
 from clyngor import solve
-from clyngor.answers import Answers
 
 
 def ASP(source_code:str):
@@ -14,4 +13,4 @@ def ASP(source_code:str):
     source_code -- ASP source code
 
     """
-    return Answers(solve(files=(), inline_source=source_code))
+    return solve(files=(), inline_source=source_code)
