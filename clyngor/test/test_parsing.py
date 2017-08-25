@@ -1,6 +1,5 @@
 import pytest
 
-import clyngor
 from clyngor import parsing
 from clyngor.parsing import Parser
 
