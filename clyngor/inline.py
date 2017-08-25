@@ -13,4 +13,4 @@ def ASP(source_code:str):
     source_code -- ASP source code
 
     """
-    return solve(files=(), inline_source=source_code)
+    return solve(files=(), inline=source_code)

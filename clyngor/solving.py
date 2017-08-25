@@ -12,7 +12,7 @@ from clyngor.answers import Answers
 
 def solve(files:iter, options:iter=[], nb_model:int=0,
           subproc_shell:bool=False, print_command:bool=False,
-          inline_source:str=None) -> iter:
+          inline:str=None) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -20,7 +20,7 @@ def solve(files:iter, options:iter=[], nb_model:int=0,
     options -- string or iterable of options for clingo
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
-    inline_source -- ASP source code to feed the solver with
+    inline -- ASP source code to feed the solver with
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -32,9 +32,9 @@ def solve(files:iter, options:iter=[], nb_model:int=0,
         files = [files]
     if isinstance(options, str):
         options = [options]
-    if inline_source:
+    if inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
-            fd.write(inline_source)
+            fd.write(inline)
             files = (*files, fd.name)
 
     command = [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
