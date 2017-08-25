@@ -7,17 +7,14 @@ import re
 import tempfile
 import subprocess
 import clyngor
-
-
-REG_ANSWER = re.compile(r'Answer: ([0-9]+)')
-REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
+from clyngor.answers import Answers
 
 
 def solve(files:iter, options:iter=[], nb_model:int=0,
           subproc_shell:bool=False, print_command:bool=False,
           inline_source:str=None) -> iter:
-    """Run the solver on given files, with given options, and yield
-    answers found.
+    """Run the solver on given files, with given options, and return
+    an Answers instance yielding answer sets.
 
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
@@ -28,8 +25,7 @@ def solve(files:iter, options:iter=[], nb_model:int=0,
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
 
-    Yield answers.
-    TODO: return stderr.
+    TODO: constants
 
     """
     if isinstance(files, str):
@@ -51,17 +47,13 @@ def solve(files:iter, options:iter=[], nb_model:int=0,
         shell=bool(subproc_shell),
     )
 
-    for line in clingo.stdout:
-        line = line.decode().strip()
-        if line.startswith(('Answer: ', 'Time')):
-            pass
-        else:  # other line are maybe answers
-            current_answer = set()
-            for match in REG_ANSWER_SET.finditer(line):
-                pred, args = match.groups(0)
-                current_answer.add((pred, tuple(args.split(','))))
-            if current_answer:
-                yield current_answer
+    def gen_answers():
+        stdout = iter(clingo.stdout)
+        while True:
+            cur_line = next(stdout).decode()
+            if cur_line.startswith('Answer: '):
+                yield next(stdout).decode()
+    return Answers(gen_answers())
 
 
 def clingo_version() -> dict:
