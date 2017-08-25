@@ -2,6 +2,7 @@
 from clyngor import ASP, solve
 
 
+if __name__ == '__main__':
     answers = ASP("""
     rel(a,(c;d)). rel(b,(d;e)).
     obj(X):- rel(X,_) ; rel(X,Y): att(Y).
