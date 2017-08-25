@@ -6,9 +6,9 @@ from clyngor.answers import Answers
 @pytest.fixture
 def simple_answers():
     return Answers((
-        (('a', [0]), ('b', [1])),
-        (('c', [2]), ('d', [3])),
-        (('e', [4]), ('f', [5])),
+        'a(0) b(1)',
+        'c(2) d(3)',
+        'e(4) f(5)',
     ))
 
 
