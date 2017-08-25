@@ -6,13 +6,14 @@
 import re
 import tempfile
 import subprocess
+import clyngor
 
 
 REG_ANSWER = re.compile(r'Answer: ([0-9]+)')
 REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
 
 
-def solve(files:iter, options:iter=[], clingo_bin:str='clingo', nb_model:int=0,
+def solve(files:iter, options:iter=[], nb_model:int=0,
           subproc_shell:bool=False, print_command:bool=False,
           inline_source:str=None) -> iter:
     """Run the solver on given files, with given options, and yield
@@ -20,7 +21,6 @@ def solve(files:iter, options:iter=[], clingo_bin:str='clingo', nb_model:int=0,
 
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
-    clingo_bin -- the name of the clingo binary
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
     inline_source -- ASP source code to feed the solver with
@@ -41,7 +41,7 @@ def solve(files:iter, options:iter=[], clingo_bin:str='clingo', nb_model:int=0,
             fd.write(inline_source)
             files = (*files, fd.name)
 
-    command = [clingo_bin, *options, *files, '-n ' + str(nb_model)]
+    command = [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
     if print_command:
         print(command)
     clingo = subprocess.Popen(
