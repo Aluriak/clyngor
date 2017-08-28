@@ -1,5 +1,6 @@
 
-from clyngor import ASP, solve
+from clyngor import ASP
+
 
 
 if __name__ == '__main__':
@@ -12,3 +13,7 @@ if __name__ == '__main__':
     """)
     for answer in answers.by_predicate.first_arg_only:
         print('{' + ','.join(answer['obj']) + '} × {' + ','.join(answer['att']) + '}')
+
+
+
+
