@@ -7,12 +7,6 @@ import re
 import arpeggio as ap
 
 
-def parse_answer(line:str, collapse_atoms:bool=False,
-                 collapse_args:bool=True) -> iter:
-    """Return a frozenset of tuple (predicate, args)"""
-    return Parser(collapse_atoms, collapse_args).parse_terms(line)
-
-
 class CollapsableAtomVisitor(ap.PTNodeVisitor):
     """Implement both the grammar and the way to handle it, dedicated to the
     parsing of ASP like string to produce frozenset instances.
@@ -27,13 +21,15 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
     See Parser class for usage examples.
 
     """
-    def __init__(self, collapse_args=True, collapse_atoms=False):
+    def __init__(self, collapse_args:bool=True, collapse_atoms:bool=False,
+                 parse_integer:bool=True):
         super().__init__()
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
+        self._int_builder = int if parse_integer else str
 
     def visit_number(self, node, children):
-        return int(node.value)
+        return self._int_builder(node.value)
 
     def visit_args(self, node, children):
         return children
@@ -81,9 +77,12 @@ class AtomVisitor(ap.PTNodeVisitor):
     special use cases, notably partial cut of parsed atoms.
 
     """
+    def __init__(self, parse_integer:bool=True):
+        super().__init__()
+        self._int_builder = int if parse_integer else str
 
     def visit_number(self, node, children):
-        return int(node.value)
+        return self._int_builder(node.value)
 
     def visit_args(self, node, children):
         return children
@@ -112,11 +111,13 @@ class AtomVisitor(ap.PTNodeVisitor):
 
 
 class Parser:
-    def __init__(self, collapse_atoms=False, collapse_args=True, callback=None):
+    def __init__(self, collapse_atoms=False, collapse_args=True, callback=None,
+                 parse_integer:bool=True):
         """
-        collapse_args: function terms in predicate arguments are collapsed into strings
-        collapse_atoms: atoms (predicate plus terms) are collapsed into strings
-                        requires that collapse_args is True
+        collapse_args -- function terms in predicate arguments are collapsed into strings
+        collapse_atoms -- atoms (predicate plus terms) are collapsed into strings
+                          requires that collapse_args is True
+        parse_integer -- return integers as int instead of string
 
         examples:
 
@@ -134,13 +135,23 @@ class Parser:
             ...
             ValueError
 
+            >>> Parser(parse_integer=False).parse_terms('a(3)')
+            frozenset({('a', ('3',))})
+
+            >>> Parser().parse_terms('a(3)')
+            frozenset({('a', (3,))})
+
         """
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
         if not self.collapse_args and not self.collapse_atoms:  # optimized case
-            self.atom_visitor = AtomVisitor()
+            self.atom_visitor = AtomVisitor(parse_integer)
         else:
-            self.atom_visitor = CollapsableAtomVisitor(bool(collapse_args), bool(collapse_atoms))
+            self.atom_visitor = CollapsableAtomVisitor(
+                bool(collapse_args),
+                bool(collapse_atoms),
+                parse_integer
+            )
         self.grammar = self.atom_visitor.grammar()
         self.callback = callback
         if self.collapse_atoms and not self.collapse_args:

@@ -26,6 +26,7 @@ class Answers:
         self._careful_parsing = False
         self._collapse_atoms= False
         self._collapse_args = True
+        self._parse_int = True
 
 
     @property
@@ -67,6 +68,15 @@ class Answers:
         return self
 
     @property
+    def int_not_parsed(self):
+        """Do not parse the integer arguments, so if an atom have integers
+        as arguments, they will be returned as string, not integers.
+
+        """
+        self._parse_int = False
+        return self
+
+    @property
     def parse_args(self):
         """Parse the arguments as well, so if an atom is argument of another
         one, it will be parsed as any atom instead of being understood
@@ -98,17 +108,20 @@ class Answers:
         REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
         if self._careful_parsing:
             print('CAREFUL PARSING:', answer_set)
-            yield from parsing.parse_answer(answer_set,
-                                            collapse_atoms=self._collapse_atoms,
-                                            collapse_args=self._collapse_args)
+            yield from parsing.Parser(
+                self._collapse_atoms, self._collapse_args,
+                parse_integer=self._parse_int
+            ).parse_terms(answer_set)
+
         else:  # the good ol' split
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
                 pred, args = match.groups(0)
                 if not self._collapse_atoms:  # else: atom as string
-                    # parse also integers
+                    # parse also integers, if asked to
                     args = tuple(
-                        (int(arg) if (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
+                        (int(arg) if self._parse_int and
+                         (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
                         for arg in args.split(',')
                     )
                 yield pred, args
