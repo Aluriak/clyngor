@@ -83,6 +83,11 @@ By default, clyngor uses a very simple parser (yeah, `str.split`) in order to ac
 However, when asked to compute a particular output format (like `parse_args`) or an explicitely *careful parsing*,
 clyngor will use a much more robust parser (made with an [arpeggio](http://www.igordejanovic.net/Arpeggio/) grammar).
 
+### Import/export
+See the [`utils` module](clyngor/utils.py) and its [tests](clyngor/test/test_utils.py),
+which provides high level routines to save and load answer sets.
+
+
 ### Define the path to clingo binary
 
     import clyngor
