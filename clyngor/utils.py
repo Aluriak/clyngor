@@ -18,10 +18,16 @@ def answer_set_to_str(answer_set:iter, atom_sep:str=' ') -> str:
 def generate_answer_set_as_str(answer_set:iter) -> iter:
     """Yield segment of string describing given answer set.
 
-    answer_set -- iterable of tuple (predicate, args)
+    answer_set -- iterable of tuple (predicate, args), or dict {predicate: [args]}
 
     """
-    print(answer_set)
+    if isinstance(answer_set, dict):  # have been created using by_predicate, probably
+        answer_set = (
+            (predicate, args)
+            for predicate, all_args in answer_set.items()
+            for args in all_args
+        )
+
     for predicate, args in answer_set:
         yield '{}({})'.format(predicate, ','.join(args)) if args else predicate
 
