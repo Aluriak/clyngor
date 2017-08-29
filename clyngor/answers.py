@@ -107,7 +107,6 @@ class Answers:
         """Yield atoms as (pred, args) according to parsing options"""
         REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
         if self._careful_parsing:
-            print('CAREFUL PARSING:', answer_set)
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
                 parse_integer=self._parse_int
