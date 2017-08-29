@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-#########################
-#       SETUP.PY        #
-#########################
 
 
-#########################
-# IMPORTS               #
-#########################
 import os
 from setuptools   import setup, find_packages
 from pip.req      import parse_requirements
@@ -21,12 +15,9 @@ install_reqs = parse_requirements(path_to('requirements.txt'), session=PipSessio
 reqs = [str(ir.req) for ir in install_reqs]
 
 
-#########################
-# SETUP                 #
-#########################
 setup(
     name = 'clyngor',
-    version = '0.0.6',
+    version = '0.0.7',
     packages = find_packages(),
     include_package_data = True,  # read the MANIFEST.in file
     install_requires = reqs,
