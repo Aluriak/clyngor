@@ -27,6 +27,10 @@ class Atom:
             return self.predicate
     def __repr__(self): return str(self)
 
+    def __iter__(self):
+        """Conserve the same API as regular representation of atoms"""
+        return iter((self.predicate, self.arguments))
+
 
 # aliases used by pyasp
 Term = Atom
