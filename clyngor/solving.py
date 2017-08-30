@@ -35,7 +35,7 @@ def solve(files:iter=(), options:iter=[], nb_model:int=0,
     if inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
             fd.write(inline)
-            files = (*files, fd.name)
+            files = tuple(files) + (fd.name,)
 
     command = [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
     if print_command:
