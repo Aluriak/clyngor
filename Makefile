@@ -2,6 +2,9 @@ t: tests
 tests:
 	python -m pytest -vv clyngor --doctest-module
 
+run:
+	python -m clyngor
+
 
 upload:
 	python setup.py sdist upload
