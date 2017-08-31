@@ -3,12 +3,79 @@
 """
 
 import re
+import itertools
+from collections import defaultdict
 import arpeggio as ap
 
 
-def parse_asp_program(asp_program:str, do=None) -> dict:
-    parse_tree = ap.ParserPython(asp_grammar()).parse(asp_program)
+def parse_asp_program(asp_source_code:str, do=None) -> tuple:
+    parse_tree = ap.ParserPython(asp_grammar()).parse(asp_source_code)
     return ap.visit_parse_tree(parse_tree, visitor=do or CodeAsTuple())
+
+
+def rules_interdependency_graph(program:str or tuple,
+                                node_as_index:bool=True) -> dict:
+    """Return the directed graph as {predecessor: {successors}} where nodes
+    are rules in the input ASP source code, and source of a link
+    is the rule yielding atom used by the target.
+
+    program -- either a source code as string or a parsed one
+    node_as_index -- return nodes as index of rules in the source code
+                     instead of rules themselves
+
+    """
+    if isinstance(program, str):
+        program = tuple(parse_asp_program(program, do=CodeAsTuple()))
+    else:
+        program
+    atom_source = defaultdict(set)  # predicate -> rules yielding it
+    atom_target = defaultdict(set)  # predicate -> rules using it
+
+    # explore the full structure to populate sources and targets
+    for idx, (type, *data) in enumerate(program):
+        if type == 'rule':
+            atom_source[data[0]].add(idx)
+            for (subtype, *subdata) in data[2]:
+                if subtype in {'term', '¬term'}:
+                    atom_target[subdata[0]].add(idx)
+                elif subtype in {'forall', '¬forall'}:
+                    atom_target[subdata[0]].add(idx)
+                    for (subsubtype, *subsubdata) in subdata[2]:
+                        if subsubtype == 'term':
+                            atom_target[subsubdata[0]].add(idx)
+                        else:
+                            assert False, "Type {} is unexpected in forall body".format(subtype)
+                else:
+                    assert False, "Type {} is unexpected in rule body".format(subtype)
+
+        elif type == 'term':
+            atom_source[data[0]].add(idx)
+        elif type == 'selection':
+            for (subtype, *subdata) in data[2]:
+                if subtype in {'term', '¬term', 'forall', '¬forall'}:
+                    atom_source[subdata[0]].add(idx)
+                else:
+                    assert False, "Type {} is unexpected in selection".format(subtype)
+        elif type == 'constraint':
+            for (subtype, *subdata) in data[0]:
+                if subtype in {'term', '¬term', 'forall', '¬forall'}:
+                    atom_source[subdata[0]].add(idx)
+                else:
+                    assert False, "Type {} is unexpected in selection".format(subtype)
+        else:
+            assert False, "Type {} is unexpected at first level".format(type)
+
+    # build the dependancy graph
+    graph = defaultdict(set)
+    for predicate in set(atom_source.keys()) | set(atom_target.keys()):
+        for source, target in itertools.product(atom_source[predicate], atom_target[predicate]):
+            graph[source].add(target)
+    if node_as_index:
+        return dict(graph)
+    else:  # use the parsed rules themselves
+        return {program[pred]: frozenset(program[succ] for succ in succs)
+                for pred, succs in graph.items()}
+
 
 
 def asp_grammar():
@@ -55,16 +122,22 @@ class CodeAsTuple(ap.PTNodeVisitor):
         return str(node.value)
 
     def visit_term(self, node, children):
-        predicate, *args = children
+        if children[0] == 'not':
+            type = '¬term'
+            predicate, *args = children[1:]
+        else:
+            type = 'term'
+            predicate, *args = children
         assert len(args) in {0, 1}
         args = args[0] if len(args) == 1 else args
-        return 'term', predicate, tuple(args)
+        return type, predicate, tuple(args)
 
     def visit_forall(self, node, children):
         atom, *conditions = children
         assert len(atom) == 3
-        assert atom[0] == 'term'
-        return 'forall', atom[1], atom[2], tuple(conditions)
+        assert atom[0] in {'term', '¬term'}
+        type = '¬forall' if atom[0] == '¬term' else 'forall'
+        return type, atom[1], atom[2], tuple(conditions)
 
     def visit_expression(self, node, children):
         return tuple(children)
@@ -76,6 +149,10 @@ class CodeAsTuple(ap.PTNodeVisitor):
         return tuple(child[0] for child in children)
 
     def visit_constraint(self, node, children):
+        if len(children) == 1:
+            children = children[0]
+        else:
+            raise ValueError("Constraint body has not 1 value, but {}: {}".format(len(children), children))
         return 'constraint', tuple(children)
 
 
