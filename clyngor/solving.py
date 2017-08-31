@@ -79,6 +79,15 @@ def command(files:iter=(), options:iter=[], inline:str=None,
         except ValueError:
             raise ValueError("Time limit should be integer, not " + type(time_limit).__name__)
         options.append('--time-limit=' + str(time_limit))
+    if nb_model:
+        try:
+            nb_model = int(nb_model)
+        except ValueError:
+            raise ValueError("Number of model must be int, not " + type(nb_model).__name__)
+        if nb_model < 0:
+            raise ValueError("Number of model must be >= 0.")
+    else:
+        nb_model = 0
 
     return [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
 
