@@ -3,6 +3,72 @@
 from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
 
 
+def test_constraint():
+    ASP_CODE = r"""
+    :- a.
+    :- not obj(X):obj(X).
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 2
+    first, second = rules
+
+    print('FIRST:', first)
+    expected = ('constraint', (('term', 'a', ()),) )
+    print('EXPEC:', expected)
+    assert first == expected
+
+    print('SECOD:', second)
+    expected = ('constraint', (('¬forall', 'obj', ('X',), (('term', 'obj', ('X',)),) ),) )
+    print('EXPEC:', expected)
+    assert second == expected
+
+
+def test_forall():
+    ASP_CODE = r"""
+    a:- rel(X,Y): obj(X), att(Y).
+    b:- not rel(X,Y): obj(X), att(Y).
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 2
+    first, second = rules
+
+    print('FIRST:', first)
+    expected = ('rule', 'a', (), (('forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
+    print('EXPEC:', expected)
+    assert first == expected
+
+    print('SECOD:', second)
+    expected = ('rule', 'b', (), (('¬forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
+    print('EXPEC:', expected)
+    assert second == expected
+
+
+def test_term():
+    ASP_CODE = r"""
+    a.
+    b(1).
+    c(2):- not b(2).
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 3
+    first, second, third = rules
+
+    print('FIRST:', first)
+    expected = ('term', 'a', ())
+    print('EXPEC:', expected)
+    assert first == expected
+
+    print('SECOD:', second)
+    expected = ('term', 'b', (1,))
+    print('EXPEC:', expected)
+    assert second == expected
+
+    print('THIRD:', third)
+    expected = ('rule', 'c', (2,), (('¬term', 'b', (2,)),) )
+    print('EXPEC:', expected)
+    assert third == expected
+
+
 def test_selection():
     ASP_CODE = r"""
     1 { sel(X): obj(X) } 1.
