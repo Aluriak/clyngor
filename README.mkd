@@ -96,6 +96,19 @@ which provides high level routines to save and load answer sets.
 
 Note that it will be the very first parameter to [`subprocess.Popen`](https://docs.python.org/3/library/subprocess.html#popen-constructor).
 
+
+### `clyngor.solve` parameters
+The `solve` functions allow to pass explicitely some parameters to clingo
+(including number of models to yield, time-limit, and constants).
+Using the `options` parameter is just fine, but with the explicit parameters some verifications
+are made against data (mostly about type).
+
+Therefore, the two followings are equivalent ; but the first is more readable and will crash earlier with a better error message if `n` is not valid:
+
+    solve('file.lp', nb_model=n)
+    solve('file.lp', options='-n ' + str(n))
+
+
 ### Dinopython support
 No.
 
@@ -104,3 +117,8 @@ Yes.
 
 ### Why clyngor ?
 No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50s).
+
+
+## Further ideas
+- [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
+- ASP source code debugging generator
