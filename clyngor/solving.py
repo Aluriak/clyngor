@@ -10,38 +10,30 @@ import clyngor
 from clyngor.answers import Answers
 
 
-def solve(files:iter=(), options:iter=[], nb_model:int=0,
+def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
-          inline:str=None) -> iter:
+          nb_model:int=0, time_limit:int=0, constants:dict={}) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
+    inline -- ASP source code to feed the solver with
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
-    inline -- ASP source code to feed the solver with
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
-
-    TODO: constants
+    time_limit -- zero or number of seconds to wait before interrupting solving
+    constants -- mapping name -> value of constants for the grounding
 
     """
-    if isinstance(files, str):
-        files = [files]
-    if isinstance(options, str):
-        options = [options]
-    if inline:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
-            fd.write(inline)
-            files = tuple(files) + (fd.name,)
-
-    command = [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
+    run_command = command(files, options, inline, nb_model, time_limit, constants)
     if print_command:
-        print(command)
+        print(run_command)
+
     clingo = subprocess.Popen(
-        command,
+        run_command,
         stderr = subprocess.PIPE,
         stdout = subprocess.PIPE,
         shell=bool(subproc_shell),
@@ -53,7 +45,42 @@ def solve(files:iter=(), options:iter=[], nb_model:int=0,
             cur_line = next(stdout).decode()
             if cur_line.startswith('Answer: '):
                 yield next(stdout).decode()
+
     return Answers(gen_answers())
+
+
+def command(files:iter=(), options:iter=[], inline:str=None,
+            nb_model:int=0, time_limit:int=0, constants:dict={}) -> iter:
+    """Return the shell command running the solver on given files,
+    with given options.
+
+    files -- iterable of files feeding the solver
+    options -- string or iterable of options for clingo
+    inline -- ASP source code to feed the solver with
+
+    Shortcut to clingo's options:
+    nb_model -- number of model to output (0 for all (default))
+    time_limit -- zero or number of seconds to wait before interrupting solving
+    constants -- mapping name -> value of constants for the grounding
+
+    """
+    files = [files] if isinstance(files, str) else list(files)
+    options = [options] if isinstance(options, str) else list(options)
+    if inline:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
+            fd.write(inline)
+            files = tuple(files) + (fd.name,)
+    if constants:
+        for name, value in constants.items():
+            options.append('-c {}={}'.format(name,value))
+    if time_limit:
+        try:
+            time_limit = int(time_limit)
+        except ValueError:
+            raise ValueError("Time limit should be integer, not " + type(time_limit).__name__)
+        options.append('--time-limit=' + str(time_limit))
+
+    return [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
 
 
 def clingo_version() -> dict:
