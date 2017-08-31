@@ -34,7 +34,7 @@ The same, but with the lower level function expecting files:
 
 More traditional interface, using file containing the ASP source code:
 
-    answers = solve('concepts.lp'):  # also accepts list of file
+    answers = solve('concepts.lp'):  # also accepts an iterable of file
 
 More examples are available in [the unit tests](clyngor/test/).
 
@@ -56,6 +56,7 @@ And if you need a [*pyasp-like*](https://github.com/sthiele/pyasp) interface:
 
 Currently, there is only one way to see all chaining operator available:
 [the source code of the Answers object](clyngor/answers.py).
+(or `help(clyngor.Answers)`)
 
 
 
