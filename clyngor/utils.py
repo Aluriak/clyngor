@@ -2,7 +2,7 @@
 
 
 import tempfile
-from clyngor import parsing
+from clyngor import asp_parsing, parsing
 
 
 def answer_set_to_str(answer_set:iter, atom_sep:str=' ') -> str:
@@ -68,3 +68,6 @@ def load_answers_from_file(filename:str, answer_set_builder:type=frozenset) -> i
             for line in ifd
         )
 
+
+def parse_asp_program(asp_program, visitor=None):
+    return asp_parsing.parse_asp_program(asp_program, visitor=visitor)
