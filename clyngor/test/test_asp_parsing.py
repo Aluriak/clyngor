@@ -3,6 +3,44 @@
 from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
 
 
+def test_disjunction():
+    ASP_CODE = r"""
+    rel(a,(c;d)).
+    rel(b,(d;e)).
+    rel(c,(e(1),f;g,h(2))).
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 3
+    first, second, third = rules
+
+    print('FIRST:', first)
+    expected = ('term', 'rel', (('term', 'a', ()),
+                                ('disjunction',
+                                 (('term', 'c', ()),),
+                                 (('term', 'd', ()),)
+                                )))
+    print('EXPEC:', expected)
+    assert first == expected
+
+    print('SECOD:', second)
+    expected = ('term', 'rel', (('term', 'b', ()),
+                                ('disjunction',
+                                 (('term', 'd', ()),),
+                                 (('term', 'e', ()),)
+                                )))
+    print('EXPEC:', expected)
+    assert second == expected
+ 
+    print('THIRD:', third)
+    expected = ('term', 'rel', (('term', 'c', ()),
+                                ('disjunction',
+                                 (('term', 'e', (1,)), ('term', 'f', ())),
+                                 (('term', 'g', ()), ('term', 'h', (2,)))
+                                )))
+    print('EXPEC:', expected)
+    assert third == expected
+
+
 def test_constraint():
     ASP_CODE = r"""
     :- a.
