@@ -42,8 +42,8 @@ if __name__ == '__main__':
     print()
 
     print('Benchmark:')
-    for parser in (asp_parsing.parse_asp_program,  # last time: 4.0s
-                   alt_parse.parse_asp):  # last time: ?.?s
+    for parser in (asp_parsing.parse_asp_program_by_arpeggio,  # last time: 4.0s
+                   asp_parsing.parse_asp_program_by_pypeg):  # last time: 8.5s
         print(parser.__name__.ljust(17) + ':', time_efficiency(parser))
     print()
 
