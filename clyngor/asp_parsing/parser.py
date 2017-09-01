@@ -5,12 +5,19 @@
 import arpeggio as ap
 
 from clyngor.asp_parsing import asp_grammar, asp_grammar_comments
+from clyngor.asp_parsing import alt_parse
 
 
-def parse_asp_program(asp_source_code:str, do=None, have_comments:bool=True) -> tuple:
+def parse_asp_program_by_arpeggio(asp_source_code:str, do=None, have_comments:bool=True) -> tuple:
     parser = ap.ParserPython(asp_grammar(), asp_grammar_comments if have_comments else None)
     parse_tree = parser.parse(asp_source_code)
     return ap.visit_parse_tree(parse_tree, visitor=do or CodeAsTuple())
+
+def parse_asp_program_by_pypeg(asp_source_code:str, do=None, have_comments:bool=True) -> tuple:
+    return alt_parse.parse_asp(asp_source_code)
+
+# handles multiline comments, but is slower
+parse_asp_program = parse_asp_program_by_pypeg
 
 
 class CodeAsTuple(ap.PTNodeVisitor):

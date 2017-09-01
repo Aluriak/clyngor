@@ -13,11 +13,9 @@ def parsed_to_tuple(program) -> tuple:
 
 
 
-comment_asp = [re.compile('%.*$'), re.compile(r'%\*.*\*%', flags=re.DOTALL)]
+comment_asp = [re.compile(r'%\*.*\*%', flags=re.DOTALL), re.compile('%.*')]
 
-Number = re.compile(r'-?[0-9]+')
 Ident = re.compile(r'[a-z][a-zA-Z0-9_]*')
-Text = re.compile(r'"((\\")|([^"]))*"')
 Variable = re.compile(r'(([A-Z][a-zA-Z0-9_]*)|(_))')
 
 
@@ -35,44 +33,58 @@ class List(pg.List):
         else:
             return tuple(map(to_tuple, self))
 
+class Number(List):
+    grammar = re.compile(r'-?[0-9]+')
+    def as_tuple(self):
+        assert len(self) == 1
+        return int(tuple(self)[0])
+
+class Text(List):
+    grammar = '"', re.compile(r'((\\")|([^"]))*'), '"'
+    def as_tuple(self):
+        assert len(self) == 1
+        return ('text', tuple(self)[0])
 
 class Litteral(List):
     grammar = [Number, Ident, Text, Variable]
     def as_tuple(self):
         assert len(self) == 1
-        return tuple(self)[0]
+        return to_tuple(tuple(self)[0])
 
 class Arg(List):
-    grammar = Litteral
+    grammar = Litteral  # updated later
     def as_tuple(self):
         assert len(self) == 1
         return tuple(self)[0].as_tuple()
 class Args(List):
     grammar = Arg, pg.maybe_some(',', Arg)
-    flat = True
 class MultArgs(List):
     grammar = Args, pg.maybe_some(';', Args)
     def as_tuple(self):
         if len(self) > 1:
-            return ('disjunction', *tuple(self))
+            return ('disjunction', *tuple(map(to_tuple, self)))
         return tuple(map(to_tuple, tuple(self)[0]))
 
 class UnamedTerm(List):
     grammar = '(', MultArgs, ')'
     def as_tuple(self):
         assert len(self) == 1
-        return ('term', *tuple(self)[0].as_tuple())
+        children = tuple(self)[0].as_tuple()
+        if children[0] == 'disjunction':
+            return children
+        return ('term', *children)
 class NamedTerm(List):
     grammar =  Ident, pg.optional('(', MultArgs, ')')
     def as_tuple(self):
         children = tuple(self)
         assert len(children) in {1, 2}
         if len(children) == 1:
-            return ('term', children[0].as_tuple(), ())
+            return ('term', to_tuple(children[0]), ())
         return ('term', *map(to_tuple, children))
 class Term(List):
     grammar = [UnamedTerm, NamedTerm]
     flat = True
+Arg.grammar = [Term, Litteral]
 
 
 # body constructions
@@ -81,11 +93,11 @@ class NotTerm(List):
     def as_tuple(self):
         type, pred, args = tuple(self)[0].as_tuple()
         assert type == 'term'
-        return '¬' + type, pred, args, conditions
+        return '¬' + type, pred, args
 class ForAll(List):
     grammar = NamedTerm, ':', Term, pg.maybe_some(',', Term)
     def as_tuple(self):
-        head, conditions = self
+        head, *conditions = self
         head = head.as_tuple()[1:]  # only the predicate and args
         conditions = tuple(sub.as_tuple() for sub in conditions)
         return ('forall', *head, conditions)
@@ -102,7 +114,28 @@ class Expression(List):
 class Selection(List):
     grammar = pg.optional(Number), '{', pg.some(Expression), '}', pg.optional(Number)
     def as_tuple(self):
-        return tuple(sub.as_tuple() for sub in self)
+        children = tuple(map(to_tuple, self))
+        down, up, exprs = 0, None, ()
+        assert len(children) in {1, 2, 3}
+        print('CHILDS:', children)
+        if isinstance(children[0], int):
+            down = children[0]
+        if isinstance(children[-1], int):
+            up = children[-1]
+        if up and down:
+            assert len(children) == 3
+            exprs = children[1]
+        elif up:
+            assert len(children) == 2
+            exprs = children[0]
+        elif down:
+            assert len(children) == 2
+            exprs = children[1]
+        else:
+            assert len(children) == 1
+            exprs = children[0]
+
+        return 'selection', down, up, (exprs,)
 
 
 class Body(List):
