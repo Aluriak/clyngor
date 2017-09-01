@@ -18,7 +18,7 @@ att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
 def time_efficiency():
     func = partial(asp_parsing.program_to_dependancy_graph, ASP_CODE)
     print('Perform 1000 graphs in', timeit(func, number=1000), 'seconds.')
-    # last time: 3.4s
+    # last time: 4.0s
 
 
 if __name__ == '__main__':
