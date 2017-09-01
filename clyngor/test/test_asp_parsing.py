@@ -27,20 +27,26 @@ def test_forall():
     ASP_CODE = r"""
     a:- rel(X,Y): obj(X), att(Y).
     b:- not rel(X,Y): obj(X), att(Y).
+    c:- not rel(X,Y): obj(X), att(Y) ; rel(c,_).
     """
     rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
-    assert len(rules) == 2
-    first, second = rules
+    assert len(rules) == 3
+    first, second, third = rules
 
     print('FIRST:', first)
-    expected = ('rule', 'a', (), (('forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
+    expected = ('rule', ('term', 'a', ()), (('forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
     print('EXPEC:', expected)
     assert first == expected
 
     print('SECOD:', second)
-    expected = ('rule', 'b', (), (('¬forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
+    expected = ('rule', ('term', 'b', ()), (('¬forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ),) )
     print('EXPEC:', expected)
     assert second == expected
+
+    print('THIRD:', third)
+    expected = ('rule', ('term', 'c', ()), (('¬forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)), ('term', 'att', ('Y',))) ), ('term', 'rel', (('term', 'c', ()), '_'))) )
+    print('EXPEC:', expected)
+    assert third == expected
 
 
 def test_term():
@@ -64,7 +70,7 @@ def test_term():
     assert second == expected
 
     print('THIRD:', third)
-    expected = ('rule', 'c', (2,), (('¬term', 'b', (2,)),) )
+    expected = ('rule', ('term', 'c', (2,)), (('¬term', 'b', (2,)),) )
     print('EXPEC:', expected)
     assert third == expected
 
@@ -81,7 +87,7 @@ def test_selection():
     first, second, third = rules
 
     print('FIRST:', first)
-    expected = ('selection', 1, 1, (('forall', 'sel', ('X',), (('term', 'obj', ('X',)),)),), ())
+    expected = ('selection', 1, 1, (('forall', 'sel', ('X',), (('term', 'obj', ('X',)),)),),)
     print('EXPEC:', expected)
     assert first == expected
 
@@ -89,14 +95,15 @@ def test_selection():
     expected = ('selection', 0, None, (('forall', 'con', ('X', 'Y'),
                                         (('term', 'obj', ('X',)),
                                          ('term', 'att', ('Y', 2)),),
-                                        ),), ())
+                                        ),),)
     print('EXPEC:', expected)
     assert second == expected
 
     print('THIRD:', third)
-    expected = ('selection', 2, 4, (('forall', 'sel', ('X',),
-                                     (('term', 'obj', ('X',)),),
-                                     ),), (('term', 'anatom', ()),))
+    expected = ('rule',
+                ('selection', 2, 4, (('forall', 'sel', ('X',),
+                                     (('term', 'obj', ('X',)),),),)),
+                (('term', 'anatom', ()),))
     print('EXPEC:', expected)
     assert third == expected
 
@@ -119,7 +126,7 @@ def test_multiple_rules():
     assert second == ('term', 'b', (('text', r'les amis, \"coucou\".'),))
 
     print('THIRD:', third)
-    expected = ('rule', 'obj', ('X',), (
+    expected = ('rule', ('term', 'obj', ('X',)), (
         ('term', 'rel', ('X', '_')),
         ('forall', 'rel', ('X', 'Y'), (('term', 'att', ('Y',)),)),
     ))
@@ -127,7 +134,7 @@ def test_multiple_rules():
     assert third == expected
 
     print('FOURTH:', fourth)
-    expected = ('rule', 'att', ('Y',), (
+    expected = ('rule', ('term', 'att', ('Y',)), (
         ('term', 'rel', ('_', 'Y')),
         ('forall', 'rel', ('X', 'Y'), (('term', 'obj', ('X',)),)),
     ))

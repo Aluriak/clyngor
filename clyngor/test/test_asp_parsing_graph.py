@@ -19,7 +19,6 @@ def asp_source_and_graph():
     }
 
 
-
 def test_interdependency_graph(asp_source_and_graph):
     source, expected = asp_source_and_graph
     graph = asp_parsing.program_to_dependancy_graph(source)
