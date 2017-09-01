@@ -38,8 +38,9 @@ def program_to_endpoints(program:str or tuple, node_as_index:bool=True) -> dict:
     # explore the full structure to populate sources and targets
     for idx, (type, *data) in enumerate(program):
         if type == 'rule':
-            atom_source[data[0]].add(idx)
-            for (subtype, *subdata) in data[2]:
+            head, body = data
+            atom_source[head[1]].add(idx)
+            for (subtype, *subdata) in body:
                 if subtype in {'term', '¬term'}:
                     atom_target[subdata[0]].add(idx)
                 elif subtype in {'forall', '¬forall'}:
