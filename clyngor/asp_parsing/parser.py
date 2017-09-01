@@ -4,11 +4,12 @@
 
 import arpeggio as ap
 
-from clyngor.asp_parsing import asp_grammar
+from clyngor.asp_parsing import asp_grammar, asp_grammar_comments
 
 
-def parse_asp_program(asp_source_code:str, do=None) -> tuple:
-    parse_tree = ap.ParserPython(asp_grammar()).parse(asp_source_code)
+def parse_asp_program(asp_source_code:str, do=None, have_comments:bool=True) -> tuple:
+    parser = ap.ParserPython(asp_grammar(), asp_grammar_comments if have_comments else None)
+    parse_tree = parser.parse(asp_source_code)
     return ap.visit_parse_tree(parse_tree, visitor=do or CodeAsTuple())
 
 

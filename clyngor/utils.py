@@ -67,7 +67,3 @@ def load_answers_from_file(filename:str, answer_set_builder:type=frozenset) -> i
             answer_set_builder(answer_set_from_str(line))
             for line in ifd
         )
-
-
-def parse_asp_program(asp_program, visitor=None):
-    return asp_parsing.parse_asp_program(asp_program, visitor=visitor)

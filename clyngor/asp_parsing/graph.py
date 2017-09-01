@@ -90,10 +90,11 @@ def atoms_endpoints_to_dependancy_graph(atom_source:dict, atom_target:dict) -> d
 
 
 def program_to_dependancy_graph(program:str or tuple,
-                               node_as_index:bool=True) -> dict:
+                                node_as_index:bool=True,
+                                have_comments:bool=True) -> dict:
     """Most high level function: compute dependancy graph from the source code
     directly"""
     if isinstance(program, str):
-        program = tuple(parse_asp_program(program, do=CodeAsTuple()))
+        program = tuple(parse_asp_program(program, do=CodeAsTuple(), have_comments=have_comments))
     endpoints = program_to_endpoints(program, node_as_index)
     return atoms_endpoints_to_dependancy_graph(*endpoints)
