@@ -9,24 +9,42 @@ def asp_grammar():
 
     """
 
-    def ident():      return ap.RegExMatch(r'[a-z][a-zA-Z0-9_]*')
-    def number():     return ap.RegExMatch(r'-?[0-9]+')
-    def text():       return '"', ap.RegExMatch(r'((\\")|([^"]))*'), '"'
-    def litteral():   return [ident, text, number]
-    def variable():   return ap.RegExMatch(r'(([A-Z][a-zA-Z0-9_]*)|(_))')
-    def subterm():    return [(ident, ap.Optional("(", args, ")")), litteral, variable]
-    def args():       return subterm, ap.ZeroOrMore(',', subterm)
-    def term():       return ap.Optional('not'), ident, ap.Optional("(", args, ")")
-    def forall():     return term, ':', term, ap.ZeroOrMore(',', term)
-    def expression(): return [forall, term]
-    def body():       return expression, ap.ZeroOrMore(';', expression)
-    def constraint(): return ':-', body
-    def head():       return term, ap.ZeroOrMore(';', term)
-    def rule():       return head, ':-', body
-    def selection_nobody():  return ap.Optional(number), '{', ap.OneOrMore(expression), '}', ap.Optional(number)
-    def selection_body():  return ap.Optional(number), '{', ap.OneOrMore(expression), '}', ap.Optional(number), ':-', body
-    def selection():  return [selection_body, selection_nobody]
-    def instruction():return [selection, constraint, rule, term]
-    def program():    return ap.OneOrMore(instruction, '.')
+    # litterals
+    def ident():        return ap.RegExMatch(r'[a-z][a-zA-Z0-9_]*')
+    def number():       return ap.RegExMatch(r'-?[0-9]+')
+    def text():         return '"', ap.RegExMatch(r'((\\")|([^"]))*'), '"'
+    def variable():     return ap.RegExMatch(r'(([A-Z][a-zA-Z0-9_]*)|(_))')
+    def litteral():     return [ident, variable, text, number]
+
+    # maths
+    def operator():     return list('+-/*\\') + ['**']
+    def binop():        return [mathexp, ('(', mathexp, ')')], operator, [mathexp, ('(', mathexp, ')')]
+    def mathexp():      return [number, binop]
+    def assignment():   return variable, '=', mathexp
+
+    # second level constructions
+    def arg():          return [term, litteral, mathexp]
+    def args():         return arg, ap.ZeroOrMore(',', arg)
+    def multargs():     return args, ap.ZeroOrMore(';', args)
+
+    # heads constructions
+    def unnamedterm():  return '(', multargs, ')'
+    def namedterm():    return ident, ap.Optional('(', multargs, ')')
+    def term():         return [unnamedterm, namedterm]
+    def selection():    return ap.Optional(number), '{', ap.OneOrMore(expression), '}', ap.Optional(number)
+
+    # body constructions
+    def not_term():     return 'not', namedterm
+    def forall():       return namedterm, ':', term, ap.ZeroOrMore(',', term)
+    def not_forall():   return 'not', namedterm, ':', term, ap.ZeroOrMore(',', term)
+    def expression():   return [not_forall, forall, not_term, term, assignment]
+
+    # program level constructions
+    def body():         return expression, ap.ZeroOrMore(';', expression)
+    def head():         return [selection, namedterm, (namedterm, ap.OneOrMore(';', namedterm))]
+    def fact():         return head
+    def constraint():   return ':-', body
+    def rule():         return head, ':-', body
+    def program():      return ap.OneOrMore([constraint, rule, fact], '.')
 
     return program
