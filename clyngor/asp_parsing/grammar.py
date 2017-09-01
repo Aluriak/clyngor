@@ -8,7 +8,6 @@ def asp_grammar():
     """Implement the Answer Set Programming grammar.
 
     """
-
     # litterals
     def ident():        return ap.RegExMatch(r'[a-z][a-zA-Z0-9_]*')
     def number():       return ap.RegExMatch(r'-?[0-9]+')
@@ -48,3 +47,8 @@ def asp_grammar():
     def program():      return ap.OneOrMore([constraint, rule, fact], '.')
 
     return program
+
+
+def asp_grammar_comments():
+    return ap.RegExMatch('\%.*')
+# return [ap.RegExMatch('\%[^\n]*'), ap.RegExMatch('\%\*.*\*\%')]  # TODO: handle multiline comment
