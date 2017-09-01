@@ -3,6 +3,37 @@
 from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
 
 
+def test_comments():
+    ASP_CODE = r"""
+    %a.
+    %.
+    %{}
+    %a:- test
+    %    *%
+    % *
+    ok.
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 1
+    assert rules[0] == ('term', 'ok', ())
+
+
+def test_non_working_multiline_comments():
+    ASP_CODE = r"""
+    %    *%
+    %*
+    ai.
+    b: %bug
+    :c- *%
+    % *
+    ok.
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 1
+    assert rules[0] == ('term', 'ai', ()), "Multiline comments are now handled ! You can change this test"
+
+
+
 def test_disjunction():
     ASP_CODE = r"""
     rel(a,(c;d)).
