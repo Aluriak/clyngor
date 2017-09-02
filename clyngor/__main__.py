@@ -51,3 +51,10 @@ if __name__ == '__main__':
     print('ALTERNATIVE:')
     program = alt_parse.parse_asp(ASP_CODE)
     print(asp_parsing.program_to_dependancy_graph(program))
+
+
+    print('PRETTY PRINTING:')
+    from pprint import pprint
+    program = asp_parsing.parse_asp_program(ASP_CODE)
+    pprint(program)
+    print('\n'.join(asp_parsing.pprint.to_asp_source_code(program)))
