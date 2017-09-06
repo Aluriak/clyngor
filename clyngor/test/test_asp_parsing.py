@@ -1,6 +1,6 @@
 
 
-from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
+from clyngor.asp_parsing.precise_parser import parse_asp_program, CodeAsTuple
 
 
 def test_comments():

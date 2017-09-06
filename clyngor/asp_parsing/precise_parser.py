@@ -1,5 +1,10 @@
 """Routines and classes for Answer Set Programming source code parsing.
 
+This parser is precise: it will carefully parse all asp source code
+(except the comments).
+
+For a more high level parser, see byline_parser.
+
 """
 
 import arpeggio as ap
