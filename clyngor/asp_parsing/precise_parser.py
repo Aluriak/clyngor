@@ -23,6 +23,7 @@ def parse_asp_program_by_pypeg(asp_source_code:str, do=None, have_comments:bool=
 
 # handles multiline comments, but is slower
 parse_asp_program = parse_asp_program_by_pypeg
+parse_asp_program = parse_asp_program_by_arpeggio
 
 
 class CodeAsTuple(ap.PTNodeVisitor):
