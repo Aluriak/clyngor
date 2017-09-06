@@ -58,6 +58,8 @@ def asp_grammar():
 
 
 def asp_grammar_comments():
-    return [ap.RegExMatch(r'%\*.*?\*%'), ap.RegExMatch(r'%.*$')]  # TODO: handle multiline comments
+    # return [ap.RegExMatch(r'%\*.*?\*%'), ap.RegExMatch(r'%.*$')]  # TODO: handle multiline comments
     # wait for Arpeggio's PR#38, which fix the problem
     # return [ap.RegExMatch(r'%\*.*?\*%', multiline=True), ap.RegExMatch(r'%.*$')]
+    # Follows a non-efficient but working way to do multiline
+    return [ap.RegExMatch(r'%\*((([^\*]?%)|([^%]?\*))|([^\*%]))*\*%'), ap.RegExMatch(r'%.*$')]
