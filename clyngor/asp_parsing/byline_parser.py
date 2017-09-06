@@ -29,30 +29,60 @@ def clusterize_from_source(source_code:str) -> tuple:
     return tuple(clusterize(parse(source_code)))
 
 
-def rebuild_clusters(clusters:str, sep_cluster:str='\n\n') -> str:
+def rebuild_clusters(clusters:str, sep_cluster:str='\n\n', sep_comment:str='  ',
+                     rule_indent:str='    ') -> str:
     """Return the source code inferred from given clusters.
 
     """
-    return sep_cluster.join(cluster_as_string(cluster) for cluster in clusters)
+    return sep_cluster.join(cluster_as_string(cluster, sep_comment, rule_indent)
+                            for cluster in clusters)
 
 
-def cluster_as_string(cluster:SourceBlock) -> str:
+def cluster_as_string(cluster:SourceBlock, sep_comment:str, rule_indent:str) -> str:
     """Return a string representation of given cluster"""
+    COMMENTS = {'comment', 'multicomment'}
+    CODE = {'code', 'end'}
     pretty_doc = lambda cluster: '\n'.join(line[4] for line in cluster.lines)
     previous_line_end = None
+    previous_type = None
     out = ''
+    in_code = False
+
+    def spacing() -> str:
+        if not new_line:
+            if previous_type in COMMENTS:
+                return sep_comment
+            elif previous_type in CODE and type in COMMENTS:
+                return sep_comment
+        elif new_line and not first_line:
+            if in_code:  # put indentation
+                return '\n' + rule_indent
+            else:
+                return '\n'
+        return ''
+
     for line_start, line_end, type, _, data in cluster.lines:
-        if previous_line_end is not None and line_start != previous_line_end:
-            out += '\n'
+        assert line_end is not None
+        assert line_start is not None
+        first_line = previous_line_end is None
+        new_line = first_line or line_start != previous_line_end
+        out += spacing()
         if type == 'comment':
             out += '%' + data
         if type == 'multicomment':
             out += '%*' + data + '*%'
         if type == 'code':
+            in_code = True
             out += data
         if type == 'end':
+            if not in_code:  # if in_code is True, there is a problem
+                print("MISUTD: unexpected '.' during parsing of non-code segment")
+            in_code = False
             out += data
+        if type == 'text':
+            out += '"' + data + '"'
         previous_line_end = line_end
+        previous_type = type
     return out
 
 
@@ -142,7 +172,7 @@ def line_grammar():
     def text():         return ap.Sequence('"', ap.RegExMatch(r'((\\")|([^"]))*'), '"', skipws=False)
     def comment():      return ap.RegExMatch(r'%.*$'),
     def multiline_comment(): return ap.RegExMatch(r'%\*.*?\*%', multiline=True),
-    def asp_code():     return ap.RegExMatch(r'[^%"\.]*[^%"\.\n]', multiline=True),
+    def asp_code():     return ap.RegExMatch(r'[^%"\.]*[^%"\.\s]', multiline=True),
     def rule_end():     return '.',
     def program():      return ap.OneOrMore([text, multiline_comment, comment, asp_code, rule_end])
 
