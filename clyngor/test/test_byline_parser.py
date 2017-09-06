@@ -42,8 +42,7 @@ def test_byline_parsing():
 def test_byline_rebuild():
     clusters = byline_parser.clusterize_from_source(ASP_SOURCE)
     rebuilt = byline_parser.rebuild_clusters(clusters)
-    expected = ASP_SOURCE.strip()
-    assert rebuilt == expected
+    assert rebuilt == ASP_SOURCE.strip()
 
 
 def test_line_ends():
