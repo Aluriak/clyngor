@@ -11,4 +11,8 @@ upload:
 
 install:
 	- yes y | pip uninstall clyngor
+	python setup.py install
+
+remote_install:
+	- yes y | pip uninstall clyngor
 	pip install clyngor
