@@ -122,3 +122,46 @@ No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50
 ## Further ideas
 - [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
 - ASP source code debugging generator
+
+
+## from pyasp to clyngor
+If you have a project that makes use of pyasp, but need clingo instead of gringo+clasp, one way to go is to use clyngor instead.
+
+Here was my old code:
+
+    from pyasp import asp
+
+    def solving(comp, graph):
+        programs = [comp, graph]
+        clasp_options = ['--opt-mode=optN', '--parallel-mode=4', '--project']
+        solver = asp.Gringo4Clasp(clasp_options=clasp_options)
+        print("solver run as: `clingo {} {}`".format(' '.join(programs), clasp_options))
+        at_least_one_solution = False
+        for answerset in solver.run(programs, collapseAtoms=False):
+            yield answerset
+
+    def find_direct_inclusions(model) -> dict:
+        programs = [ASP_SRC_INCLUSION]
+        solver = asp.Gringo4Clasp()
+        add_atoms = ''.join(str(atom) + '.' for atom in model)
+        answers = tuple(solver.run(programs, collapseAtoms=False,
+                                   additionalProgramText=add_atoms))
+        return answers
+
+And here is the version using clyngor, that pass the exact same unit tests:
+
+    import clyngor
+
+    def solving(comp, graph):
+        programs = [comp, graph]
+        clasp_options = '--opt-mode=optN', '--parallel-mode=4', '--project'
+        answers = clyngor.solve(programs, options=clasp_options)
+        print("solver run as: `{}`".format(answers.command))
+        for answerset in answers.as_pyasp.parse_args.int_not_parsed:
+            yield answerset
+
+    def find_direct_inclusions(model) -> dict:
+        programs = [ASP_SRC_INCLUSION]
+        add_atoms = ''.join(str(atom) + '.' for atom in model)
+        answers = tuple(clyngor.solve(programs, inline=add_atoms).as_pyasp.parse_args)
+        return answers
