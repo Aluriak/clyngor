@@ -12,6 +12,24 @@ def simple_answers():
         'g(6) h(7)',
     ))
 
+@pytest.fixture
+def noarg_answers():
+    return Answers((
+        '',
+        'a',
+        'b c',
+        'd e f',
+    ))
+
+
+def test_multiple_tunning_no_arg(noarg_answers):
+    answers = noarg_answers.no_arg
+    assert next(answers) == frozenset()
+    assert next(answers) == {'a'}
+    assert next(answers) == {'b', 'c'}
+    answers.by_predicate
+    assert next(answers) == {'d': frozenset(), 'e': frozenset(), 'f': frozenset()}
+
 
 def test_multiple_tunning(simple_answers):
     answers = simple_answers
