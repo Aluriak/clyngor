@@ -10,5 +10,5 @@ upload:
 	python setup.py sdist upload
 
 install:
-	yes y | pip uninstall clyngor
+	- yes y | pip uninstall clyngor
 	pip install clyngor
