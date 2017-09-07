@@ -70,6 +70,9 @@ def load_answers_from_file(filename:str, answer_set_builder:type=frozenset) -> i
         )
 
 
-def cleaned_path(path:str) -> str:
+def cleaned_path(path:str, error_if_invalid:bool=True) -> str:
     """Return the same path, but cleaned with user expension and absolute"""
-    return os.path.abspath(os.path.expanduser(path))
+    path = os.path.abspath(os.path.expanduser(path))
+    if error_if_invalid and not os.path.exists(path):
+        open(path)  # will raise FileExistsError
+    return path
