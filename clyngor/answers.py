@@ -28,6 +28,7 @@ class Answers:
         self._collapse_atoms= False
         self._collapse_args = True
         self._parse_int = True
+        self._ignore_args = False
 
     @property
     def command(self) -> str:  return self._command
@@ -93,6 +94,14 @@ class Answers:
         self._collapse_args = False
         return self
 
+    @property
+    def no_arg(self):
+        """Do not parse arguments, and discard/ignore them.
+
+        """
+        self._ignore_args = True
+        return self
+
 
     def __next__(self):
         return next(iter(self))
@@ -139,7 +148,14 @@ class Answers:
         """
         sorted_tuple = lambda it: tuple(sorted(it))
         builder = sorted_tuple if self._sorted else frozenset
-        if self._first_arg_only:
+        if self._ignore_args:
+            answer_set = (pred for pred, _ in answer_set)
+            if self._group_atoms:
+                return {pred: frozenset() for pred in answer_set}
+            if self._as_pyasp:
+                return builder(as_pyasp.Atom(pred, ()) for pred in answer_set)
+            return builder(answer_set)
+        elif self._first_arg_only:
             answer_set = builder((pred, args[0] if args else ())
                                    for pred, args in answer_set)
         else:
