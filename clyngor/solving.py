@@ -8,11 +8,13 @@ import tempfile
 import subprocess
 import clyngor
 from clyngor.answers import Answers
+from clyngor.utils import cleaned_path
 
 
 def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
-          nb_model:int=0, time_limit:int=0, constants:dict={}) -> iter:
+          nb_model:int=0, time_limit:int=0, constants:dict={},
+          clean_path:bool=True) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -21,6 +23,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     inline -- ASP source code to feed the solver with
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
+    clean_path -- clean the path of given files before using them
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -28,6 +31,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     constants -- mapping name -> value of constants for the grounding
 
     """
+    files = tuple(map(cleaned_path, files) if clean_path else files)
     run_command = command(files, options, inline, nb_model, time_limit, constants)
     if print_command:
         print(run_command)
