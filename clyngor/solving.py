@@ -46,7 +46,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
             if cur_line.startswith('Answer: '):
                 yield next(stdout).decode()
 
-    return Answers(gen_answers())
+    return Answers(gen_answers(), command=' '.join(run_command))
 
 
 def command(files:iter=(), options:iter=[], inline:str=None,

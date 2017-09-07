@@ -16,9 +16,10 @@ class Answers:
 
     """
 
-    def __init__(self, answers:iter):
+    def __init__(self, answers:iter, command:str=''):
         """Answer sets must be iterable of (predicate, args)"""
         self._answers = iter(answers)
+        self._command = str(command or '')
         self._first_arg_only = False
         self._group_atoms = False
         self._as_pyasp = False
@@ -28,6 +29,8 @@ class Answers:
         self._collapse_args = True
         self._parse_int = True
 
+    @property
+    def command(self) -> str:  return self._command
 
     @property
     def first_arg_only(self):
