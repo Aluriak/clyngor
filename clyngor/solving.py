@@ -4,6 +4,7 @@
 
 
 import re
+import shlex
 import tempfile
 import subprocess
 import clyngor
@@ -69,7 +70,7 @@ def command(files:iter=(), options:iter=[], inline:str=None,
 
     """
     files = [files] if isinstance(files, str) else list(files)
-    options = [options] if isinstance(options, str) else list(options)
+    options = list(shlex.split(options) if isinstance(options, str) else options)
     if inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
             fd.write(inline)

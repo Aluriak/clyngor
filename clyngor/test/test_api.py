@@ -17,6 +17,31 @@ def asp_code():
     """
 
 
+def test_api_solve_with_weird_flags():
+    files = []
+    with tempfile.NamedTemporaryFile('wt', delete=False) as fd:
+        fd.write('1 {a ; b ; c} 1 :- d.')
+        files.append(fd.name)
+    with tempfile.NamedTemporaryFile('wt', delete=False) as fd:
+        fd.write('0 {d ; e} 1.')
+        files.append(fd.name)
+
+    answers = solve(files, options='--parallel-mode=4').no_arg
+    print(answers.command)
+    set = frozenset
+    assert set(answers) == { set('da'), set('db'), set('dc'), set('e'), set() }
+
+    answers = solve(files, options='--opt-mode=optN').no_arg
+    print(answers.command)
+    set = frozenset
+    assert set(answers) == { set('da'), set('db'), set('dc'), set('e'), set() }
+
+    answers = solve(files, options='--parallel-mode=4 --opt-mode=optN').no_arg
+    print(answers.command)
+    set = frozenset
+    assert set(answers) == { set('da'), set('db'), set('dc'), set('e'), set() }
+
+
 def test_api_solve():
     files = []
     with tempfile.NamedTemporaryFile('wt', delete=False) as fd:
