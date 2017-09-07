@@ -1,2 +1,3 @@
-pytest==3.2.1
-Arpeggio==1.6.1
+Arpeggio>=1.6.1
+pyPEG2>=2.15.2
+pytest>=3.2.1
