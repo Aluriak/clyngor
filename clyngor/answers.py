@@ -108,7 +108,7 @@ class Answers:
 
     def _parse_answer(self, answer_set:str) -> iter:
         """Yield atoms as (pred, args) according to parsing options"""
-        REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
+        REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)(\([^)]+\))?')
         if self._careful_parsing:
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
@@ -118,15 +118,18 @@ class Answers:
         else:  # the good ol' split
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
-                pred, args = match.groups(0)
-                if not self._collapse_atoms:  # else: atom as string
-                    # parse also integers, if asked to
-                    args = tuple(
-                        (int(arg) if self._parse_int and
-                         (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
-                        for arg in args.split(',')
-                    )
-                yield pred, args
+                pred, args = match.groups()
+                assert args is None or (args.startswith('(') and args.endswith(')'))
+                if args:
+                    args = args[1:-1]
+                    if not self._collapse_atoms:  # else: atom as string
+                        # parse also integers, if asked to
+                        args = tuple(
+                            (int(arg) if self._parse_int and
+                             (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
+                            for arg in args.split(',')
+                        )
+                yield pred, args or ()
 
 
     def _format(self, answer_set) -> dict or frozenset:
