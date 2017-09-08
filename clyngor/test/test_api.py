@@ -4,6 +4,7 @@ import pytest
 import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
+from clyngor import asp_parsing
 
 
 @pytest.fixture
@@ -102,3 +103,18 @@ def test_string_without_escaped_quotes():
         assert pred == 'atom'
         assert len(args) == 1
         assert args[0] == dangerous_string
+
+
+def test_add_debug_lines(asp_code):
+    line_to_debug = 'natt(Y):- rel(_,Y) ; not rel(X,Y): obj(X).'
+    debug = asp_parsing.debug.lines_for(line_to_debug, id=42)
+    print('JLRBLI DEBUG:', debug)
+    source = '\n'.join(asp_parsing.parsed_to_source(debug))
+    print(source)
+    assert source == """
+ok(42).
+head(42):- ap(42) ; not ko(42).
+ap(42):- ok(42) ; rel(_,Y) ; not rel(X,Y): obj(X).
+bl(42):- ok(42) ; not rel(_,Y).
+bl(42):- ok(42) ; not not rel(X,Y): obj(X).
+""".strip()

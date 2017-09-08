@@ -37,7 +37,7 @@ class BaseVisitor:
     def walk_on(cls, program:tuple, **kwargs):
         """Return the visitor results of its walk on given program"""
         visitor = cls(**kwargs)
-        return self.program(map(visitor.visite, program))
+        return tuple(map(visitor.visite, program))
 
     def visite(self, obj):
         type = obj[0]
@@ -84,6 +84,7 @@ def to_asp_source_code(program:tuple, rule_marker:str=':- ', body_sep:str=' ; ',
     """Yield a ASP compliant string implementing each rule in program.
 
     """
+    assert isinstance(program, tuple)
     def str_term(pred, args:iter) -> str:
         args = tuple(args)
         return '{}({})'.format(pred, args_sep.join(args)) if args else pred
@@ -100,6 +101,7 @@ def to_asp_source_code(program:tuple, rule_marker:str=':- ', body_sep:str=' ; ',
 
 
     def stringifier(obj) -> callable:
+        if isinstance(obj, int):  return str(obj)
         type = obj[0]
         if type == 'rule':
             assert len(obj) == 3
@@ -124,18 +126,25 @@ def to_asp_source_code(program:tuple, rule_marker:str=':- ', body_sep:str=' ; ',
             assert len(obj) == 4
             name, args, conditions = obj[1:]
             not_ = ('not ' if type.startswith('¬') else '')
-            return not_ + str_term(name, map(stringifier, args)) + ':' + conditions_sep.join(map(stringifier, conditions))
+            return not_ + str_term(name, map(stringifier, args)) + ': ' + conditions_sep.join(map(stringifier, conditions))
         if type == 'disjunction':
             raise NotImplementedError()
-        if type in 'selection':
+        if type == 'not':
+            assert len(obj) == 2
+            return 'not ' + stringifier(obj[1])
+        if type == 'selection':
             assert len(obj) == 4
             down, up, generateds = obj[1:]
             return str_selection(down, up, map(stringifier, generateds))
         # now here, it is a litteral
+        if isinstance(obj, (str, int)):
+            return str(obj)
         return args_sep.join(map(str, obj))
 
     for rule in program:
         yield stringifier(rule) + rule_end
+
+parsed_to_source = to_asp_source_code
 
 
 def to_human_text(program:tuple) -> str:
