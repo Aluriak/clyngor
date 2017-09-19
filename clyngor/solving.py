@@ -32,6 +32,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     constants -- mapping name -> value of constants for the grounding
 
     """
+    files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
     run_command = command(files, options, inline, nb_model, time_limit, constants)
     if print_command:
