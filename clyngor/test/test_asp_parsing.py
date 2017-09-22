@@ -1,6 +1,44 @@
 
 
-from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
+from clyngor.asp_parsing.precise_parser import parse_asp_program, CodeAsTuple
+
+
+def test_const():
+    ASP_CODE = r"""
+    %follows a show
+    #const a=2.
+    #const ident="".
+    #const ident="text$%\"".
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 3
+    assert rules[0] == ('const', 'a', 2)
+    assert rules[1] == ('const', 'ident', ('text', ''))
+    assert rules[2] == ('const', 'ident', ('text', 'text$%\\"'))
+
+
+def test_const_text_with_inlined_comment():
+    ASP_CODE = r"""
+    #const ident="%*text\" *%".
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 1
+    assert rules[0] == ('const', 'ident', ('text', '')), (
+        "if this fail, it's because comments are correctly handled.")
+
+
+def test_show():
+    ASP_CODE = r"""
+    %follows a show
+    #show a.
+    #show a(X): b(X).
+    #show a/1.
+    """
+    rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
+    assert len(rules) == 3
+    assert rules[0] == ('show', 'a', ())
+    assert rules[1] == ('show', 'a', ('X',), (('term', 'b', ('X',)),))
+    assert rules[2] == ('show/n', 'a', 1)
 
 
 def test_comments():
@@ -30,8 +68,7 @@ def test_non_working_multiline_comments():
     """
     rules = tuple(parse_asp_program(ASP_CODE, do=CodeAsTuple()))
     assert len(rules) == 1
-    assert rules[0] == ('term', 'ai', ()), ("Multiline comments are now handled !"
-                                            " You can now change this test")
+    assert rules[0] == ('term', 'ok', ()), "Multiline comments are not handled !"
 
 
 
@@ -178,7 +215,29 @@ def test_selection():
     assert third == expected
 
 
-def test_multiple_rules():
+def test_multirules():
+    ASP_CODE = r"""
+    a;b:-c.
+    b("string") ; a(X):- c(X).
+    """
+
+    rules = tuple(parse_asp_program(ASP_CODE))
+    assert len(rules) == 2
+    assert rules[0] == ('multirule', (
+        ('term', 'a', ()),
+        ('term', 'b', ()),
+    ), (
+        ('term', 'c', ()),
+    ))
+    assert rules[1] == ('multirule', (
+        ('term', 'b', (('text', 'string'),)),
+        ('term', 'a', ('X',)),
+    ), (
+        ('term', 'c', ('X',)),
+    ))
+
+
+def test_rules():
     ASP_CODE = r"""
     a.
     b("les amis, \"coucou\".").

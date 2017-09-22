@@ -1,6 +1,7 @@
 """Various high level definition for client"""
 
 
+import os
 import tempfile
 from clyngor import asp_parsing, parsing
 
@@ -92,3 +93,11 @@ def load_answers_from_file(filename:str, answer_set_builder:type=frozenset) -> i
             answer_set_builder(answer_set_from_str(line))
             for line in ifd
         )
+
+
+def cleaned_path(path:str, error_if_invalid:bool=True) -> str:
+    """Return the same path, but cleaned with user expension and absolute"""
+    path = os.path.abspath(os.path.expanduser(path))
+    if error_if_invalid and not os.path.exists(path):
+        open(path)  # will raise FileExistsError
+    return path

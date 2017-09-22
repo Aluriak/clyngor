@@ -16,9 +16,10 @@ class Answers:
 
     """
 
-    def __init__(self, answers:iter):
+    def __init__(self, answers:iter, command:str=''):
         """Answer sets must be iterable of (predicate, args)"""
         self._answers = iter(answers)
+        self._command = str(command or '')
         self._first_arg_only = False
         self._group_atoms = False
         self._as_pyasp = False
@@ -27,7 +28,10 @@ class Answers:
         self._collapse_atoms= False
         self._collapse_args = True
         self._parse_int = True
+        self._ignore_args = False
 
+    @property
+    def command(self) -> str:  return self._command
 
     @property
     def first_arg_only(self):
@@ -90,6 +94,14 @@ class Answers:
         self._collapse_args = False
         return self
 
+    @property
+    def no_arg(self):
+        """Do not parse arguments, and discard/ignore them.
+
+        """
+        self._ignore_args = True
+        return self
+
 
     def __next__(self):
         return next(iter(self))
@@ -105,7 +117,7 @@ class Answers:
 
     def _parse_answer(self, answer_set:str) -> iter:
         """Yield atoms as (pred, args) according to parsing options"""
-        REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)\(([^)]+)\)')
+        REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)(\([^)]+\))?')
         if self._careful_parsing:
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
@@ -115,15 +127,18 @@ class Answers:
         else:  # the good ol' split
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
-                pred, args = match.groups(0)
-                if not self._collapse_atoms:  # else: atom as string
-                    # parse also integers, if asked to
-                    args = tuple(
-                        (int(arg) if self._parse_int and
-                         (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
-                        for arg in args.split(',')
-                    )
-                yield pred, args
+                pred, args = match.groups()
+                assert args is None or (args.startswith('(') and args.endswith(')'))
+                if args:
+                    args = args[1:-1]
+                    if not self._collapse_atoms:  # else: atom as string
+                        # parse also integers, if asked to
+                        args = tuple(
+                            (int(arg) if self._parse_int and
+                             (arg[1:] if arg.startswith('-') else arg).isnumeric() else arg)
+                            for arg in args.split(',')
+                        )
+                yield pred, args or ()
 
 
     def _format(self, answer_set) -> dict or frozenset:
@@ -133,7 +148,14 @@ class Answers:
         """
         sorted_tuple = lambda it: tuple(sorted(it))
         builder = sorted_tuple if self._sorted else frozenset
-        if self._first_arg_only:
+        if self._ignore_args:
+            answer_set = (pred for pred, _ in answer_set)
+            if self._group_atoms:
+                return {pred: frozenset() for pred in answer_set}
+            if self._as_pyasp:
+                return builder(as_pyasp.Atom(pred, ()) for pred in answer_set)
+            return builder(answer_set)
+        elif self._first_arg_only:
             answer_set = builder((pred, args[0] if args else ())
                                    for pred, args in answer_set)
         else:

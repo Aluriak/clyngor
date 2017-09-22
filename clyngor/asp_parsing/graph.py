@@ -19,7 +19,7 @@ which is much more accurate.
 """
 import itertools
 from collections import defaultdict
-from clyngor.asp_parsing import parse_asp_program, CodeAsTuple
+from clyngor.asp_parsing.precise_parser import parse_asp_program, CodeAsTuple
 
 
 def program_to_endpoints(program:str or tuple, node_as_index:bool=True) -> dict:

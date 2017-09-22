@@ -1,5 +1,10 @@
 """Routines and classes for Answer Set Programming source code parsing.
 
+This parser is precise: it will carefully parse all asp source code
+(except the comments).
+
+For a more high level parser, see byline_parser.
+
 """
 
 import arpeggio as ap
@@ -18,6 +23,7 @@ def parse_asp_program_by_pypeg(asp_source_code:str, do=None, have_comments:bool=
 
 # handles multiline comments, but is slower
 parse_asp_program = parse_asp_program_by_pypeg
+parse_asp_program = parse_asp_program_by_arpeggio
 
 
 class CodeAsTuple(ap.PTNodeVisitor):
@@ -38,7 +44,11 @@ class CodeAsTuple(ap.PTNodeVisitor):
 
 
     def visit_text(self, node, children):
-        text = tuple(children)[0]
+        if len(children) == 0:  # empty text
+            text = ''
+        else:
+            assert len(children) == 1
+            text = tuple(children)[0]
         return 'text', str(text)
 
     def visit_ident(self, node, children):
@@ -121,17 +131,32 @@ class CodeAsTuple(ap.PTNodeVisitor):
 
     def visit_head(self, node, children):
         predicate, *args = children
-        return children
+        assert len(children) == 1
+        return children[0]
 
     def visit_rule(self, node, children):
         assert len(children) == 2
         head, body = children
-        if len(head) == 1:  # general case: only one production
-            head = head[0]
-            type = 'rule'
-        else:
-            type = 'multirule'
-        return (type, tuple(head), tuple(body))
+        return ('rule', tuple(head), tuple(body))
+
+    def visit_multirule(self, node, children):
+        assert len(children) > 2  # at least two heads and a body
+        head, body = children[:-1], children[-1]
+        return ('multirule', tuple(head), tuple(body))
+
+
+    def visit_arityterm(self, node, children):
+        return 'arity', children[0], self._int_builder(children[1])
+
+    def visit_meta_show(self, node, children):
+        assert len(children) == 1
+        type, *child = children[0]
+        return ('show/n' if type == 'arity' else 'show', *child)
+
+    def visit_meta_const(self, node, children):
+        assert len(children) == 2
+        return ('const', *tuple(children))
+
 
     def visit_program(self, node, children):
         for rule in children:
