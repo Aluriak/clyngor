@@ -14,7 +14,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name = 'clyngor',
-    version = '0.0.16',
+    version = '0.0.18',
     packages = find_packages(),
     include_package_data = True,  # read the MANIFEST.in file
     install_requires = reqs,
