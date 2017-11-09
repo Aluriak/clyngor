@@ -127,6 +127,9 @@ class Answers:
         else:  # the good ol' split
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
+                if self._atoms_as_string:
+                    yield ''.join(match.groups())  # just send the match
+                    continue
                 pred, args = match.groups()
                 assert args is None or (args.startswith('(') and args.endswith(')'))
                 if args:
@@ -148,6 +151,8 @@ class Answers:
         """
         sorted_tuple = lambda it: tuple(sorted(it))
         builder = sorted_tuple if self._sorted else frozenset
+        if self._atoms_as_string:  # special case
+            return frozenset(answer_set)
         if self._ignore_args:
             answer_set = (pred for pred, _ in answer_set)
             if self._group_atoms:
@@ -172,3 +177,9 @@ class Answers:
         elif self._as_pyasp:
             return builder(as_pyasp.Atom(*atom) for atom in answer_set)
         return answer_set
+
+
+    @property
+    def _atoms_as_string(self) -> bool:
+        """Shortcut"""
+        return self._collapse_atoms and self._collapse_args

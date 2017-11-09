@@ -64,6 +64,7 @@ def test_tunning_atoms_as_string(simple_answers):
     answers.atoms_as_string
     assert next(answers) == {'a(0)', 'b(1)'}
     assert next(answers) == {'c(2)', 'd(3)'}
+    answers.careful_parsing
     assert next(answers) == {'e(4)', 'f(5)'}
     assert next(answers) == {'g(6)', 'h(7)'}
 
@@ -72,4 +73,6 @@ def test_multiple_args_in_atoms(multiple_args):
     answers = multiple_args
     assert next(answers) == {('edge', (4, '"s…lp."')), ('r_e_l', (1, 2))}
     answers = answers.atoms_as_string
+    assert next(answers) == {'edge(4,"s…lp.")', 'r_e_l(1,2)'}
+    answers.careful_parsing
     assert next(answers) == {'edge(4,"s…lp.")', 'r_e_l(1,2)'}
