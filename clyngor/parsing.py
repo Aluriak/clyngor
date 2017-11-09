@@ -173,48 +173,71 @@ class Parser:
 
     def parse_clasp_output(self, output:iter or str, *, yield_stats:bool=False,
                            yield_info:bool=False):
-        """Yield pairs (payload type, payload) where type is 'info', 'statistics'
-        or 'answer' and payload the raw information.
-
-        output -- iterable of lines or full clasp output to parse
-        yield_stats -- yields final statistics as a mapping {field: value}
-                       under type 'statistics'
-        yield_info  -- yields first lines not related to first answer
-                       under type 'info' as a tuple of lines
-
-        In any case, tuple ('answer', termset) will be returned
-        with termset a frozenset instance containing all atoms in the found model.
-
-        See test/test_parsing.py for examples.
+        """Decorator over the parse_clasp_output module function,
+        where the answers are parsed using self.parse_terms method.
 
         """
-        REGEX_ANSWER_HEADER = re.compile(r"Answer: [0-9]+")
-        output = iter(output.splitlines() if isinstance(output, str) else output)
-        modes = iter(('info', 'answers', 'statistics'))
-        mode = next(modes)
+        parsed = parse_clasp_output(output, yield_stats=yield_stats,
+                                    yield_info=yield_info)
+        for type, payload in parsed:
+            if type == 'answer':
+                yield type, self.parse_terms(payload)
+            else:
+                yield type, payload
 
-        # all lines until meeting "Answer: 1" belongs to the info lines
-        info = []
-        line = ''
+
+def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
+                       yield_opti:bool=False, yield_info:bool=False):
+    """Yield pairs (payload type, payload) where type is 'info', 'statistics'
+    or 'answer' and payload the raw information.
+
+    output -- iterable of lines or full clasp output to parse
+    yield_stats -- yields final statistics as a mapping {field: value}
+                   under type 'statistics'
+    yield_opti  -- yields line sometimes following an answer set,
+                   beginning with 'Optimization: '.
+    yield_info  -- yields all lines not included in other types, including the
+                   first lines not related to first answer
+                   under type 'info' as a tuple of lines
+
+    In any case, tuple ('answer', termset) will be returned
+    with termset a string containing the raw data.
+
+    """
+    ASW_FLAG, OPT_FLAG = 'Answer: ', 'Optimization: '
+    output = iter(output.splitlines() if isinstance(output, str) else output)
+
+    # get the first lines
+    line = next(output)
+    infos = []
+    while not line.startswith(ASW_FLAG):
+        infos.append(line)
         line = next(output)
-        while not REGEX_ANSWER_HEADER.fullmatch(line):
-            info.append(line)
-            line = next(output)
-        if yield_info:
-            yield 'info', tuple(info)
 
-        # first answer begins
-        while True:
-            if REGEX_ANSWER_HEADER.fullmatch(line):
-                next_line = next(output)
-                answer = self.parse_terms(next_line)
-                yield 'answer', answer
-            if not line.strip():  # empty line: statistics are beginning
-                if not yield_stats: break  # stats are the last part of the output
-                stats = {}
-                for line in output:
-                    sep = line.find(':')
-                    key, value = line[:sep], line[sep+1:]
-                    stats[key.strip()] = value.strip()
-                yield 'statistics', stats
-            line = next(output)
+    print('FIRST NON INFO LINE:', line)
+    # first answer begins
+    while True:
+        if line.startswith(ASW_FLAG):
+            print('LINE: answer')
+            yield 'answer', next(output)
+        elif line.startswith(OPT_FLAG):
+            print('LINE: optimization', int(line[len(OPT_FLAG):].strip()))
+            yield 'optimization', int(line[len(OPT_FLAG):].strip())
+        elif not line.strip():  # empty line: statistics are beginning
+            if not yield_stats: break  # stats are the last part of the output
+            stats = {}
+            for line in output:
+                sep = line.find(':')
+                key, value = line[:sep], line[sep+1:]
+                stats[key.strip()] = value.strip()
+            yield 'statistics', stats
+            print('LINE: statistics', stats)
+            break
+        else:  # should not happen
+            infos.append(line)
+        line = next(output)
+
+    if yield_info:
+        yield 'info', tuple(infos)
+
+parse_clasp_output.out_types = ('info', 'answers', 'optimization, ''statistics')  # the order is the one in clingo input
