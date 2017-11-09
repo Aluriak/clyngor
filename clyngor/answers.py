@@ -16,10 +16,21 @@ class Answers:
 
     """
 
-    def __init__(self, answers:iter, command:str=''):
-        """Answer sets must be iterable of (predicate, args)"""
+    def __init__(self, answers:iter, command:str='', statistics:dict={},
+                 *, with_optimization:bool=False):
+        """Answer sets must be iterable of (predicate, args).
+
+        with_optimization -- answers are read as ((predicate, args), optimization)
+                             allowing to retrieve optimization data of the answers.
+                             See also Answers.with_optimization property.
+
+        """
+        if not with_optimization:
+            # emulate optimization with None value
+            answers = ((answer, None) for answer in answers)
         self._answers = iter(answers)
         self._command = str(command or '')
+        self._statistics = dict(statistics or {})
         self._first_arg_only = False
         self._group_atoms = False
         self._as_pyasp = False
@@ -29,9 +40,16 @@ class Answers:
         self._collapse_args = True
         self._parse_int = True
         self._ignore_args = False
+        self._with_optimization = False
 
     @property
     def command(self) -> str:  return self._command
+
+    @property
+    def with_optimization(self):
+        """Yield (model, optimization) instead of just model"""
+        self._with_optimization = True
+        return self
 
     @property
     def first_arg_only(self):
@@ -109,10 +127,11 @@ class Answers:
 
     def __iter__(self):
         """Yield answer sets"""
-        for answer_set in self._answers:
+        for answer_set, optimization in self._answers:
             answer_set = self._parse_answer(answer_set)
             answer_set = tuple(answer_set)
-            yield self._format(answer_set)
+            parsed = self._format(answer_set)
+            yield (parsed, optimization) if self._with_optimization else parsed
 
 
     def _parse_answer(self, answer_set:str) -> iter:
@@ -183,3 +202,7 @@ class Answers:
     def _atoms_as_string(self) -> bool:
         """Shortcut"""
         return self._collapse_atoms and self._collapse_args
+
+    @property
+    def statistics(self) -> dict:
+        return dict(self._statistics)
