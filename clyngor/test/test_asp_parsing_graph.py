@@ -20,8 +20,18 @@ def asp_source_and_graph():
             7: {5},
         },
         "a(1).  p(X):- a(X).": {1: {0}},
-        "p(X):- a(X). q(X):- p(X) ; q(X).": {1: {0, 1}},
+        "p(X):- a(X).  q(X):- p(X) ; q(X).": {1: {0, 1}},
     }.items()
+
+
+def test_endpoints(asp_source_and_graph):
+    sources, targets = asp_parsing.program_to_endpoints("a(1).  p(X):- a(X).")
+    assert targets == {'a': {0}, 'p': {1}}
+    assert sources == {'a': {1}}
+
+    sources, targets = asp_parsing.program_to_endpoints("p(X):- a(X).  q(X):- p(X) ; q(X).")
+    assert targets == {'p': {0}, 'q': {1}}
+    assert sources == {'p': {1}, 'q': {1}, 'a': {0}}
 
 
 def test_interdependency_graph(asp_source_and_graph):
