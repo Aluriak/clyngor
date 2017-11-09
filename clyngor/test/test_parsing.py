@@ -18,7 +18,7 @@ def test_simple_case():
             assert type == 'info'
             info = payload
     assert len(models) == 2
-    assert info == ('clasp version 3.2.0', 'Reading from stdin', 'Solving...')
+    assert info == ('clasp version 3.2.0', 'Reading from stdin', 'Solving...', 'SATISFIABLE')
     assert stats == {'Models': '2', 'Calls': '1', 'CPU Time': '0.000s',
                      'Time': '0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)'}
 
@@ -113,10 +113,12 @@ def test_time_limit():
         'Time': '4.000s (Solving: 2.82s 1st Model: 0.01s Unsat: 0.00s)',
         'CPU Time': '3.980s',
     }
-    expected_info = tuple(OUTCLASP_TIME_LIMIT.splitlines()[:3])
+    expected_info = tuple(OUTCLASP_TIME_LIMIT.splitlines()[:3] + ['SATISFIABLE'])
     expected_answer = iter((
         ((('a', ()),)), ((('b', ()),)), ((('c', ()),))
     ))
+    expected_optimization = iter((597337713, 597301761, 597301577))
+    all_infos = []
     for type, model in parsed:
         if type == 'statistics':
             assert model == expected_stats
@@ -124,6 +126,8 @@ def test_time_limit():
             assert model == expected_info
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
+        elif type == 'optimization':
+            assert model == next(expected_optimization)
         else:  # impossible
             assert False
 
