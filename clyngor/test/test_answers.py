@@ -30,6 +30,15 @@ def noarg_answers():
         'd e f',
     ))
 
+@pytest.fixture
+def optimized_answers():
+    return Answers((
+        ('edge(4,"s…lp.") r_e_l(1,2)', 1),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 2),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 3),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 4),
+    ), with_optimization=True)
+
 
 def test_multiple_tunning_no_arg(noarg_answers):
     answers = noarg_answers.no_arg
@@ -76,3 +85,12 @@ def test_multiple_args_in_atoms(multiple_args):
     assert next(answers) == {'edge(4,"s…lp.")', 'r_e_l(1,2)'}
     answers.careful_parsing
     assert next(answers) == {'edge(4,"s…lp.")', 'r_e_l(1,2)'}
+
+
+def test_optimization_access(optimized_answers):
+    answers = optimized_answers.with_optimization
+    assert next(answers) == ({('edge', (4, '"s…lp."')), ('r_e_l', (1, 2))}, 1)
+    answers = answers.no_arg
+    assert next(answers) == ({'edge', 'r_e_l'}, 2)
+    answers.atoms_as_string
+    assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 3)
