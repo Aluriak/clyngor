@@ -6,13 +6,6 @@ run:
 	python -m clyngor
 
 
-upload:
-	python setup.py sdist upload
 
-install:
-	- yes y | pip uninstall clyngor
-	python setup.py install
-
-remote_install:
-	- yes y | pip uninstall clyngor
-	pip install clyngor
+install_deps:
+	python -c "import configparser; c = configparser.ConfigParser(); c.read('setup.cfg'); print(c['options']['install_requires'])" | xargs pip install -U
