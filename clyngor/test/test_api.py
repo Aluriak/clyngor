@@ -59,14 +59,14 @@ def test_api_solve():
 
 def test_api_command():
     files = ('a.lp', 'b.lp')
-    cmd = command(files, nb_model=3)
+    cmd = command(files, nb_model=3, stats=False)
     assert cmd == [CLINGO_BIN_PATH, *files, '-n 3']
 
     files = ('a.lp', 'b.lp', 'c')
     clyngor.CLINGO_BIN_PATH = '/usr/bin/clingo'  # NB: this have serious side effects. If any fail happen before the restauration, all other tests may fail.
     cmd = command(files, nb_model=0)
     clyngor.CLINGO_BIN_PATH = 'clingo'
-    assert cmd == ['/usr/bin/clingo', *files, '-n 0']
+    assert cmd == ['/usr/bin/clingo', '--stats', *files, '-n 0']
 
 
 def test_api_asp(asp_code):

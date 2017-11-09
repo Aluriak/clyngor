@@ -10,12 +10,13 @@ import subprocess
 import clyngor
 from clyngor.answers import Answers
 from clyngor.utils import cleaned_path
+from clyngor.parsing import parse_clasp_output
 
 
 def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
-          clean_path:bool=True) -> iter:
+          clean_path:bool=True, stats:bool=True) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -25,6 +26,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
     clean_path -- clean the path of given files before using them
+    stats -- will ask clingo for all stats, instead of just the minimal ones
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -34,7 +36,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     """
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
-    run_command = command(files, options, inline, nb_model, time_limit, constants)
+    run_command = command(files, options, inline, nb_model, time_limit, constants, stats)
     if print_command:
         print(run_command)
 
@@ -44,19 +46,43 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         stdout = subprocess.PIPE,
         shell=bool(subproc_shell),
     )
+    stdout = (line.decode() for line in clingo.stdout)
 
-    def gen_answers():
-        stdout = iter(clingo.stdout)
-        while True:
-            cur_line = next(stdout).decode()
-            if cur_line.startswith('Answer: '):
-                yield next(stdout).decode()
 
-    return Answers(gen_answers(), command=' '.join(run_command))
+    statistics = {}
+    def gen_answers(stdout:dict=stdout, statistics:dict=statistics) -> (str, int or None):
+        """Yield 2-uplet (answer set, optimization),
+        and update given statistics dict with statistics payloads
+
+        """
+        answer = None  # is used to generate a model only when we are sur there is (no) optimization
+        for ptype, payload in parse_clasp_output(stdout, yield_stats=True):
+            if ptype == 'answer':
+                if answer is not None:
+                    yield answer, None  # no optimization to yield
+                answer = payload
+            elif ptype == 'optimization':
+                if answer is not None:
+                    yield answer, payload
+                    answer = None
+                else:
+                    assert False, "Optimization line without answer: " + repr(payload)
+            elif ptype == 'statistics':
+                statistics.update(payload)
+            elif ptype == 'info':
+                pass  # don't care
+            else:
+                assert ptype in parse_clasp_output.out_types, 'solving.parse_clasp_output yields an unexpceted type ' + repr(ptype)
+        if answer is not None:  # if no optimization, probably one miss
+            yield answer, None
+
+    return Answers(gen_answers(), command=' '.join(run_command),
+                   statistics=statistics, with_optimization=True)
 
 
 def command(files:iter=(), options:iter=[], inline:str=None,
-            nb_model:int=0, time_limit:int=0, constants:dict={}) -> iter:
+            nb_model:int=0, time_limit:int=0, constants:dict={},
+            stats:bool=True) -> iter:
     """Return the shell command running the solver on given files,
     with given options.
 
@@ -68,6 +94,7 @@ def command(files:iter=(), options:iter=[], inline:str=None,
     nb_model -- number of model to output (0 for all (default))
     time_limit -- zero or number of seconds to wait before interrupting solving
     constants -- mapping name -> value of constants for the grounding
+    stats -- True to provides the --stats flag
 
     """
     files = [files] if isinstance(files, str) else list(files)
@@ -94,6 +121,8 @@ def command(files:iter=(), options:iter=[], inline:str=None,
             raise ValueError("Number of model must be >= 0.")
     else:
         nb_model = 0
+    if stats:
+        options.append('--stats')
 
     return [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
 
