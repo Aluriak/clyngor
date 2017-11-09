@@ -68,11 +68,13 @@ def answer_set_from_str(line:str, collapse_atoms:bool=False,
 
 
 def save_answers_in_file(answers:iter, filename:str or None=None,
+                         atom_separator:str=' ',
                          answer_separator:str='\n', end:str='') -> str:
     """Return the name of the file in which the answer sets are written.
 
     answers -- iterable of answer set to write
     filename -- file to write ; if None, a temporary file will be created
+    atom_separator -- string placed between each atom
     answer_separator -- string placed between each answer set
     end -- string written at the end
 
@@ -81,7 +83,7 @@ def save_answers_in_file(answers:iter, filename:str or None=None,
         with tempfile.NamedTemporaryFile('w', delete=False) as ofd:
             filename = ofd.name
     with open(filename, 'w') as ofd:
-        ofd.write(answer_separator.join(answer_set_to_str(answer)
+        ofd.write(answer_separator.join(answer_set_to_str(answer, atom_sep=atom_separator)
                                         for answer in answers) + end)
     return filename
 
