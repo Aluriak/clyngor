@@ -16,7 +16,8 @@ from clyngor.parsing import parse_clasp_output
 def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
-          clean_path:bool=True, stats:bool=True) -> iter:
+          clean_path:bool=True, stats:bool=True,
+          clingo_bin_path:str=None) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -27,6 +28,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     print_command -- print full command to stdout before running it
     clean_path -- clean the path of given files before using them
     stats -- will ask clingo for all stats, instead of just the minimal ones
+    clingo_bin_path -- the path to the clingo binary
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -36,7 +38,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     """
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
-    run_command = command(files, options, inline, nb_model, time_limit, constants, stats)
+    run_command = command(files, options, inline, nb_model, time_limit,
+                          constants, stats, clingo_bin_path=clingo_bin_path)
     if print_command:
         print(run_command)
 
@@ -82,13 +85,14 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
 def command(files:iter=(), options:iter=[], inline:str=None,
             nb_model:int=0, time_limit:int=0, constants:dict={},
-            stats:bool=True) -> iter:
+            stats:bool=True, clingo_bin_path:str=None) -> iter:
     """Return the shell command running the solver on given files,
     with given options.
 
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
     inline -- ASP source code to feed the solver with
+    clingo_bin_path -- the path to the clingo binary
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -124,13 +128,14 @@ def command(files:iter=(), options:iter=[], inline:str=None,
     if stats:
         options.append('--stats')
 
-    return [clyngor.CLINGO_BIN_PATH, *options, *files, '-n ' + str(nb_model)]
+    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH,
+            *options, *files, '-n ' + str(nb_model)]
 
 
-def clingo_version() -> dict:
+def clingo_version(clingo_bin_path:str=None) -> dict:
     """Return clingo's version information in a dict"""
     clingo = subprocess.Popen(
-        [clyngor.CLINGO_BIN_PATH, '--version', '--outf=2'],
+        [clingo_bin_path or clyngor.CLINGO_BIN_PATH, '--version', '--outf=2'],
         stderr = subprocess.PIPE,
         stdout = subprocess.PIPE,
     )
