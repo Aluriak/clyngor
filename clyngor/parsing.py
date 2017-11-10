@@ -214,14 +214,11 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
         infos.append(line)
         line = next(output)
 
-    print('FIRST NON INFO LINE:', line)
     # first answer begins
     while True:
         if line.startswith(ASW_FLAG):
-            print('LINE: answer')
             yield 'answer', next(output)
         elif line.startswith(OPT_FLAG):
-            print('LINE: optimization', int(line[len(OPT_FLAG):].strip()))
             yield 'optimization', int(line[len(OPT_FLAG):].strip())
         elif not line.strip():  # empty line: statistics are beginning
             if not yield_stats: break  # stats are the last part of the output
@@ -231,7 +228,6 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
                 key, value = line[:sep], line[sep+1:]
                 stats[key.strip()] = value.strip()
             yield 'statistics', stats
-            print('LINE: statistics', stats)
             break
         else:  # should not happen
             infos.append(line)
