@@ -43,6 +43,12 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     if print_command:
         print(run_command)
 
+    if not files and not inline:
+        # in this case, clingo will wait for stdin input, which will never come
+        # so better not call clingo at all
+        return Answers((), command=' '.join(run_command))
+
+
     clingo = subprocess.Popen(
         run_command,
         stderr = subprocess.PIPE,

@@ -78,7 +78,7 @@ def test_api_asp(asp_code):
 
 
 def test_api_inline_by_solve(asp_code):
-    answers = solve([], inline=asp_code)
+    answers = solve((), inline=asp_code)
     found = set()
     for answer in answers.by_predicate.sorted.first_arg_only:
         found.add(''.join(answer['obj']) + '×' + ''.join(answer['att']))
@@ -118,3 +118,17 @@ ap(42):- ok(42) ; rel(_,Y) ; not rel(X,Y): obj(X).
 bl(42):- ok(42) ; not rel(_,Y).
 bl(42):- ok(42) ; not not rel(X,Y): obj(X).
 """.strip()
+
+
+def test_no_input(capsys):
+    """This test ensure that empty input do not lead the code to wait forever
+    clingo to finish, since it will just wait for stdin input.
+
+    So if this test takes time to run, you know why.
+
+    Note the use of capsys fixture, allowing to disable the input patching
+    that make it fail automatically, and therefore disturbing the functionality.
+
+    """
+    with capsys.disabled():
+        assert tuple(clyngor.solve((), inline='')) == ()
