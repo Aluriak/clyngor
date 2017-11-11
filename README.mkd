@@ -61,6 +61,14 @@ Currently, there is only one way to see all chaining operator available:
 
 
 
+## Debugging
+TODO: Clyngor is also able to parse an ASP program to generate debugging help.
+
+## Solver scripting
+TODO: Clyngor is able to manage python inside ASP source code, allowing user to fully control the solving.
+
+
+
 ## Alternatives
 [pyasp](https://github.com/sthiele/pyasp) comes into mind, but do not (yet) supports clingo alone.
 
