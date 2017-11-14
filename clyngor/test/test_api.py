@@ -132,3 +132,27 @@ def test_no_input(capsys):
     """
     with capsys.disabled():
         assert tuple(clyngor.solve((), inline='')) == ()
+
+
+def test_syntax_error():
+    with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
+        tuple(clyngor.solve((), inline='invalid'))
+    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.lineno == 2
+    assert excinfo.value.offset == (1, 2)
+    assert excinfo.value.msg.startswith('unexpected EOF in file /tmp/tmp')
+    assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
+
+
+def test_undefined_warning():
+    with pytest.raises(clyngor.ASPWarning) as excinfo:
+        tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True))
+    assert excinfo.value.atom == 'c'
+    assert len(excinfo.value.args) == 1
+    start = "atom 'c' does not occur in any rule head in file /tmp/tmp"
+    assert excinfo.value.args[0].startswith(start)
+    assert excinfo.value.args[0].endswith(" at line 1 and column 5-6")
+
+    # NB: the following should NOT raise any error (default value)
+    tuple(clyngor.solve((), inline='b:- c.', error_on_warning=False))
+    tuple(clyngor.solve((), inline='b:- c.'))
