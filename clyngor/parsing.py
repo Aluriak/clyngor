@@ -237,3 +237,27 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
         yield 'info', tuple(infos)
 
 parse_clasp_output.out_types = ('info', 'answers', 'optimization, ''statistics')  # the order is the one in clingo input
+
+
+def validate_clasp_stderr(stderr:iter or str) -> iter:
+    """Parse stderr of clingo, detect and yield defects lines in form of dict"""
+    reg_err = re.compile(r'(.+):([0-9]+):([0-9]+)-([0-9]+): (\w+): ([\s\w,:]+)')
+    while True:
+        line = next(stderr).strip()
+        err_match = reg_err.fullmatch(line)
+        if err_match:
+            data = dict(zip(('filename', 'lineno', 'char_beg', 'char_end', 'level', 'message'), err_match.groups()))
+            for int_field in ('lineno', 'char_beg', 'char_end'):
+                data[int_field] = int(data[int_field])
+            data['text'] = line
+            data['human message'] = '{} in file {} at line {} and column {}-{}'.format(
+                data['message'].strip(':,'), data['filename'], data['lineno'], data['char_beg'], data['char_end']
+            )
+
+            # special cases
+            if 'atom does not occur in any rule head' in data['text']:
+                data['atom'] = next(stderr).strip()
+                data['human message'] = "atom '{}' does not occur in any rule head in file {} at line {} and column {}-{}".format(
+                    data['atom'], data['filename'], data['lineno'], data['char_beg'], data['char_end']
+                )
+            yield data
