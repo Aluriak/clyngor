@@ -95,8 +95,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
                 raise ASPSyntaxError(
                     payload['human message'][len('syntax error, '):],
                     (payload['filename'], payload['lineno'],
-                     (payload['char_beg'], payload['char_end']),
-                     payload['text']), payload=payload)
+                     payload['char_beg'], payload['text']),
+                    payload=payload)
             elif payload['level'] in {'warning', 'info'}:
                 if error_on_warning:
                     raise ASPWarning(payload['human message'], payload)

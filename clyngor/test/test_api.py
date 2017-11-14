@@ -139,7 +139,8 @@ def test_syntax_error():
         tuple(clyngor.solve((), inline='invalid'))
     assert excinfo.value.filename.startswith('/tmp/tmp')
     assert excinfo.value.lineno == 2
-    assert excinfo.value.offset == (1, 2)
+    assert excinfo.value.offset == 1
+    assert excinfo.value.payload['char_end'] == 2
     assert excinfo.value.msg.startswith('unexpected EOF in file /tmp/tmp')
     assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
 
