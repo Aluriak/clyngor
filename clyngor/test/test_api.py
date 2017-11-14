@@ -145,6 +145,26 @@ def test_syntax_error():
     assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
 
 
+def test_syntax_error_semicolon():
+    with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
+        tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").'))
+    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.lineno == 1
+    assert excinfo.value.offset == 16
+    assert excinfo.value.msg.startswith('unexpected ; in file /tmp/tmp')
+    assert excinfo.value.msg.endswith(' at line 1 and column 16-17')
+
+
+def test_syntax_error_brace():
+    with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
+        tuple(clyngor.solve((), inline='color(X,red):- {{}}.'))
+    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.lineno == 1
+    assert excinfo.value.offset == 17
+    assert excinfo.value.msg.startswith('unexpected { in file /tmp/tmp')
+    assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
+
+
 def test_undefined_warning():
     with pytest.raises(clyngor.ASPWarning) as excinfo:
         tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True))

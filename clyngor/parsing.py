@@ -241,7 +241,7 @@ parse_clasp_output.out_types = ('info', 'answers', 'optimization, ''statistics')
 
 def validate_clasp_stderr(stderr:iter or str) -> iter:
     """Parse stderr of clingo, detect and yield defects lines in form of dict"""
-    reg_err = re.compile(r'(.+):([0-9]+):([0-9]+)-([0-9]+): (\w+): ([\s\w,:]+)')
+    reg_err = re.compile(r'(.+):([0-9]+):([0-9]+)-([0-9]+): (\w+): (.+)')
     while True:
         line = next(stderr).strip()
         err_match = reg_err.fullmatch(line)
