@@ -6,6 +6,28 @@ import tempfile
 from clyngor import asp_parsing, parsing
 
 
+class ASPSyntaxError(SyntaxError):
+    """This is a SyntaxError, but without the filename at the end of the
+    string representation, and with a payload attached.
+
+    Used by solving module to indicate problems in generated files.
+
+    """
+    def __init__(self, *args, payload:dict, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.payload = payload
+
+    def __str__(self):
+        return self.msg
+
+class ASPWarning(ValueError):
+    """This is a ValueError, with a payload attached to it"""
+    def __init__(self, msg:str, payload:dict):
+        super().__init__(msg)
+        self.payload = payload
+        self.atom = payload['atom']
+
+
 def answer_set_to_str(answer_set:iter, atom_sep:str=' ') -> str:
     """Returns the string representation of given answer set.
 

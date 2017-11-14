@@ -9,15 +9,17 @@ import tempfile
 import subprocess
 import clyngor
 from clyngor.answers import Answers
-from clyngor.utils import cleaned_path
-from clyngor.parsing import parse_clasp_output
+from clyngor.utils import cleaned_path, ASPSyntaxError, ASPWarning
+from clyngor.parsing import parse_clasp_output, validate_clasp_stderr
+
+
 
 
 def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
           clean_path:bool=True, stats:bool=True,
-          clingo_bin_path:str=None) -> iter:
+          clingo_bin_path:str=None, error_on_warning:bool=False) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -29,6 +31,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     clean_path -- clean the path of given files before using them
     stats -- will ask clingo for all stats, instead of just the minimal ones
     clingo_bin_path -- the path to the clingo binary
+    error_on_warning -- raise an ASPWarning when encountering a clingo warning
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default))
@@ -51,15 +54,16 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
     clingo = subprocess.Popen(
         run_command,
-        stderr = subprocess.PIPE,
-        stdout = subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         shell=bool(subproc_shell),
     )
     stdout = (line.decode() for line in clingo.stdout)
+    stderr = (line.decode() for line in clingo.stderr)
 
 
     statistics = {}
-    def gen_answers(stdout:dict=stdout, statistics:dict=statistics) -> (str, int or None):
+    def gen_answers(stdout:iter=stdout, stderr:iter=stderr, statistics:dict=statistics) -> (str, int or None):
         """Yield 2-uplet (answer set, optimization),
         and update given statistics dict with statistics payloads
 
@@ -84,6 +88,22 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
                 assert ptype in parse_clasp_output.out_types, 'solving.parse_clasp_output yields an unexpceted type ' + repr(ptype)
         if answer is not None:  # if no optimization, probably one miss
             yield answer, None
+
+        # handle stderr
+        for payload in validate_clasp_stderr(stderr):
+            if payload['level'] == 'error' and payload['message'].startswith('syntax error, '):
+                raise ASPSyntaxError(
+                    payload['human message'][len('syntax error, '):],
+                    (payload['filename'], payload['lineno'],
+                     (payload['char_beg'], payload['char_end']),
+                     payload['text']), payload=payload)
+            elif payload['level'] in {'warning', 'info'}:
+                if error_on_warning:
+                    raise ASPWarning(payload['human message'], payload)
+                else:
+                    pass  # do nothing, user said
+            else:
+                raise SystemError("Clingo yield a non-handled error " + repr(payload))
 
     return Answers(gen_answers(), command=' '.join(run_command),
                    statistics=statistics, with_optimization=True)
