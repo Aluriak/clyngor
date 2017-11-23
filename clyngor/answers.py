@@ -172,7 +172,7 @@ class Answers:
         builder = sorted_tuple if self._sorted else frozenset
         if self._atoms_as_string:  # special case
             return frozenset(answer_set)
-        if self._ignore_args:
+        elif self._ignore_args:
             answer_set = (pred for pred, _ in answer_set)
             if self._group_atoms:
                 return {pred: frozenset() for pred in answer_set}
