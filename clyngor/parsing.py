@@ -11,9 +11,6 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
     """Implement both the grammar and the way to handle it, dedicated to the
     parsing of ASP like string to produce frozenset instances.
 
-    This is a more complex version than AtomVisitor, because implementing
-    special use cases, notably partial cut of parsed atoms.
-
     collapse_args: function terms in predicate arguments are collapsed into strings
     collapse_atoms: atoms (predicate plus terms) are collapsed into strings
                    requires that collapse_args is True
@@ -69,47 +66,6 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         return terms
 
 
-class AtomVisitor(ap.PTNodeVisitor):
-    """Implement both the grammar and the way to handle it, dedicated to the
-    parsing of ASP like string to produce frozenset instances.
-
-    This is a simpler version than CollapsableAtomVisitor, which implement
-    special use cases, notably partial cut of parsed atoms.
-
-    """
-    def __init__(self, parse_integer:bool=True):
-        super().__init__()
-        self._int_builder = int if parse_integer else str
-
-    def visit_number(self, node, children):
-        return self._int_builder(node.value)
-
-    def visit_args(self, node, children):
-        return children
-
-    def visit_text(self, node, children):
-        text = tuple(children)[0]
-        return '"' + text + '"'
-
-    def visit_term(self, node, children):
-        predicate, *args = children
-        return (predicate, tuple(args[0])) if args else predicate
-
-    def visit_terms(self, node, children):
-        return frozenset(children)
-
-    @staticmethod
-    def grammar():
-        def ident():      return ap.RegExMatch(r'[a-z][a-zA-Z0-9_]*')
-        def number():     return ap.RegExMatch(r'-?[0-9]+')
-        def text():       return ap.ZeroOrMore([r'\"', ap.RegExMatch(r'[^"]*')])
-        def litteral():   return [('"', text, '"'), number]
-        def args():       return term, ap.ZeroOrMore(',', term)
-        def term():       return [(ident, ap.Optional("(", args, ")")), litteral]
-        def terms():      return ap.ZeroOrMore(term)
-        return terms
-
-
 class Parser:
     def __init__(self, collapse_atoms=False, collapse_args=True, callback=None,
                  parse_integer:bool=True):
@@ -147,14 +103,11 @@ class Parser:
         """
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
-        if not self.collapse_args and not self.collapse_atoms:  # optimized case
-            self.atom_visitor = AtomVisitor(parse_integer)
-        else:
-            self.atom_visitor = CollapsableAtomVisitor(
-                bool(collapse_args),
-                bool(collapse_atoms),
-                parse_integer
-            )
+        self.atom_visitor = CollapsableAtomVisitor(
+            bool(collapse_args),
+            bool(collapse_atoms),
+            parse_integer
+        )
         self.grammar = self.atom_visitor.grammar()
         self.callback = callback
         if self.collapse_atoms and not self.collapse_args:
