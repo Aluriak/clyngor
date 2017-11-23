@@ -130,6 +130,9 @@ class Parser:
             >>> Parser(False, False).parse_terms('a(b,c(d))')
             frozenset({('a', ('b', ('c', ('d',))))})
 
+            >>> Parser(False, False).parse_terms('a')
+            frozenset({('a', ())})
+
             >>> Parser(True, False).parse_terms('a(b,c(d))')  # doctest: +IGNORE_EXCEPTION_DETAIL
             Traceback (most recent call last):
             ...

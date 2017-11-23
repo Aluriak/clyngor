@@ -40,6 +40,16 @@ def optimized_answers():
     ), with_optimization=True)
 
 
+def test_parsing_args_when_noargs(noarg_answers):
+    answers = noarg_answers
+    assert next(answers) == frozenset()
+    assert next(answers) == {('a', ())}
+    answers = noarg_answers.parse_args
+    assert next(answers) == {('b', ()), ('c', ())}
+    answers.by_predicate
+    assert next(answers) == {'d': frozenset(), 'e': frozenset(), 'f': frozenset()}
+
+
 def test_multiple_tunning_no_arg(noarg_answers):
     answers = noarg_answers.no_arg
     assert next(answers) == frozenset()
