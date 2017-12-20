@@ -129,7 +129,7 @@ No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50
 
 ## Further ideas
 - [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
-- ASP source code debugging generator
+- ASP source code debugging generator (started in [clyngor-parser](clyngor-parser))
 
 
 ## from pyasp to clyngor

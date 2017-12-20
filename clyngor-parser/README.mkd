@@ -1,0 +1,12 @@
+# Clyngor-parser
+This is a subproject of clyngor, a poc around the concept of ASP code manipulation from python.
+
+Various application:
+
+- code autoformatting
+- code autodocumentation: autocomments, call graph
+- code debugging by inserting rules as described in *TODO: insert ref*
+- code generation and high-level manipulation
+
+Current implementation consist of 2 parsers working together (one in the big, the other in the small).
+Run package for application example.
