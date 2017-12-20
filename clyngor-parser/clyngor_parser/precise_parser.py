@@ -9,8 +9,8 @@ For a more high level parser, see byline_parser.
 
 import arpeggio as ap
 
-from clyngor.asp_parsing import asp_grammar, asp_grammar_comments
-from clyngor.asp_parsing import alt_parse
+from clyngor_parser import asp_grammar, asp_grammar_comments
+from clyngor_parser import alt_parse
 
 
 def parse_asp_program_by_arpeggio(asp_source_code:str, do=None, have_comments:bool=True) -> tuple:

@@ -2,9 +2,8 @@
 
 """
 
-from clyngor import asp_parsing
-from clyngor.asp_parsing import precise_parser
-from clyngor.asp_parsing import byline_parser
+from clyngor_parser import precise_parser
+from clyngor_parser import byline_parser
 
 
 

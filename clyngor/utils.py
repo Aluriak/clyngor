@@ -3,7 +3,7 @@
 
 import os
 import tempfile
-from clyngor import asp_parsing, parsing
+from clyngor import parsing
 
 
 class ASPSyntaxError(SyntaxError):

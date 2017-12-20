@@ -1,7 +1,5 @@
-
-import random
 import pytest
-from clyngor import asp_parsing
+import clyngor_parser
 
 
 @pytest.fixture
@@ -25,16 +23,16 @@ def asp_source_and_graph():
 
 
 def test_endpoints(asp_source_and_graph):
-    sources, targets = asp_parsing.program_to_endpoints("a(1).  p(X):- a(X).")
+    sources, targets = clyngor_parser.program_to_endpoints("a(1).  p(X):- a(X).")
     assert targets == {'a': {0}, 'p': {1}}
     assert sources == {'a': {1}}
 
-    sources, targets = asp_parsing.program_to_endpoints("p(X):- a(X).  q(X):- p(X) ; q(X).")
+    sources, targets = clyngor_parser.program_to_endpoints("p(X):- a(X).  q(X):- p(X) ; q(X).")
     assert targets == {'p': {0}, 'q': {1}}
     assert sources == {'p': {1}, 'q': {1}, 'a': {0}}
 
 
 def test_interdependency_graph(asp_source_and_graph):
     for source, expected in asp_source_and_graph:
-        graph = asp_parsing.program_to_dependancy_graph(source)
+        graph = clyngor_parser.program_to_dependancy_graph(source)
         assert graph == expected

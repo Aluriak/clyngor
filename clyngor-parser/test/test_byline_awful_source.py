@@ -1,7 +1,6 @@
 
-from clyngor import ASP
-from clyngor.asp_parsing import byline_parser
-from clyngor.asp_parsing.byline_parser import SourceBlock
+from clyngor_parser import byline_parser
+from clyngor_parser.byline_parser import SourceBlock
 
 
 AWFUL_SOURCE = """
@@ -35,16 +34,6 @@ p(X):- q(X) % a comment inside a rule
 #show p/1.
 #show rel/2.
 """
-
-
-def test_solving():
-    """Prove that the program is valid"""
-    answers = tuple(ASP(AWFUL_SOURCE).by_predicate)
-    assert len(answers) == 1
-    for idx, answer in enumerate(answers):
-        assert 'p' not in answer
-        assert len(answer['rel']) == 5
-        assert answer['rel'] == {('a', 'b'), ('a', 'c'), ('a', 'd'), ('a', 'e'), ('b', 'c')}
 
 
 def test_byline_rebuild():

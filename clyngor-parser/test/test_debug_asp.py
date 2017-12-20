@@ -1,5 +1,5 @@
 
-from clyngor import asp_parsing
+import clyngor_parser
 
 
 def test_debug_lines():
@@ -7,7 +7,7 @@ def test_debug_lines():
         ('term', 'b', ('X',)),
         ('¬term', 'c', ('X',)),
     ))
-    lines = asp_parsing.debug.lines_for(rule, id=1)
+    lines = clyngor_parser.debug.lines_for(rule, id=1)
     print(lines)
     assert lines == (
         ('term', 'ok', ('1',)),

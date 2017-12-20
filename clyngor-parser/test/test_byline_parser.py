@@ -1,19 +1,8 @@
 
-from pprint import pprint
 import pytest
-from clyngor import ASP
-from clyngor.asp_parsing import byline_parser
-from clyngor.asp_parsing.byline_parser import SourceBlock
-
-
-def test_solving():
-    """Prove that the program is valid"""
-    answers = tuple(ASP(ASP_SOURCE).by_predicate)
-    assert len(answers) == 1
-    for idx, answer in enumerate(answers):
-        assert len(answer['p']) == 4
-        assert len(answer['rel']) == 4
-        assert answer['rel'] == {('a', 'b'), ('a', 'c'), ('a', 'd'), ('a', 'e')}
+from pprint import pprint
+from clyngor_parser import byline_parser
+from clyngor_parser.byline_parser import SourceBlock
 
 
 def test_byline_parsing():
