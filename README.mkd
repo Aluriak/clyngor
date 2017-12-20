@@ -64,9 +64,17 @@ Currently, there is only one way to see all chaining operator available:
 ## Debugging
 TODO: Clyngor is also able to parse an ASP program to generate debugging help.
 
+See [clyngor-parser](clyngor-parser) for implementation ideas.
+
+
 ## Solver scripting
 TODO: Clyngor is able to manage python inside ASP source code, allowing user to fully control the solving.
 
+### Propagators
+Clyngor provides the Propagator base class if you want to play with
+high-level propagators on top of the propagator API.
+
+Examples in [tests](clyngor/test/test_propagator_class.py).
 
 
 ## Alternatives
@@ -91,6 +99,10 @@ or through downloading and (compilation and) manual installation.
 By default, clyngor uses a very simple parser (yeah, `str.split`) in order to achieve time efficiency in most time.
 However, when asked to compute a particular output format (like `parse_args`) or an explicitely *careful parsing*,
 clyngor will use a much more robust parser (made with an [arpeggio](http://www.igordejanovic.net/Arpeggio/) grammar).
+
+### Official API embedding
+If [the clingo module](https://potassco.org/clingo/python-api/current/clingo.html) is importable,
+clyngor will use it instead of its interface. Parsing will then be both robust and quick.
 
 ### Import/export
 See the [`utils` module](clyngor/utils.py) and its [tests](clyngor/test/test_utils.py),
