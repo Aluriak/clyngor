@@ -91,18 +91,34 @@ or through downloading and (compilation and) manual installation.
 
 [See the doc](https://potassco.org/doc/start/).
 
+You may also want to install the [python clingo module](https://potassco.org/clingo/python-api/current/clingo.html),
+which is [an optional dependancy](#official-api-embedding).
 
 
+## Official API embedding
+If [the clingo module](https://potassco.org/clingo/python-api/current/clingo.html) is importable,
+clyngor will use it instead of its ad-hoc interface.
+Using the official API leads to the following changes :
+
+- both robust and quick parsing, instead of the simple vs slow method
+- in-process support for [propagators](#propagators)
+- some options are not supported : constants, time-limit, parsing error handling
+
+
+## Propagators
+Propagators are presented in [this paper](TODO). They are basically active
+observers of the solving process, able for instance to modify truth assignment
+and invalidate models.
+
+Clyngor offers an integrated interface to load easily propagators in a solving process.
+
+Note that the python clingo module is necessary for propagators be supported correctly.
 
 ## Tips
 ### Careful parsing
 By default, clyngor uses a very simple parser (yeah, `str.split`) in order to achieve time efficiency in most time.
 However, when asked to compute a particular output format (like `parse_args`) or an explicitely *careful parsing*,
 clyngor will use a much more robust parser (made with an [arpeggio](http://www.igordejanovic.net/Arpeggio/) grammar).
-
-### Official API embedding
-If [the clingo module](https://potassco.org/clingo/python-api/current/clingo.html) is importable,
-clyngor will use it instead of its interface. Parsing will then be both robust and quick.
 
 ### Import/export
 See the [`utils` module](clyngor/utils.py) and its [tests](clyngor/test/test_utils.py),
