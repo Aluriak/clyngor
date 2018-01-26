@@ -1,6 +1,6 @@
 t: tests
 tests:
-	python -m pytest -vv clyngor --doctest-module
+	python -m pytest -vv clyngor --doctest-module -rs
 
 run:
 	python -m clyngor
