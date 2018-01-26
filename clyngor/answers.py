@@ -129,8 +129,7 @@ class Answers:
     def __iter__(self):
         """Yield answer sets"""
         for answer_set, optimization in self._answers:
-            answer_set = self._parse_answer(answer_set)
-            answer_set = tuple(answer_set)
+            answer_set = tuple(self._parse_answer(answer_set))
             parsed = self._format(answer_set)
             yield (parsed, optimization) if self._with_optimization else parsed
 
@@ -167,6 +166,8 @@ class Answers:
     def _format(self, answer_set) -> dict or frozenset:
         """Perform the formatting of the answer set according to
         formatting options.
+
+        answer_set -- iterable of (pred, args)
 
         """
         sorted_tuple = lambda it: tuple(sorted(it))
