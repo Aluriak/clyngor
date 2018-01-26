@@ -117,19 +117,28 @@ Therefore, the two followings are equivalent ; but the first is more readable an
     solve('file.lp', options='-n ' + str(n))
 
 
-### Dinopython support
+
+
+## FAQ
+
+### Dinopython support ?
 No.
 
-### Contributions
+### Contributions ?
 Yes.
 
 ### Why clyngor ?
 No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50s).
 
 
+
+
 ## Further ideas
 - [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
 - ASP source code debugging generator (started in [clyngor-parser](clyngor-parser))
+- use official API for speeding up things when available (currently in-dev in branch [impl/propagators](https://github.com/Aluriak/clyngor/tree/impl/propagator))
+- add propagators in-process (currently in-dev in branch [impl/propagators](https://github.com/Aluriak/clyngor/tree/impl/propagator))
+
 
 
 ## from pyasp to clyngor
