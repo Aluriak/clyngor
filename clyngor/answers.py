@@ -4,6 +4,7 @@
 import re
 from collections import defaultdict
 
+import clyngor
 from clyngor import as_pyasp, parsing
 
 
@@ -206,3 +207,33 @@ class Answers:
     @property
     def statistics(self) -> dict:
         return dict(self._statistics)
+
+
+class ClingoAnswers(Answers):
+    """Proxy to the solver as called through the python clingo module.
+
+    """
+    def __init__(self, solver, statistics:callable=(lambda: {})):
+        assert clyngor.have_clingo_module()
+        super().__init__(())
+        self._solver = solver
+        self._statistics = lambda s=solver: json.dumps(s.statistics, sort_keys=True,
+                                                       indent=4, separators=(',', ': '))
+        assert callable(self._statistics)
+
+
+    def __iter__(self):
+        """Yield answer sets"""
+        def processed(args:iter) -> tuple: return tuple(map(str, args))
+        with self._solver.solve(yield_=True, async=True) as models:
+            for model in models:
+                answer_set = tuple((a.name, processed(a.arguments))
+                                   for a in model.symbols(atoms=True))
+                print('SBDFNC:', answer_set)
+                parsed = self._format(answer_set)
+                yield (parsed, optimization) if self._with_optimization else parsed
+
+
+    @property
+    def statistics(self) -> dict:
+        return self._statistics()
