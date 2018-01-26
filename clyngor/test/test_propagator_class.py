@@ -1,6 +1,7 @@
 """Tests the clyngor' Propagator class and the underlying API"""
 
-from clyngor import Propagator
+import clyngor
+import pytest
 
 
 ASP_CODE = """
@@ -9,7 +10,7 @@ p(X):- p(X-1) ; X<3.
 q(a,b,p(1)).
 """
 
-class MyPropagator(Propagator):
+class MyPropagator(clyngor.Propagator):
 
     def __init__(self):
         self.found_atoms = set()
@@ -22,6 +23,8 @@ class MyPropagator(Propagator):
         self.found_p.add(only_arg)
 
 
+@pytest.mark.skipif(not clyngor.have_clingo_module(),
+                    reason='requires clingo module')
 def test_the_subclass():
     prop = MyPropagator.run_with(ASP_CODE)
     for answer in prop.answers:

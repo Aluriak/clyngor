@@ -5,6 +5,8 @@ import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
 
+clingo_noncompliant = pytest.mark.skipif(clyngor.have_clingo_module(),
+                                         reason='clingo module do not support this feature')
 
 @pytest.fixture
 def asp_code():
@@ -118,6 +120,7 @@ def test_no_input(capsys):
         assert tuple(clyngor.solve((), inline='')) == ()
 
 
+@clingo_noncompliant
 def test_syntax_error():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='invalid'))
@@ -129,6 +132,7 @@ def test_syntax_error():
     assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
 
 
+@clingo_noncompliant
 def test_syntax_error_semicolon():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").'))
@@ -139,6 +143,7 @@ def test_syntax_error_semicolon():
     assert excinfo.value.msg.endswith(' at line 1 and column 16-17')
 
 
+@clingo_noncompliant
 def test_syntax_error_brace():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- {{}}.'))
@@ -149,6 +154,7 @@ def test_syntax_error_brace():
     assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
 
 
+@clingo_noncompliant
 def test_undefined_warning():
     with pytest.raises(clyngor.ASPWarning) as excinfo:
         tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True))

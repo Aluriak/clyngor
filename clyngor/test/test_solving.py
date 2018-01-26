@@ -1,7 +1,12 @@
 
 import pytest
 from .test_api import asp_code  # fixture
+import clyngor
 from clyngor import solve
+
+
+clingo_noncompliant = pytest.mark.skipif(clyngor.have_clingo_module(),
+                                         reason='clingo module do not support this feature')
 
 
 @pytest.fixture
@@ -13,6 +18,7 @@ def asp_code_with_constants():
     """
 
 
+@clingo_noncompliant
 def test_without_constants(asp_code_with_constants):
     answers = tuple(solve([], inline=asp_code_with_constants).by_predicate)
     assert len(answers) == 1
@@ -21,6 +27,7 @@ def test_without_constants(asp_code_with_constants):
     assert next(iter(answer)) == (1,)
 
 
+@clingo_noncompliant
 def test_constants(asp_code_with_constants):
     answers = tuple(solve([], inline=asp_code_with_constants,
                           constants={'a': 2}, print_command=True).by_predicate)
