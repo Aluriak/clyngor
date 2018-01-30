@@ -127,6 +127,28 @@ def test_time_limit():
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
         elif type == 'optimization':
+            assert model == (next(expected_optimization),)
+        else:  # impossible
+            assert False
+
+
+def test_multiple_opt_values():
+    parsed = Parser().parse_clasp_output(CLINGO_OUTPUT_MULTIPLE_OPT.splitlines())
+    expected_answer = iter((
+        (('a', ()),),
+        (('b', ()),),
+        (('c', ()),),
+    ))
+    expected_optimization = iter(((-10, 6), (-11, 6), (-13, 4)))
+    all_infos = []
+    for type, model in parsed:
+        if type == 'statistics':
+            assert False, 'no statistics'
+        elif type == 'info':
+            assert False, 'no info'
+        elif type == 'answer':
+            assert model == frozenset(next(expected_answer))
+        elif type == 'optimization':
             assert model == next(expected_optimization)
         else:  # impossible
             assert False
@@ -227,4 +249,28 @@ Models       : 0
 Calls        : 1
 Time         : 0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
 CPU Time     : 0.000s
+"""
+
+
+CLINGO_OUTPUT_MULTIPLE_OPT = """
+clingo version 5.2.2
+Reading from ...ergrasp/ASPsources/findbestbiclique.lp ...
+Solving...
+Answer: 1
+a
+Optimization: -10 6
+Answer: 2
+b
+Optimization: -11 6
+Answer: 3
+c
+Optimization: -13 4
+OPTIMUM FOUND
+
+Models       : 3
+  Optimum    : yes
+Optimization : -13 4
+Calls        : 1
+Time         : 0.012s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
+CPU Time     : 0.011s
 """
