@@ -4,6 +4,7 @@ from clyngor import solve
 
 # small helper ; to activate when dev
 deactivate = pytest.mark.skipif(False, reason="Takes time")
+# deactivate = pytest.mark.skipif(True, reason="Takes time")
 
 
 @deactivate
