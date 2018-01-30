@@ -34,7 +34,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     error_on_warning -- raise an ASPWarning when encountering a clingo warning
 
     Shortcut to clingo's options:
-    nb_model -- number of model to output (0 for all (default))
+    nb_model -- number of model to output (0 for all (default), None to disable)
     time_limit -- zero or number of seconds to wait before interrupting solving
     constants -- mapping name -> value of constants for the grounding
 
@@ -121,7 +121,7 @@ def command(files:iter=(), options:iter=[], inline:str=None,
     clingo_bin_path -- the path to the clingo binary
 
     Shortcut to clingo's options:
-    nb_model -- number of model to output (0 for all (default))
+    nb_model -- number of model to output (0 for all (default), None to disable)
     time_limit -- zero or number of seconds to wait before interrupting solving
     constants -- mapping name -> value of constants for the grounding
     stats -- True to provides the --stats flag
@@ -149,13 +149,13 @@ def command(files:iter=(), options:iter=[], inline:str=None,
             raise ValueError("Number of model must be int, not " + type(nb_model).__name__)
         if nb_model < 0:
             raise ValueError("Number of model must be >= 0.")
-    else:
-        nb_model = 0
+        options.append('-n ' + str(nb_model))
+    elif nb_model is not None:
+        options.append('-n 0')
     if stats:
         options.append('--stats')
 
-    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH,
-            *options, *files, '-n ' + str(nb_model)]
+    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH, *options, *files]
 
 
 def clingo_version(clingo_bin_path:str=None) -> dict:
