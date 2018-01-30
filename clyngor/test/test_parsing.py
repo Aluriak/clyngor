@@ -115,7 +115,7 @@ def test_time_limit():
     }
     expected_info = tuple(OUTCLASP_TIME_LIMIT.splitlines()[:3] + ['SATISFIABLE'])
     expected_answer = iter((
-        ((('a', ()),)), ((('b', ()),)), ((('c', ()),))
+        (('a', ()),), (('b', ()),), (('c', ()),)
     ))
     expected_optimization = iter((597337713, 597301761, 597301577))
     all_infos = []
