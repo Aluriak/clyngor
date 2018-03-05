@@ -19,7 +19,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
           clean_path:bool=True, stats:bool=True,
-          clingo_bin_path:str=None, error_on_warning:bool=False) -> iter:
+          clingo_bin_path:str=None, error_on_warning:bool=False,
+          force_tempfile:bool=False) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -32,6 +33,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     stats -- will ask clingo for all stats, instead of just the minimal ones
     clingo_bin_path -- the path to the clingo binary
     error_on_warning -- raise an ASPWarning when encountering a clingo warning
+    force_tempfile -- use tempfile, even if only inline code is given
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default), None to disable)
@@ -41,12 +43,15 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     """
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
+    stdin_feed = None  # data to send to stdin
+    if inline and not files and not force_tempfile:  # avoid tempfile if possible
+        stdin_feed, inline = inline, None
     run_command = command(files, options, inline, nb_model, time_limit,
                           constants, stats, clingo_bin_path=clingo_bin_path)
     if print_command:
         print(run_command)
 
-    if not files and not inline:
+    if not files and not inline and not stdin_feed:
         # in this case, clingo will wait for stdin input, which will never come
         # so better not call clingo at all
         return Answers((), command=' '.join(run_command))
@@ -54,10 +59,14 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
     clingo = subprocess.Popen(
         run_command,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         shell=bool(subproc_shell),
     )
+    if stdin_feed:
+        clingo.stdin.write(stdin_feed.encode())
+        clingo.stdin.close()
     stdout = (line.decode() for line in clingo.stdout)
     stderr = (line.decode() for line in clingo.stderr)
 
