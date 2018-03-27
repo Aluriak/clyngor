@@ -10,31 +10,37 @@ Handy python wrapper around [Potassco's Clingo](https://potassco.org/) [ASP solv
 Clyngor offers multiple interfaces. The followings are all equivalent.
 (they search for [formal concepts](https://en.wikipedia.org/wiki/Formal_concept_analysis))
 
-    from clyngor import ASP, solve
+```python
+from clyngor import ASP, solve
 
-    answers = ASP("""
-    rel(a,(c;d)). rel(b,(d;e)).
-    obj(X):- rel(X,_) ; rel(X,Y): att(Y).
-    att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
-    :- not obj(X):obj(X).
-    :- not att(Y):att(Y).
-    """)
-    for answer in answers:
-        print(answer)
+answers = ASP("""
+rel(a,(c;d)). rel(b,(d;e)).
+obj(X):- rel(X,_) ; rel(X,Y): att(Y).
+att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
+:- not obj(X):obj(X).
+:- not att(Y):att(Y).
+""")
+for answer in answers:
+    print(answer)
+```
 
 The same, but with the lower level function expecting files:
 
-    answers = solve(inline="""
-    rel(a,(c;d)). rel(b,(d;e)).
-    obj(X):- rel(X,_) ; rel(X,Y): att(Y).
-    att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
-    :- not obj(X):obj(X).
-    :- not att(Y):att(Y).
-    """)
+```python
+answers = solve(inline="""
+rel(a,(c;d)). rel(b,(d;e)).
+obj(X):- rel(X,_) ; rel(X,Y): att(Y).
+att(Y):- rel(_,Y) ; rel(X,Y): obj(X).
+:- not obj(X):obj(X).
+:- not att(Y):att(Y).
+""")
+```
 
 More traditional interface, using file containing the ASP source code:
 
-    answers = solve('concepts.lp'):  # also accepts an iterable of file
+```python
+answers = solve('concepts.lp'):  # also accepts an iterable of file
+```
 
 More examples are available in [the unit tests](clyngor/test/).
 
@@ -44,15 +50,18 @@ More examples are available in [the unit tests](clyngor/test/).
 Once you get your answers, clyngor allows you to specify
 the answer sets format using builtin methods:
 
-    for answer in answers.by_predicate.first_arg_only:
-        print('{' + ','.join(answer['obj']) + '} × {' + ','.join(answer['att']) + '}')
+```python
+for answer in answers.by_predicate.first_arg_only:
+    print('{' + ','.join(answer['obj']) + '} × {' + ','.join(answer['att']) + '}')
+```
 
 And if you need a [*pyasp-like*](https://github.com/sthiele/pyasp) interface:
 
-    for answer in answers.as_pyasp:
-        print('{' + ','.join(a.args()[0] for a in answer if a.predicate == 'obj')
-              + '} × {' + ','.join(a.args()[0] for a in answer if a.predicate == 'att') + '}')
-
+```python
+for answer in answers.as_pyasp:
+    print('{' + ','.join(a.args()[0] for a in answer if a.predicate == 'obj')
+          + '} × {' + ','.join(a.args()[0] for a in answer if a.predicate == 'att') + '}')
+```
 
 Currently, there is only one way to see all chaining operator available:
 [the source code of the Answers object](clyngor/answers.py).
@@ -99,8 +108,10 @@ which provides high level routines to save and load answer sets.
 
 ### Define the path to clingo binary
 
-    import clyngor
-    clyngor.CLINGO_BIN_PATH = 'path/to/clingo'
+```python
+import clyngor
+clyngor.CLINGO_BIN_PATH = 'path/to/clingo'
+```
 
 Note that it will be the very first parameter to [`subprocess.Popen`](https://docs.python.org/3/library/subprocess.html#popen-constructor).
 
@@ -113,9 +124,10 @@ are made against data (mostly about type).
 
 Therefore, the two followings are equivalent ; but the first is more readable and will crash earlier with a better error message if `n` is not valid:
 
-    solve('file.lp', nb_model=n)
-    solve('file.lp', options='-n ' + str(n))
-
+```python
+solve('file.lp', nb_model=n)
+solve('file.lp', options='-n ' + str(n))
+```
 
 
 
@@ -146,39 +158,43 @@ If you have a project that makes use of pyasp, but need clingo instead of gringo
 
 Here was my old code:
 
-    from pyasp import asp
+```python
+from pyasp import asp
 
-    def solving(comp, graph):
-        programs = [comp, graph]
-        clasp_options = ['--opt-mode=optN', '--parallel-mode=4', '--project']
-        solver = asp.Gringo4Clasp(clasp_options=clasp_options)
-        print("solver run as: `clingo {} {}`".format(' '.join(programs), clasp_options))
-        at_least_one_solution = False
-        for answerset in solver.run(programs, collapseAtoms=False):
-            yield answerset
+def solving(comp, graph):
+    programs = [comp, graph]
+    clasp_options = ['--opt-mode=optN', '--parallel-mode=4', '--project']
+    solver = asp.Gringo4Clasp(clasp_options=clasp_options)
+    print("solver run as: `clingo {} {}`".format(' '.join(programs), clasp_options))
+    at_least_one_solution = False
+    for answerset in solver.run(programs, collapseAtoms=False):
+        yield answerset
 
-    def find_direct_inclusions(model) -> dict:
-        programs = [ASP_SRC_INCLUSION]
-        solver = asp.Gringo4Clasp()
-        add_atoms = ''.join(str(atom) + '.' for atom in model)
-        answers = tuple(solver.run(programs, collapseAtoms=False,
-                                   additionalProgramText=add_atoms))
-        return answers
+def find_direct_inclusions(model) -> dict:
+    programs = [ASP_SRC_INCLUSION]
+    solver = asp.Gringo4Clasp()
+    add_atoms = ''.join(str(atom) + '.' for atom in model)
+    answers = tuple(solver.run(programs, collapseAtoms=False,
+                               additionalProgramText=add_atoms))
+    return answers
+```
 
 And here is the version using clyngor, that pass the exact same unit tests:
 
-    import clyngor
+```python
+import clyngor
 
-    def solving(comp, graph):
-        programs = [comp, graph]
-        clasp_options = '--opt-mode=optN', '--parallel-mode=4', '--project'
-        answers = clyngor.solve(programs, options=clasp_options)
-        print("solver run as: `{}`".format(answers.command))
-        for answerset in answers.as_pyasp.parse_args.int_not_parsed:
-            yield answerset
+def solving(comp, graph):
+    programs = [comp, graph]
+    clasp_options = '--opt-mode=optN', '--parallel-mode=4', '--project'
+    answers = clyngor.solve(programs, options=clasp_options)
+    print("solver run as: `{}`".format(answers.command))
+    for answerset in answers.as_pyasp.parse_args.int_not_parsed:
+        yield answerset
 
-    def find_direct_inclusions(model) -> dict:
-        programs = [ASP_SRC_INCLUSION]
-        add_atoms = ''.join(str(atom) + '.' for atom in model)
-        answers = tuple(clyngor.solve(programs, inline=add_atoms).as_pyasp.parse_args)
-        return answers
+def find_direct_inclusions(model) -> dict:
+    programs = [ASP_SRC_INCLUSION]
+    add_atoms = ''.join(str(atom) + '.' for atom in model)
+    answers = tuple(clyngor.solve(programs, inline=add_atoms).as_pyasp.parse_args)
+    return answers
+```
