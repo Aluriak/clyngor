@@ -28,12 +28,19 @@ def f(a:str, b:int, c:int):
 def g(a:str, b:int) -> tuple:  # the tuple make the return value an iterable of arguments
     yield a * b
     yield len(a) * b
+
+@converted_types
+def h(a:str, b:int) -> 'b'.join:  # any callable will be applied on function output
+    for _ in range(b):
+        yield a
 #end.
 
 p(X):- (X)=@f("hello",2,3).
 p(X):- (X)=@f(2,2,3).  % this is a bad type, and therefore ignored
 
 q(X,Y):- (X,Y)=@g("a",2).
+
+r(X):- (X)=@h("a",4).
 
 """
 
@@ -45,4 +52,5 @@ def test_basic_decorator_usage():
     assert model == {
         'p': frozenset({('"hellohello"',), (6,), (5,)}),
         'q': frozenset({('"aa"', 2)}),
+        'r': frozenset({('"abababa"',)}),
     }
