@@ -70,6 +70,30 @@ Currently, there is only one way to see all chaining operator available:
 
 
 
+## Python embedding
+Clyngor provides user with `converted_types` function,
+allowing one to avoid boilerplate code based on type annotation when
+calling python from inside ASP code.
+
+Example (see [tests](clyngor/test/test_upapi.py) for more):
+
+```python
+#script(python)
+from clyngor.upapi import converted_types
+@converted_types
+def f(a:str, b:int):
+    yield a * b
+    yield len(a) * b
+#end.
+
+p(X):- (X)=@f("hello",2).
+p(X):- (X)=@f(1,2).  % ignored, because types do not match
+```
+
+Without `converted_types`, user have to ensure that `f` is a function returning a list,
+and that arguments are of the expected type.
+
+
 ## Debugging
 TODO: Clyngor is also able to parse an ASP program to generate debugging help.
 
@@ -79,7 +103,8 @@ TODO: Clyngor is able to manage python inside ASP source code, allowing user to 
 
 
 ## Alternatives
-[pyasp](https://github.com/sthiele/pyasp) comes into mind, but do not (yet) supports clingo alone.
+[pyasp](https://github.com/sthiele/pyasp) comes into mind,
+but do not (yet) supports clingo alone.
 
 
 
