@@ -185,7 +185,7 @@ class Answers:
         else:
             answer_set = builder((pred, tuple(args))
                                    for pred, args in answer_set)
-        # NB: as_pyasp flag behave diffrently if group_atoms is activated
+        # NB: as_pyasp flag behave differently if group_atoms is activated
         if self._group_atoms:
             mapping = defaultdict(set)
             for pred, args in answer_set:
