@@ -13,8 +13,6 @@ from clyngor.utils import cleaned_path, ASPSyntaxError, ASPWarning
 from clyngor.parsing import parse_clasp_output, validate_clasp_stderr
 
 
-
-
 def solve(files:iter=(), options:iter=[], inline:str=None,
           subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
