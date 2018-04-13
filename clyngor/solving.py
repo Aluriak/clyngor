@@ -16,6 +16,7 @@ from clyngor.parsing import parse_clasp_output, validate_clasp_stderr
 
 def _default_running_sequence(programs:iter, files, solver_conf, options,
                               propagators:iter, observers:iter) -> 'Control':
+    """Main function to be used when using clingo module and its python interface"""
     ctl = clyngor.clingo_module.Control(options)
     for propagator in propagators:
         solver.register_propagator(propagator)
@@ -26,7 +27,10 @@ def _default_running_sequence(programs:iter, files, solver_conf, options,
         ctl.load(fname)
     ctl.ground(programs)
 
-    # ctl.configuration = solver_conf  # TODO
+    if solver_conf:
+        raise NotImplementedError("Solver configuration handling is currently"
+                                  "not implemented")
+        # ctl.configuration = solver_conf  # TODO
 
     return ctl
 
@@ -76,6 +80,10 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     stdin_feed = None  # data to send to stdin
     if inline and not files and not force_tempfile:  # avoid tempfile if possible
         stdin_feed, inline = inline, None
+    elif inline:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
+            fd.write(inline)
+            files = tuple(files) + (fd.name,)
     run_command = command(files, options, inline, nb_model, time_limit,
                           constants, stats, clingo_bin_path=clingo_bin_path)
 

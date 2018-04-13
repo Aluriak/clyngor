@@ -19,4 +19,7 @@ def load_clingo_module() -> bool:
 def have_clingo_module() -> bool:
     return clingo_module is not None
 
+def deactivate_clingo_module():
+    globals()['clingo_module'] = None
+
 load_clingo_module()

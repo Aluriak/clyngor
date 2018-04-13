@@ -1,7 +1,7 @@
 """Tests the clyngor' Propagator class and the underlying API"""
 
 import clyngor
-import pytest
+from .definitions import clingo_noncompliant
 
 
 ASP_CODE = """
@@ -23,8 +23,7 @@ class MyPropagator(clyngor.Propagator):
         self.found_p.add(only_arg)
 
 
-@pytest.mark.skipif(not clyngor.have_clingo_module(),
-                    reason='requires clingo module')
+@clingo_noncompliant
 def test_the_subclass():
     prop = MyPropagator.run_with(ASP_CODE)
     for answer in prop.answers:

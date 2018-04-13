@@ -4,9 +4,8 @@ import pytest
 import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
+from .definitions import clingo_noncompliant
 
-clingo_noncompliant = pytest.mark.skipif(not clyngor.have_clingo_module(),
-                                         reason='clingo module do not support this feature')
 
 @pytest.fixture
 def asp_code():
@@ -125,7 +124,7 @@ def test_no_input(capsys):
 
 @clingo_noncompliant
 def test_syntax_error():
-    assert clyngor.have_clingo_module()
+    assert not clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='invalid', force_tempfile=True))
     assert excinfo.value.filename.startswith('/tmp/tmp')
@@ -171,6 +170,7 @@ def test_syntax_error_brace_with_stdin():
 
 @clingo_noncompliant
 def test_undefined_warning():
+    assert not clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPWarning) as excinfo:
         tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True, force_tempfile=True))
     assert excinfo.value.atom == 'c'
