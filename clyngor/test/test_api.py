@@ -5,7 +5,7 @@ import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
 
-clingo_noncompliant = pytest.mark.skipif(clyngor.have_clingo_module(),
+clingo_noncompliant = pytest.mark.skipif(not clyngor.have_clingo_module(),
                                          reason='clingo module do not support this feature')
 
 @pytest.fixture
@@ -61,13 +61,16 @@ def test_api_solve():
 def test_api_command():
     files = ('a.lp', 'b.lp')
     cmd = command(files, nb_model=3, stats=False)
-    assert cmd == [CLINGO_BIN_PATH, *files, '-n 3']
+    assert cmd == [CLINGO_BIN_PATH, '-n 3', *files]
+
+    cmd = command(files, nb_model=None)
+    assert cmd == [CLINGO_BIN_PATH, '--stats', *files]
 
     files = ('a.lp', 'b.lp', 'c')
     clyngor.CLINGO_BIN_PATH = '/usr/bin/clingo'  # NB: this have serious side effects. If any fail happen before the restauration, all other tests may fail.
     cmd = command(files, nb_model=0)
     clyngor.CLINGO_BIN_PATH = 'clingo'
-    assert cmd == ['/usr/bin/clingo', '--stats', *files, '-n 0']
+    assert cmd == ['/usr/bin/clingo', '-n 0', '--stats', *files]
 
 
 def test_api_asp(asp_code):
@@ -122,8 +125,9 @@ def test_no_input(capsys):
 
 @clingo_noncompliant
 def test_syntax_error():
+    assert clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
-        tuple(clyngor.solve((), inline='invalid'))
+        tuple(clyngor.solve((), inline='invalid', force_tempfile=True))
     assert excinfo.value.filename.startswith('/tmp/tmp')
     assert excinfo.value.lineno == 2
     assert excinfo.value.offset == 1
@@ -135,7 +139,7 @@ def test_syntax_error():
 @clingo_noncompliant
 def test_syntax_error_semicolon():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
-        tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").'))
+        tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").', force_tempfile=True))
     assert excinfo.value.filename.startswith('/tmp/tmp')
     assert excinfo.value.lineno == 1
     assert excinfo.value.offset == 16
@@ -146,7 +150,7 @@ def test_syntax_error_semicolon():
 @clingo_noncompliant
 def test_syntax_error_brace():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
-        tuple(clyngor.solve((), inline='color(X,red):- {{}}.'))
+        tuple(clyngor.solve((), inline='color(X,red):- {{}}.', force_tempfile=True))
     assert excinfo.value.filename.startswith('/tmp/tmp')
     assert excinfo.value.lineno == 1
     assert excinfo.value.offset == 17
@@ -155,9 +159,20 @@ def test_syntax_error_brace():
 
 
 @clingo_noncompliant
+def test_syntax_error_brace_with_stdin():
+    with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
+        tuple(clyngor.solve((), inline='color(X,red):- {{}}.'))
+    assert excinfo.value.filename == '-'
+    assert excinfo.value.lineno == 1
+    assert excinfo.value.offset == 17
+    assert excinfo.value.msg.startswith('unexpected { in file -')
+    assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
+
+
+@clingo_noncompliant
 def test_undefined_warning():
     with pytest.raises(clyngor.ASPWarning) as excinfo:
-        tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True))
+        tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True, force_tempfile=True))
     assert excinfo.value.atom == 'c'
     assert len(excinfo.value.args) == 1
     start = "atom 'c' does not occur in any rule head in file /tmp/tmp"

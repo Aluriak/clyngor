@@ -36,6 +36,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
           nb_model:int=0, time_limit:int=0, constants:dict={},
           clean_path:bool=True, stats:bool=True,
           clingo_bin_path:str=None, error_on_warning:bool=False,
+          force_tempfile:bool=False,
           use_clingo_module:bool=True, grounding_observers:iter=(),
           propagators:iter=(), solver_conf:object=None,
           running_sequence:callable=_default_running_sequence,
@@ -53,34 +54,35 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     clingo_bin_path -- the path to the clingo binary
     error_on_warning -- raise an ASPWarning when encountering a clingo warning
     use_clingo_module -- will use the clingo module (if available)
+    force_tempfile -- use tempfile, even if only inline code is given
 
     The following options needs the propagator support and/or python clingo module:
     grounding_observers -- iterable of observers to add to the grounding process
     propagators -- iterable of propagators to add to the solving process
     solver_conf -- clingo.Configuration instance, given to the running_sequence
-    running_sequence -- If given, must be a callable taking programs, files and Configuration,
-                        returning both clingo.Control and clingo.SolveHandle instances
+    running_sequence -- If given, must be a callable taking programs,
+                        files and Configuration, returning both clingo.Control
+                        and clingo.SolveHandle instances.
     programs -- programs to feed the running sequence with.
 
     Shortcut to clingo's options:
-    nb_model -- number of model to output (0 for all (default))
+    nb_model -- number of model to output (0 for all (default), None to disable)
     time_limit -- zero or number of seconds to wait before interrupting solving
     constants -- mapping name -> value of constants for the grounding
 
     """
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
-    if inline:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
-            fd.write(inline)
-            files = tuple(files) + (fd.name,)
-    run_command = command(files, options, nb_model, time_limit,
+    stdin_feed = None  # data to send to stdin
+    if inline and not files and not force_tempfile:  # avoid tempfile if possible
+        stdin_feed, inline = inline, None
+    run_command = command(files, options, inline, nb_model, time_limit,
                           constants, stats, clingo_bin_path=clingo_bin_path)
 
     if print_command:
         print(run_command)
 
-    if not files:
+    if not files and not inline and not stdin_feed:
         # in this case, clingo will wait for stdin input, which will never come
         # so better not call clingo at all
         return Answers((), command=' '.join(run_command))
@@ -97,10 +99,14 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     else:
         clingo = subprocess.Popen(
             run_command,
+            stdin=subprocess.PIPE if stdin_feed else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=bool(subproc_shell),
         )
+        if stdin_feed:
+            clingo.stdin.write(stdin_feed.encode())
+            clingo.stdin.close()
         stdout = (line.decode() for line in clingo.stdout)
         stderr = (line.decode() for line in clingo.stderr)
         statistics = {}
@@ -110,7 +116,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
                        statistics=statistics, with_optimization=True)
 
 
-def command(files:iter=(), options:iter=[],
+def command(files:iter=(), options:iter=[], inline:str=None,
             nb_model:int=0, time_limit:int=0, constants:dict={},
             stats:bool=True, clingo_bin_path:str=None) -> iter:
     """Return the shell command running the solver on given files,
@@ -121,7 +127,7 @@ def command(files:iter=(), options:iter=[],
     clingo_bin_path -- the path to the clingo binary
 
     Shortcut to clingo's options:
-    nb_model -- number of model to output (0 for all (default))
+    nb_model -- number of model to output (0 for all (default), None to disable)
     time_limit -- zero or number of seconds to wait before interrupting solving
     constants -- mapping name -> value of constants for the grounding
     stats -- True to provides the --stats flag
@@ -145,13 +151,13 @@ def command(files:iter=(), options:iter=[],
             raise ValueError("Number of model must be int, not " + type(nb_model).__name__)
         if nb_model < 0:
             raise ValueError("Number of model must be >= 0.")
-    else:
-        nb_model = 0
+        options.append('-n ' + str(nb_model))
+    elif nb_model is not None:
+        options.append('-n 0')
     if stats:
         options.append('--stats')
 
-    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH,
-            *options, *files, '-n ' + str(nb_model)]
+    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH, *options, *files]
 
 
 def clingo_version(clingo_bin_path:str=None) -> dict:

@@ -175,7 +175,7 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
         if line.startswith(ASW_FLAG):
             yield 'answer', next(output)
         elif line.startswith(OPT_FLAG):
-            yield 'optimization', int(line[len(OPT_FLAG):].strip())
+            yield 'optimization', tuple(map(int, line[len(OPT_FLAG):].strip().split()))
         elif not line.strip():  # empty line: statistics are beginning
             if not yield_stats: break  # stats are the last part of the output
             stats = {}
