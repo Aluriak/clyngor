@@ -70,8 +70,29 @@ Currently, there is only one way to see all chaining operator available:
 
 
 
+
+## Official Python API
+If the used version of clingo is compiled with python, you can put python code into your ASP code as usual.
+But if you also have the [clingo package](https://potassco.org/clingo/python-api/current/clingo.html)
+installed and importable, clyngor can use it for various tasks.
+
+Using the official API leads to the following changes :
+
+- both robust and quick parsing, instead of the simple vs slow method
+- some options are not supported : constants, time-limit, parsing error handling
+
+You can activate the use of the clingo module by calling `clyngor.activate_clingo_module()`
+or calling `clyngor.solve` with argument `use_clingo_module` set to `True`.
+
+
 ## Python embedding
-Clyngor provides user with `converted_types` function,
+For users putting some python in their ASP, clyngor may help.
+The only condition is to have clingo compiled with python support,
+and having clyngor installed for the python used by clingo.
+
+
+### Easy ASP functors
+Clyngor provides `converted_types` function,
 allowing one to avoid boilerplate code based on type annotation when
 calling python from inside ASP code.
 
@@ -94,25 +115,24 @@ Without `converted_types`, user have to ensure that `f` is a function returning 
 and that arguments are of the expected type.
 
 
-## Debugging
-TODO: Clyngor is also able to parse an ASP program to generate debugging help.
+### Generalist propagators
+Propagators are presented in [this paper](TODO). They are basically active
+observers of the solving process, able for instance to modify truth assignment
+and invalidate models.
 
-See [clyngor-parser](clyngor-parser) for implementation ideas.
+As shown in [clyngor/test/test_propagator_class.py](clyngor/test/test_propagator_class.py),
+a high-level propagator class built on top of the official API is available, useful in many typical use-cases.
 
 
-## Solver scripting
-TODO: Clyngor is able to manage python inside ASP source code, allowing user to fully control the solving.
+### Python constraint propagators
+As shown in [examples/pyconstraint.lp](examples/pyconstraint.lp),
+clyngor also exposes some helpers for users wanting to create propagators
+that implement an ASP constraint, but implemented in Python.
 
-### Propagators
-Clyngor provides the Propagator base class if you want to play with
-high-level propagators on top of the propagator API.
-
-Examples in [tests](clyngor/test/test_propagator_class.py).
 
 
 ## Alternatives
-[pyasp](https://github.com/sthiele/pyasp) comes into mind,
-but do not (yet) supports clingo alone.
+[pyasp](https://github.com/sthiele/pyasp) comes into mind, but does not supports clingo alone.
 
 
 
@@ -128,25 +148,6 @@ or through downloading and (compilation and) manual installation.
 You may also want to install the [python clingo module](https://potassco.org/clingo/python-api/current/clingo.html),
 which is [an optional dependancy](#official-api-embedding).
 
-
-## Official API embedding
-If [the clingo module](https://potassco.org/clingo/python-api/current/clingo.html) is importable,
-clyngor will use it instead of its ad-hoc interface.
-Using the official API leads to the following changes :
-
-- both robust and quick parsing, instead of the simple vs slow method
-- in-process support for [propagators](#propagators)
-- some options are not supported : constants, time-limit, parsing error handling
-
-
-## Propagators
-Propagators are presented in [this paper](TODO). They are basically active
-observers of the solving process, able for instance to modify truth assignment
-and invalidate models.
-
-Clyngor offers an integrated interface to load easily propagators in a solving process.
-
-Note that the python clingo module is necessary for propagators be supported correctly.
 
 ## Tips
 ### Careful parsing
@@ -195,15 +196,24 @@ Yes.
 ### Why clyngor ?
 No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50s).
 
-
+### Explain me again the thing with the official module
+Clyngor was designed to not require the official module, because it required a manual compilation and installation of clingo.
+However, because of the obvious interest in features and performances,
+the official module will be by default used by clyngor if it is available.
 
 
 ## Further ideas
 - [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
 - ASP source code debugging generator (started in [clyngor-parser](clyngor-parser))
-- use official API for speeding up things when available (currently in-dev in branch [impl/propagators](https://github.com/Aluriak/clyngor/tree/impl/propagator))
-- add propagators in-process (currently in-dev in branch [impl/propagators](https://github.com/Aluriak/clyngor/tree/impl/propagator))
 
+
+## Changelog
+
+- 0.4.0
+    - easy interface for most use cases using type hint for embedded python
+    - easy python constraints in ASP with Constraint type
+    - add support for propagators
+    - add support for clingo official python module
 
 
 ## from pyasp to clyngor
