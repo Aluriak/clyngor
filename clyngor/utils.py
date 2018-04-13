@@ -28,6 +28,24 @@ class ASPWarning(ValueError):
         self.atom = payload['atom']
 
 
+def clingo_value_to_python(value:object) -> int or str or tuple:
+    """Convert a clingo.Symbol object to the python equivalent"""
+    if isinstance(value, (int, str)):
+        return value
+    elif isinstance(value, (tuple, list)):
+        return tuple(map(pyvalues, value))
+    elif type(value).__name__ == 'Symbol':
+        try:
+            return getattr(value, str(value.type).lower())
+        except AttributeError:  # inf or sup
+            if value.type == value.type.Infimum:
+                return -math.inf
+            elif value.type == value.type.Supremum:
+                return math.inf
+    raise TypeError("Can't handle values like {} of type {}."
+                    "".format(value, type(value)))
+
+
 def answer_set_to_str(answer_set:iter, atom_sep:str=' ') -> str:
     """Returns the string representation of given answer set.
 
