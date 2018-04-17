@@ -127,7 +127,7 @@ a high-level propagator class built on top of the official API is available, use
 ### Python constraint propagators
 As shown in [examples/pyconstraint.lp](examples/pyconstraint.lp),
 clyngor also exposes some helpers for users wanting to create propagators
-that implement an ASP constraint, but implemented in Python.
+that implement an ASP constraint, but written in Python.
 
 
 
