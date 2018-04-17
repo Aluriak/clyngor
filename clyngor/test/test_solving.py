@@ -3,10 +3,7 @@ import pytest
 from .test_api import asp_code  # fixture
 import clyngor
 from clyngor import solve
-
-
-clingo_noncompliant = pytest.mark.skipif(clyngor.have_clingo_module(),
-                                         reason='clingo module do not support this feature')
+from .definitions import clingo_noncompliant
 
 
 @pytest.fixture
