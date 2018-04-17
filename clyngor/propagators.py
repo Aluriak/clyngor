@@ -29,7 +29,7 @@ def Main(propagators:iter or object=(), groundable:iter or dict={'base': ()}):
     groundable -- programs with their args to ground (default base without param)
 
     """
-    if not isinstance(propagators, (tuple, list)):
+    if not isinstance(propagators, (tuple, list, set, frozenset)) or isinstance(propagators, Propagator):
         propagators = (propagators,)
     groundable = list(
         (prg, list(args)) for prg, args
@@ -47,7 +47,20 @@ def Main(propagators:iter or object=(), groundable:iter or dict={'base': ()}):
 Variable = Ellipsis
 
 
-class Constraint:
+class Propagator:
+    """Base class for high level propagator."""
+
+
+    @staticmethod
+    def run_with(filenames:[str]=(), inline:str='', programs:iter=(['base', ()],),
+                 options:list=[]):
+        import clingo
+        ctl = clingo.Control(options)
+        main = Main(propagators=self, groundable=programs)
+        return main(ctl)
+
+
+class Constraint(Propagator):
     """Base class for a particular class of user defined propagators.
 
     Instances of PyConstraint are valid propagators.
@@ -60,6 +73,7 @@ class Constraint:
     """
 
     def __init__(self, formula:callable, inputs:[tuple]):
+        super().__init__()
         self.__inputs = frozenset(inputs)
         self.__str_inputs = frozenset(input for input in self.__inputs
                                       if isinstance(input, str))
