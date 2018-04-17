@@ -1,7 +1,7 @@
 """Tests the clyngor' Propagator class and the underlying API"""
 
 import clyngor
-from .definitions import skipif_clingo_without_python
+from .definitions import skipif_clingo_without_python, skipif_no_clingo_module
 
 
 ASP_CODE = """
@@ -41,9 +41,10 @@ class MyPropagator(clyngor.Propagator):
         self.found_p.add(only_arg)
 
 
+@skipif_no_clingo_module
 @skipif_clingo_without_python
 def test_the_subclass():
-    prop = MyPropagator.run_with(ASP_CODE)
+    prop = MyPropagator.run_with(inline=ASP_CODE)
     for answer in prop.answers:
         pass
     assert prop.found_p == {1, 2}
@@ -51,8 +52,23 @@ def test_the_subclass():
 
 
 @skipif_clingo_without_python
-def test_pyconstraint():
+def test_pyconstraint_from_embedded_code():
     models = set(clyngor.solve(inline=PYCONSTRAINT_CODE))
+    assert len(models) == 2
+    assert models == {
+        frozenset({('b', (1,))}),
+        frozenset({('b', (3,))}),
+    }
+
+
+@skipif_no_clingo_module
+@skipif_clingo_without_python
+def test_pyconstraint_from_python():
+    from clyngor import Constraint, Variable as V
+    def formula(inputs) -> bool:
+        return not inputs[('b', (2,))]
+    constraint = Constraint(formula, {('b', (V,))})
+    models = set(constraint.run_with(inline='1{b(X): X=1..3}1.'))
     assert len(models) == 2
     assert models == {
         frozenset({('b', (1,))}),

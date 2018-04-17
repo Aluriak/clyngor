@@ -21,6 +21,20 @@ def clingo_noncompliant(func):
 
 
 def skipif_clingo_without_python(func):
-    decorator = pytest.mark.skipif(clyngor.have_python_support(py2=False),
-                                   reason="Need clingo with python3 support")
+    decorator = pytest.mark.skipif(
+        not clyngor.have_python_support(py2=False),
+        reason="Require clingo with python3 support"
+    )
+    return decorator(func)
+
+
+def skipif_no_clingo_module(func):
+    try:
+        import clingo
+    except ImportError:
+        clingo = None
+    decorator = pytest.mark.skipif(
+        clingo is None,
+        reason="Require official clingo module to be available"
+    )
     return decorator(func)
