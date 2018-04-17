@@ -23,3 +23,15 @@ def deactivate_clingo_module():
     globals()['clingo_module'] = None
 
 load_clingo_module()
+
+
+def have_python_support(py2:bool=True, py3:bool=True) -> bool or None:
+    """True if clingo supports python for given versions.
+    None if no python support at all."""
+    py_ver = clingo_version()['python']
+    if py_ver:
+        return (py2 and py_ver.startswith('2')) or (py3 and py_ver.startswith('3'))
+
+def have_lua_support() -> bool:
+    """True if clingo supports lua"""
+    return bool(clingo_version()['lua'])
