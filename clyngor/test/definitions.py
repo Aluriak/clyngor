@@ -1,6 +1,7 @@
 """Some definitions used for testing.
 
 """
+import pytest
 import clyngor
 from functools import wraps
 
@@ -17,3 +18,9 @@ def clingo_noncompliant(func):
         clyngor.load_clingo_module()
         return ret
     return wrapped
+
+
+def skipif_clingo_without_python(func):
+    decorator = pytest.mark.skipif(clyngor.have_python_support(py2=False),
+                                   reason="Need clingo with python3 support")
+    return decorator(func)
