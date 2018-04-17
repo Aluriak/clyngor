@@ -81,7 +81,7 @@ Using the official API leads to the following changes :
 - both robust and quick parsing, instead of the simple vs slow method
 - some options are not supported : constants, time-limit, parsing error handling
 
-You can activate the use of the clingo module by calling `clyngor.activate_clingo_module()`
+You can activate the use of the clingo module by calling once `clyngor.activate_clingo_module()`
 or calling `clyngor.solve` with argument `use_clingo_module` set to `True`.
 
 
@@ -116,7 +116,7 @@ and that arguments are of the expected type.
 
 
 ### Generalist propagators
-Propagators are presented in [this paper](TODO). They are basically active
+Propagators are presented in [this paper](http://drops.dagstuhl.de/opus/volltexte/2016/6733/). They are basically active
 observers of the solving process, able for instance to modify truth assignment
 and invalidate models.
 
@@ -199,7 +199,7 @@ No, it's pronounced [*clyngor*](https://www.youtube.com/watch?v=RyU99BCNRuU#t=50
 ### Explain me again the thing with the official module
 Clyngor was designed to not require the official module, because it required a manual compilation and installation of clingo.
 However, because of the obvious interest in features and performances,
-the official module will be by default used by clyngor if it is available.
+the official module can be used by clyngor if it is available.
 
 
 ## Further ideas

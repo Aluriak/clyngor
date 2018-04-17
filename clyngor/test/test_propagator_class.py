@@ -1,7 +1,6 @@
 """Tests the clyngor' Propagator class and the underlying API"""
 
 import clyngor
-from .definitions import clingo_noncompliant
 
 
 ASP_CODE = """
@@ -9,6 +8,7 @@ p(1).
 p(X):- p(X-1) ; X<3.
 q(a,b,p(1)).
 """
+
 
 class MyPropagator(clyngor.Propagator):
 
@@ -23,7 +23,6 @@ class MyPropagator(clyngor.Propagator):
         self.found_p.add(only_arg)
 
 
-@clingo_noncompliant
 def test_the_subclass():
     prop = MyPropagator.run_with(ASP_CODE)
     for answer in prop.answers:
