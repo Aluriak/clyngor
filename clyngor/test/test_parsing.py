@@ -113,23 +113,28 @@ def test_time_limit():
         'Time': '4.000s (Solving: 2.82s 1st Model: 0.01s Unsat: 0.00s)',
         'CPU Time': '3.980s',
     }
-    expected_info = tuple(OUTCLASP_TIME_LIMIT.splitlines()[:3] + ['SATISFIABLE'])
+    expected_info = iter((
+        tuple(OUTCLASP_TIME_LIMIT.splitlines()[:3] + ['SATISFIABLE']),
+    ))
     expected_answer = iter((
         (('a', ()),), (('b', ()),), (('c', ()),)
     ))
     expected_optimization = iter((597337713, 597301761, 597301577))
-    all_infos = []
     for type, model in parsed:
         if type == 'statistics':
             assert model == expected_stats
         elif type == 'info':
-            assert model == expected_info
+            assert model == next(expected_info)
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
         elif type == 'optimization':
             assert model == (next(expected_optimization),)
         else:  # impossible
             assert False
+    # ensure that all data has been found
+    assert next(expected_info, None) is None
+    assert next(expected_answer, None) is None
+    assert next(expected_optimization, None) is None
 
 
 def test_multiple_opt_values():
@@ -140,7 +145,6 @@ def test_multiple_opt_values():
         (('c', ()),),
     ))
     expected_optimization = iter(((-10, 6), (-11, 6), (-13, 4)))
-    all_infos = []
     for type, model in parsed:
         if type == 'statistics':
             assert False, 'no statistics'
@@ -152,6 +156,9 @@ def test_multiple_opt_values():
             assert model == next(expected_optimization)
         else:  # impossible
             assert False
+    # ensure that all data has been found
+    assert next(expected_answer, None) is None
+    assert next(expected_optimization, None) is None
 
 
 def test_unsat():
