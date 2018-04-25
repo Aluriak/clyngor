@@ -129,6 +129,8 @@ def test_time_limit():
             assert model == frozenset(next(expected_answer))
         elif type == 'optimization':
             assert model == (next(expected_optimization),)
+        elif type == 'progression':
+            assert False, 'no progression'
         else:  # impossible
             assert False
     # ensure that all data has been found
@@ -164,6 +166,36 @@ def test_multiple_opt_values():
 def test_unsat():
     parsed = Parser().parse_clasp_output(OUTCLASP_UNSATISFIABLE.splitlines())
     assert next(parsed, None) is None
+
+
+def test_multithread_with_progression():
+    parsed = Parser().parse_clasp_output(CLINGO_OUTPUT_MULTITHREADING_WITH_PROGRESS.splitlines(),
+                                         yield_prgs=True)
+    expected_answer = iter((
+        (('a', ()),),
+        (('b', ()),),
+    ))
+    expected_progress = iter((
+        '[   2;3299] (Error: 1648.5)',
+    ))
+    expected_optimization = iter(((3299,), (3296,)))
+    for type, model in parsed:
+        if type == 'statistics':
+            assert False, 'no statistics'
+        elif type == 'info':
+            assert False, 'no info'
+        elif type == 'answer':
+            assert model == frozenset(next(expected_answer))
+        elif type == 'optimization':
+            assert model == next(expected_optimization)
+        elif type == 'progression':
+            assert model == next(expected_progress)
+        else:  # impossible
+            assert False
+    # ensure that all data has been found
+    assert next(expected_answer, None) is None
+    assert next(expected_progress, None) is None
+    assert next(expected_optimization, None) is None
 
 
 OUTCLASP_TIME_LIMIT = """clingo version 4.5.4
@@ -280,4 +312,21 @@ Optimization : -13 4
 Calls        : 1
 Time         : 0.012s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
 CPU Time     : 0.011s
+"""
+
+
+CLINGO_OUTPUT_MULTITHREADING_WITH_PROGRESS = """
+clingo version 5.2.2
+Reading from ...rasp/powergrasp/asp/search-biclique.lp ...
+/home/lbourneu/packages/powergrasp/powergrasp/asp/process-motif.lp:39:31-53: info: atom does not occur in any rule head:
+  include_block(K,T,L,U)
+
+Solving...
+Answer: 1
+a
+Optimization: 3299
+Progression : [   2;3299] (Error: 1648.5)
+Answer: 2
+b
+Optimization: 3296
 """

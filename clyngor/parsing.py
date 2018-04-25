@@ -128,13 +128,14 @@ class Parser:
 
 
     def parse_clasp_output(self, output:iter or str, *, yield_stats:bool=False,
-                           yield_info:bool=False):
+                           yield_info:bool=False, yield_prgs:bool=False):
         """Decorator over the parse_clasp_output module function,
         where the answers are parsed using self.parse_terms method.
 
         """
         parsed = parse_clasp_output(output, yield_stats=yield_stats,
-                                    yield_info=yield_info)
+                                    yield_info=yield_info,
+                                    yield_prgs=yield_prgs)
         for type, payload in parsed:
             if type == 'answer':
                 yield type, self.parse_terms(payload)
@@ -143,9 +144,10 @@ class Parser:
 
 
 def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
-                       yield_opti:bool=False, yield_info:bool=False):
-    """Yield pairs (payload type, payload) where type is 'info', 'statistics'
-    or 'answer' and payload the raw information.
+                       yield_opti:bool=True, yield_info:bool=False,
+                       yield_prgs:bool=False):
+    """Yield pairs (payload type, payload) where type is 'info', 'statistics',
+    'optimization', 'progression', or 'answer' and payload the raw information.
 
     output -- iterable of lines or full clasp output to parse
     yield_stats -- yields final statistics as a mapping {field: value}
@@ -155,12 +157,15 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     yield_info  -- yields all lines not included in other types, including the
                    first lines not related to first answer
                    under type 'info' as a tuple of lines
+    yield_prgs -- yields lines of Progressions that are sometimes
+                  following an answer set in multithreading contexts,
+                  under type 'progression' as a string.
 
     In any case, tuple ('answer', termset) will be returned
     with termset a string containing the raw data.
 
     """
-    ASW_FLAG, OPT_FLAG = 'Answer: ', 'Optimization: '
+    ASW_FLAG, OPT_FLAG, PROGRESS = 'Answer: ', 'Optimization: ', 'Progression :'
     output = iter(output.splitlines() if isinstance(output, str) else output)
 
     # get the first lines
@@ -174,8 +179,10 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     while True:
         if line.startswith(ASW_FLAG):
             yield 'answer', next(output)
-        elif line.startswith(OPT_FLAG):
+        elif line.startswith(OPT_FLAG) and yield_opti:
             yield 'optimization', tuple(map(int, line[len(OPT_FLAG):].strip().split()))
+        elif line.startswith(PROGRESS) and yield_prgs:
+            yield 'progression', line[len(PROGRESS):].strip()
         elif not line.strip():  # empty line: statistics are beginning
             if not yield_stats: break  # stats are the last part of the output
             stats = {}
@@ -187,7 +194,10 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
             break
         else:  # should not happen
             infos.append(line)
-        line = next(output)
+        try:
+            line = next(output)
+        except StopIteration:
+            break
 
     if yield_info:
         yield 'info', tuple(infos)
