@@ -1,6 +1,9 @@
 t: tests
 tests:
 	python -m pytest -vv clyngor --doctest-module
+qt: quick-tests
+quick-tests:
+	python -m pytest -vv clyngor --doctest-module --quick
 
 run:
 	python -m clyngor
