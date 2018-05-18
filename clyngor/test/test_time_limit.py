@@ -2,12 +2,7 @@ import pytest
 from clyngor import solve
 
 
-# small helper ; to activate when dev
-deactivate = pytest.mark.skipif(False, reason="Takes time")
-# deactivate = pytest.mark.skipif(True, reason="Takes time")
-
-
-@deactivate
+@pytest.mark.slow
 def test_time_limit_with_solutions():
     """Sudoku yield thousands of solution in a second"""
     answers = solve([], inline=SUDOKU, options='--time-limit=1')
@@ -15,7 +10,7 @@ def test_time_limit_with_solutions():
     assert nb_answer > 1
 
 
-@deactivate
+@pytest.mark.slow
 def test_time_limit_no_solutions():
     """Queens do not yield any solution in a second
     (at least on not so powerful machines)
@@ -30,7 +25,7 @@ def test_time_limit_no_solutions():
     assert nb_answer == 0
 
 
-@deactivate
+@pytest.mark.slow
 def test_no_time_limit_queens():
     """Queens yield at least one solution when enough time is provided.
 

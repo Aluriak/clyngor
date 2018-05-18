@@ -1,6 +1,10 @@
 t: tests
 tests:
 	python -m pytest -vv clyngor --doctest-module -rs --failed-first
+qt: quick-tests
+tq: quick-tests
+quick-tests:
+	python -m pytest -vv clyngor --doctest-module --quick
 
 run:
 	python -m clyngor
