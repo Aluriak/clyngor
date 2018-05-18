@@ -4,7 +4,7 @@ tests:
 qt: quick-tests
 tq: quick-tests
 quick-tests:
-	python -m pytest -vv clyngor --doctest-module --quick
+	python -m pytest -vv clyngor --doctest-module --quick -rs --failed-first
 
 run:
 	python -m clyngor
