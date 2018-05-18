@@ -13,7 +13,7 @@ def formula(inputs) -> bool:
 constraint = Constraint(formula, {('b', (V,))})
 
 # regular main function
-main = Main(constraint)
+main = Main(propagators=constraint)
 
 #end.
 
