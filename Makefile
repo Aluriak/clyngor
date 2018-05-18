@@ -2,6 +2,7 @@ t: tests
 tests:
 	python -m pytest -vv clyngor --doctest-module
 qt: quick-tests
+tq: quick-tests
 quick-tests:
 	python -m pytest -vv clyngor --doctest-module --quick
 
