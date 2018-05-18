@@ -32,7 +32,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         return children
 
     def visit_text(self, node, children):
-        text = tuple(children)[0]
+        text = tuple(children)[0] if children else ''
         return '"' + text + '"'
 
     def visit_subterm(self, node, children):
