@@ -2,3 +2,4 @@ include LICENCE MANIFEST.in requirements.txt README.mkd
 exclude *.png Makefile
 recursive-include clyngor *.py
 prune clyngor-parser
+prune examples
