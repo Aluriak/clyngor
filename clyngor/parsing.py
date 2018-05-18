@@ -31,6 +31,9 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
     def visit_args(self, node, children):
         return children
 
+    def visit_aloneargs(self, node, children):
+        return self.visit_term(node, ('', *children))
+
     def visit_text(self, node, children):
         text = tuple(children)[0] if children else ''
         return '"' + text + '"'
@@ -58,8 +61,9 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         def number():     return ap.RegExMatch(r'-?[0-9]+')
         def text():       return '"', ap.RegExMatch(r'((\\")|([^"]))*'), '"'
         def litteral():   return [text, number]
-        def subterm():    return [(ident, ap.Optional("(", args, ")")), litteral]
+        def subterm():    return [(ident, ap.Optional("(", args, ")")), litteral, aloneargs]
         def args():       return subterm, ap.ZeroOrMore(',', subterm)
+        def aloneargs():  return '(', args, ')'
         # NB: litteral outputed by #show are not handled.
         def term():       return ident, ap.Optional("(", args, ")")
         def terms():      return ap.ZeroOrMore(term)
