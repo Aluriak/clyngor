@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 
 import clyngor
-from clyngor import as_pyasp, parsing
+from clyngor import as_pyasp, parsing, utils
 
 
 class Answers:
@@ -225,12 +225,10 @@ class ClingoAnswers(Answers):
 
     def __iter__(self):
         """Yield answer sets"""
-        def processed(args:iter) -> tuple: return tuple(map(str, args))
         with self._solver.solve(yield_=True, async=True) as models:
             for model in models:
-                answer_set = tuple((a.name, processed(a.arguments))
+                answer_set = tuple((a.name, utils.clingo_value_to_python(a.arguments))
                                    for a in model.symbols(atoms=True))
-                print('SBDFNC:', answer_set)
                 parsed = self._format(answer_set)
                 yield (parsed, optimization) if self._with_optimization else parsed
 

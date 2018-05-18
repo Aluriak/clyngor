@@ -5,6 +5,11 @@ import os
 import tempfile
 from clyngor import parsing
 
+try:
+    import clingo
+except ImportError:
+    clingo = None
+
 
 class ASPSyntaxError(SyntaxError):
     """This is a SyntaxError, but without the filename at the end of the
@@ -28,20 +33,52 @@ class ASPWarning(ValueError):
         self.atom = payload['atom']
 
 
+def make_hashable(val):
+    """Convert lists and sets into tuples and frozensets
+
+    >>> make_hashable(2)
+    2
+    >>> make_hashable('2')
+    '2'
+    >>> make_hashable([1, ({2, 3}, [4, 5], {(6, 7): [8, 9]})])
+    (1, (frozenset({2, 3}), (4, 5), {(6, 7): (8, 9)}))
+
+    """
+    if isinstance(val, (tuple, list)):
+        return tuple(map(make_hashable, val))
+    elif isinstance(val, (frozenset, set)):
+        return frozenset(map(make_hashable, val))
+    elif isinstance(val, dict):
+        return {make_hashable(k): make_hashable(v) for k, v in val.items()}
+    return val
+
+
 def clingo_value_to_python(value:object) -> int or str or tuple:
     """Convert a clingo.Symbol object to the python equivalent"""
     if isinstance(value, (int, str)):
         return value
     elif isinstance(value, (tuple, list)):
-        return tuple(map(pyvalues, value))
+        return tuple(map(clingo_value_to_python, value))
     elif type(value).__name__ == 'Symbol':
         try:
-            return getattr(value, str(value.type).lower())
-        except AttributeError:  # inf or sup
+            typename = str(value.type).lower()
+            if typename == 'function':
+                if value.arguments:
+                    pyvalue = (value.name, tuple(map(clingo_value_to_python, value.arguments)))
+                else:
+                    pyvalue = value.name
+            else:
+                pyvalue = getattr(value, typename)
+        except AttributeError as err:  # inf or sup
             if value.type == value.type.Infimum:
                 return -math.inf
             elif value.type == value.type.Supremum:
                 return math.inf
+            else:
+                raise err
+        if typename == 'string':
+            pyvalue = '"' + pyvalue.replace('"', '\\"') + '"'
+        return pyvalue
     raise TypeError("Can't handle values like {} of type {}."
                     "".format(value, type(value)))
 

@@ -12,27 +12,7 @@ import clyngor
 from clyngor.answers import Answers, ClingoAnswers
 from clyngor.utils import cleaned_path, ASPSyntaxError, ASPWarning
 from clyngor.parsing import parse_clasp_output, validate_clasp_stderr
-
-
-def _default_running_sequence(programs:iter, files, solver_conf, options,
-                              propagators:iter, observers:iter) -> 'Control':
-    """Main function to be used when using clingo module and its python interface"""
-    ctl = clyngor.clingo_module.Control(options)
-    for propagator in propagators:
-        solver.register_propagator(propagator)
-    for observer in observers:
-        solver.register_observer(observer)
-
-    for fname in files:
-        ctl.load(fname)
-    ctl.ground(programs)
-
-    if solver_conf:
-        raise NotImplementedError("Solver configuration handling is currently"
-                                  "not implemented")
-        # ctl.configuration = solver_conf  # TODO
-
-    return ctl
+from clyngor.propagators import Main as _default_running_sequence
 
 
 def solve(files:iter=(), options:iter=[], inline:str=None,
@@ -78,12 +58,17 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
     stdin_feed = None  # data to send to stdin
+    use_clingo_module = use_clingo_module and clyngor.have_clingo_module()
+    if use_clingo_module:
+        # the clingo API do not handle stdin feeding
+        force_tempfile = True
     if inline and not files and not force_tempfile:  # avoid tempfile if possible
         stdin_feed, inline = inline, None
     elif inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
             fd.write(inline)
             files = tuple(files) + (fd.name,)
+            assert files, fd.name
     run_command = command(files, options, inline, nb_model, time_limit,
                           constants, stats, clingo_bin_path=clingo_bin_path)
 
@@ -95,15 +80,19 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         # so better not call clingo at all
         return Answers((), command=' '.join(run_command))
 
-    if use_clingo_module and clyngor.have_clingo_module():
-        options = options.split() if isinstance(options, str) else options
-        solver = running_sequence(programs, files, solver_conf, options,
-                                  propagators, grounding_observers)
-        solver.configuration.solve.models = nb_model
+    if use_clingo_module:
         if time_limit != 0 or constants:
             raise ValueError("Options 'time_limit' and 'constants' are not "
                              "handled when used with python clingo module.")
-        return ClingoAnswers(solver)
+        if solver_conf:
+            raise NotImplementedError("Solver configuration handling is currently"
+                                      "not implemented")
+        options = options.split() if isinstance(options, str) else options
+        ctl = clyngor.clingo_module.Control(options)
+        main = running_sequence(programs=programs, files=files, nb_model=nb_model,
+                                propagators=propagators, observers=grounding_observers,
+                                generator=True)
+        return main(ctl)
     else:
         clingo = subprocess.Popen(
             run_command,

@@ -5,11 +5,15 @@ Exposes Main, Constraint and Variable.
 """
 
 import math
+import tempfile
 from collections import defaultdict
-from .utils import clingo_value_to_python
+from . import utils
+from .answers import ClingoAnswers
 
 
-def Main(propagators:iter or object=(), groundable:iter or dict={'base': ()}):
+def Main(files:iter=(), inline:str='', nb_model:int=0,
+         propagators:iter or object=(), observers:iter or object=(),
+         programs:iter or dict={'base': ()}, generator:bool=False):
     """Main function builder for clingo.
 
     Allow user to use:
@@ -21,24 +25,46 @@ def Main(propagators:iter or object=(), groundable:iter or dict={'base': ()}):
 
         def main(prg):
             prg.ground([('base', [])])
-            prg.solve()
+            return prg.solve()
 
     Also, Main() will add to the function additional treatments based on:
 
     propagators -- propagators instances to register (default none)
-    groundable -- programs with their args to ground (default base without param)
+    observers -- observers instances to register (default none)
+    programs -- programs with their args to ground (default base without param)
+    files -- list of files to ground
+    inline -- ASP code to add to base program
+    generator -- the main function will return a ClingoAnswers instance instead
+                 of returning the solve call result
+    nb_model -- number of model to search for. 0 stands for all.
 
     """
-    if not isinstance(propagators, (tuple, list, set, frozenset)) or isinstance(propagators, Propagator):
+    if not isinstance(propagators, (tuple, list, set, frozenset)):
         propagators = (propagators,)
-    groundable = list(
+    if not isinstance(observers, (tuple, list, set, frozenset)):
+        observers = (observers,)
+
+    programs = list(
         (prg, list(args)) for prg, args
-        in (groundable.items() if isinstance(groundable, dict) else groundable)
+        in (programs.items() if isinstance(programs, dict) else programs)
     )
+    if inline:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
+            fd.write(inline)
+            files = tuple(files) + (fd.name,)
+            assert files, fd.name
+
     def main(prg):
+        for file in files:
+            prg.load(file)
+        for observer in observers:
+            prg.register_observer(observer)
         for propagator in propagators:
             prg.register_propagator(propagator)
-        prg.ground(groundable)
+        prg.ground(programs)
+        prg.configuration.solve.models = nb_model
+        if generator:
+            return ClingoAnswers(prg)
         prg.solve()
     return main
 
@@ -50,13 +76,92 @@ Variable = Ellipsis
 class Propagator:
     """Base class for high level propagator."""
 
+    def __init__(self, follow:iter or str=()):
+        """
+        follow -- iterable or string describing the atoms to follow during solving
+        """
+        self._followeds = frozenset(utils.make_hashable(follow))
+        self._str_followeds = frozenset(fol for fol in self._followeds
+                                        if isinstance(fol, str))
+        self._raw_followeds = frozenset(fol for fol in self._followeds
+                                        if not isinstance(fol, str))
 
-    @staticmethod
-    def run_with(filenames:[str]=(), inline:str='', programs:iter=(['base', ()],),
-                 options:list=[]):
+
+    def init(self, init):
+        self.symbols = defaultdict(set)
+        if not self._followeds: return
+        for atom in init.symbolic_atoms:
+            lit = init.solver_literal(atom.literal)
+            repr_str = str(atom.symbol)
+            if self._match_str(repr_str):
+                init.add_watch(lit)
+                self.symbols[lit].add(repr_str)
+            else:  # not in string inputs, maybe in raws ?
+                repr = atom.symbol.name, tuple(map(utils.clingo_value_to_python,
+                                                   atom.symbol.arguments))
+                if self._match_raw(*repr):
+                    init.add_watch(lit)
+                    self.symbols[lit].add(repr)
+
+
+    def propagate(self, ctl, changes):
+        value_of = ctl.assignment.value
+        values = {
+            repr: value_of(lit)
+            for lit, reprs in self.symbols.items()
+            for repr in reprs
+        }
+        complete = all(value is not None for value in values.values())
+        partial = any(value is not None for value in values.values())
+        if complete and hasattr(self, 'on_all_input'):
+            discard = self.on_all_input(values)
+        elif partial and hasattr(self, 'on_any_input'):
+            discard = self.on_any_input(values)
+        else:
+            return
+
+        if discard is not True:
+            return
+        # object may have invalidated the model
+        if discard:
+            one_literal = next(iter(self.symbols))
+            if value_of(one_literal) is None:
+                clause = [one_literal, -one_literal]
+            elif value_of(one_literal) is False:
+                clause = [one_literal]
+            elif value_of(one_literal) is True:
+                clause = [-one_literal]
+            if not ctl.add_clause(clause) or not ctl.propagate():
+                return
+
+    def check(self, ctl):
+        return self.propagate(ctl, [])
+
+
+    def _match_str(self, atom:str) -> bool:
+        """True if given string atom is in inputs"""
+        if atom in self._str_followeds:
+            return True
+
+    def _match_raw(self, name:str, args:tuple) -> bool:
+        """True if given atom is in inputs"""
+        if (name, args) in self._raw_followeds or (name,) in self._raw_followeds:
+            return True
+        # more complex verification: it may be because of variables
+        for atom in self._raw_followeds:
+            if len(atom) != 2: continue
+            pred, params = atom
+            if pred == name and len(args) == len(params):
+                for arg, param in zip(args, params):
+                    if param is Variable or arg == param:
+                        return True
+
+
+    def run_with(self, filenames:[str]=(), inline:str='',
+                 programs:iter=(['base', ()],), options:list=[]):
         import clingo
         ctl = clingo.Control(options)
-        main = Main(propagators=self, groundable=programs)
+        main = Main(propagators=self, programs=programs, inline=inline, generator=True)
         return main(ctl)
 
 
@@ -73,58 +178,13 @@ class Constraint(Propagator):
     """
 
     def __init__(self, formula:callable, inputs:[tuple]):
-        super().__init__()
-        self.__inputs = frozenset(inputs)
-        self.__str_inputs = frozenset(input for input in self.__inputs
-                                      if isinstance(input, str))
-        self.__raw_inputs = frozenset(input for input in self.__inputs
-                                      if not isinstance(input, str))
+        super().__init__(follow=inputs)
         self.__formula = formula
 
+    def on_all_input(self, values:dict):
+        return self.__formula(values)
 
-    def init(self, init):
-        self.__symbols = defaultdict(set)
-        for atom in init.symbolic_atoms:
-            lit = init.solver_literal(atom.literal)
-            repr = atom.symbol.name, tuple(map(clingo_value_to_python, atom.symbol.arguments))
-            repr_str = str(atom.symbol)
-            if self._match_str(repr_str):
-                init.add_watch(lit)
-                self.__symbols[lit].add(repr_str)
-            if self._match_raw(*repr):
-                init.add_watch(lit)
-                self.__symbols[lit].add(repr)
-        self.__added_lit = None  # literal to be added to avoid yield of model
+    # def on_all_inputs(self):
+        # pass
 
 
-    def check(self, ctl):
-        value_of = ctl.assignment.value
-        checked = self.__formula({
-            repr: value_of(lit)
-            for lit, reprs in self.__symbols.items()
-            for repr in reprs
-        })
-        if not self.__added_lit:
-            self.__added_lit = ctl.add_literal()
-            if not ctl.add_clause([self.__added_lit]) or not ctl.propagate():
-                return
-        if not checked:
-            if not ctl.add_nogood([self.__added_lit]) or not ctl.propagate():
-                return
-
-
-    def _match_str(self, atom:str) -> bool:
-        """True if given string atom is in inputs"""
-        if atom in self.__str_inputs:
-            return True
-
-    def _match_raw(self, name:str, args:tuple) -> bool:
-        """True if given atom is in inputs"""
-        if (name, args) in self.__raw_inputs:
-            return True
-        # more complex verification: it may be because of variables
-        for pred, params in self.__raw_inputs:
-            if pred == name and len(args) == len(params):
-                for arg, param in zip(args, params):
-                    if param is Variable or arg == param:
-                        return True
