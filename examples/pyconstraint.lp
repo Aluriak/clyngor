@@ -8,7 +8,7 @@ from clyngor import Constraint, Variable as V, Main
 
 # Build the constraint on atom b
 def formula(inputs) -> bool:
-    return not inputs[('b', (2,))]
+    return inputs[('b', (2,))]
 
 constraint = Constraint(formula, {('b', (V,))})
 
@@ -18,4 +18,4 @@ main = Main(constraint)
 #end.
 
 
-1{b(X): X=1..3}1.
+1{b(1..3)}1.
