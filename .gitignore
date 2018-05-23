@@ -1,9 +1,10 @@
-build/
-.cache/
-*.vim
-venv/
-venv-*/
-__pycache__/
 *.pyc
+*.vim
+.cache/
+.pytest_cache
+__pycache__/
+build/
 clyngor.egg-info/
 dist/
+venv-*/
+venv/
