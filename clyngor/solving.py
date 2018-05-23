@@ -4,6 +4,7 @@
 
 
 import re
+import os
 import json
 import shlex
 import tempfile
@@ -67,7 +68,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     elif inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
             fd.write(inline)
-            files = tuple(files) + (fd.name,)
+            tempfile_to_del = fd.name
+            files = tuple(files) + (tempfile_to_del,)
             assert files, fd.name
     run_command = command(files, options, inline, nb_model, time_limit,
                           constants, stats, clingo_bin_path=clingo_bin_path)
@@ -108,8 +110,13 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         stderr = (line.decode() for line in clingo.stderr)
         statistics = {}
 
+        # remove the tempfile after the work.
+        on_end = None
+        if inline and tempfile_to_del:
+            on_end = lambda: os.remove(tempfile_to_del)
+
         return Answers(_gen_answers(stdout, stderr, statistics, error_on_warning),
-                       command=' '.join(run_command),
+                       command=' '.join(run_command), on_end=on_end,
                        statistics=statistics, with_optimization=True)
 
 

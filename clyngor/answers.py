@@ -18,12 +18,13 @@ class Answers:
     """
 
     def __init__(self, answers:iter, command:str='', statistics:dict={},
-                 *, with_optimization:bool=False):
+                 *, with_optimization:bool=False, on_end:callable=None):
         """Answer sets must be iterable of (predicate, args).
 
         with_optimization -- answers are read as ((predicate, args), optimization)
                              allowing to retrieve optimization data of the answers.
                              See also Answers.with_optimization property.
+        on_end -- if callable, called when all answer sets are exhausted.
 
         """
         if not with_optimization:
@@ -42,6 +43,7 @@ class Answers:
         self._parse_int = True
         self._ignore_args = False
         self._with_optimization = False
+        self.__on_end = on_end or (lambda: None)
 
     @property
     def command(self) -> str:  return self._command
@@ -132,6 +134,7 @@ class Answers:
             answer_set = tuple(self._parse_answer(answer_set))
             parsed = self._format(answer_set)
             yield (parsed, optimization) if self._with_optimization else parsed
+        self.__on_end()
 
 
     def _parse_answer(self, answer_set:str) -> iter:
