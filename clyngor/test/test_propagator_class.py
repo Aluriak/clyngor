@@ -53,7 +53,7 @@ def test_the_subclass():
 
 @skipif_clingo_without_python
 def test_pyconstraint_from_embedded_code():
-    models = set(clyngor.solve(inline=PYCONSTRAINT_CODE))
+    models = set(clyngor.solve(inline=PYCONSTRAINT_CODE, use_clingo_module=False))
     assert len(models) == 2
     assert models == {
         frozenset({('b', (1,))}),
