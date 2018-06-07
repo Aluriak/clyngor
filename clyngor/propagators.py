@@ -4,6 +4,7 @@ Exposes Main, Constraint and Variable.
 
 """
 
+import os
 import math
 import tempfile
 from collections import defaultdict
@@ -51,12 +52,15 @@ def Main(files:iter=(), inline:str='', nb_model:int=0,
     if inline:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as fd:
             fd.write(inline)
-            files = tuple(files) + (fd.name,)
+            tempfile_to_del = fd.name
+            files = tuple(files) + (tempfile_to_del,)
             assert files, fd.name
 
     def main(prg):
         for file in files:
             prg.load(file)
+        if inline and tempfile_to_del:  # remove the tempfile after the work.
+            os.remove(tempfile_to_del)
         for observer in observers:
             prg.register_observer(observer)
         for propagator in propagators:
