@@ -176,7 +176,7 @@ class Answers:
         sorted_tuple = lambda it: tuple(sorted(it))
         builder = sorted_tuple if self._sorted else frozenset
         if self._atoms_as_string:  # special case
-            return frozenset(answer_set)
+            return answer_set if self._sorted else frozenset(answer_set)
         elif self._ignore_args:
             answer_set = (pred for pred, _ in answer_set)
             if self._group_atoms:
