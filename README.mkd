@@ -140,10 +140,8 @@ that implement an ASP constraint, but written in Python.
 
     pip install clyngor
 
-You must have `clingo` in your path. Depending on your OS, it might be done with a system installation,
-or through downloading and (compilation and) manual installation.
-
-[See the doc](https://potassco.org/doc/start/).
+You must have [`clingo`](https://potassco.org/doc/start/) in your path. Depending on your OS, it might be done with a system installation,
+or through [downloading](https://github.com/potassco/clingo/releases) and (compilation and) manual installation.
 
 You may also want to install the [python clingo module](https://potassco.org/clingo/python-api/current/clingo.html),
 which is [an optional dependancy](#official-api-embedding).
