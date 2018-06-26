@@ -150,10 +150,10 @@ class Answers:
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
                 if self._atoms_as_string:
-                    pred, args = match = match.groups()
+                    pred, args = match.groups()
                     if args is None:  # atom with no arg
-                        match = [pred]
-                    yield ''.join(match)  # just send the match
+                        args = ''
+                    yield pred + args  # just send the match
                     continue
                 pred, args = match.groups()
                 assert args is None or (args.startswith('(') and args.endswith(')'))
