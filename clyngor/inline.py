@@ -14,7 +14,7 @@ def ASP(source_code:str, **kwargs):
     kwargs -- keyword arguments to be given to solve() call
 
     """
-    return solve(files=(), inline=source_code, stats=False, **kwargs)
+    return solve(inline=source_code, stats=False, **kwargs)
 
 
 def ASP_last_model(source_code:str, **kwargs):
@@ -29,7 +29,7 @@ def ASP_last_model(source_code:str, **kwargs):
 
     """
     model = None
-    for model in solve(files=(), inline=source_code, stats=False, **kwargs):
+    for model in solve(inline=source_code, stats=False, **kwargs):
         pass
     return model
 
@@ -42,7 +42,7 @@ def ASP_one_model(source_code:str, **kwargs):
     kwargs -- keyword arguments to be given to solve() call
 
     """
-    models = solve(files=(), inline=source_code, stats=False, nb_model=1, **kwargs)
+    models = solve(inline=source_code, stats=False, nb_model=1, **kwargs)
     return next(models, None)
 
 
