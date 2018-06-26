@@ -150,7 +150,10 @@ class Answers:
             current_answer = set()
             for match in REG_ANSWER_SET.finditer(answer_set):
                 if self._atoms_as_string:
-                    yield ''.join(match.groups())  # just send the match
+                    pred, args = match = match.groups()
+                    if args is None:  # atom with no arg
+                        match = [pred]
+                    yield ''.join(match)  # just send the match
                     continue
                 pred, args = match.groups()
                 assert args is None or (args.startswith('(') and args.endswith(')'))
@@ -176,7 +179,7 @@ class Answers:
         sorted_tuple = lambda it: tuple(sorted(it))
         builder = sorted_tuple if self._sorted else frozenset
         if self._atoms_as_string:  # special case
-            return answer_set if self._sorted else frozenset(answer_set)
+            return builder(answer_set)
         elif self._ignore_args:
             answer_set = (pred for pred, _ in answer_set)
             if self._group_atoms:
