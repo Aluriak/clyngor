@@ -32,7 +32,7 @@ class Answers:
             answers = ((answer, None) for answer in answers)
         self._answers = iter(answers)
         self._command = str(command or '')
-        self._statistics = dict(statistics or {})
+        self._statistics = statistics  # will be updated by reading method
         self._first_arg_only = False
         self._group_atoms = False
         self._as_pyasp = False

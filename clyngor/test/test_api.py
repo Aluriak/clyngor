@@ -78,6 +78,10 @@ def test_api_asp(asp_code):
     for answer in answers.by_predicate.sorted.first_arg_only:
         found.add(''.join(answer['obj']) + '×' + ''.join(answer['att']))
     assert found == {'a×cd', 'b×de', 'ab×d'}
+    assert len(answers.statistics) == 4
+    assert answers.statistics['Calls'] == '1'
+    assert answers.statistics['Models'] == '3'
+    assert set(answers.statistics.keys()) == {'CPU Time', 'Calls', 'Models', 'Time'}
 
 
 def test_api_inline_by_solve(asp_code):
