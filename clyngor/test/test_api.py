@@ -112,6 +112,19 @@ def test_string_without_escaped_quotes():
         assert args[0] == dangerous_string
 
 
+def test_lispy_construct():
+    dangerous_string = r'"1,3-dimethyl-2-[2-oxopropyl thio]imidazolium chloride"'
+    source = r'atom((((a,b),c),d),{},(1,(2,3))). yield(X,Y,Z):- atom(X,Y,Z).'.format(dangerous_string)
+    for sol in clyngor.ASP(source).careful_parsing.by_predicate.parse_args:
+        assert len(sol) == 2
+        assert sol['atom'] == sol['yield']
+        args = next(iter(sol['yield']))
+        assert len(args) == 3
+        assert args[0] == ('', (('', (('', ('a', 'b')), 'c')), 'd'))
+        assert args[1] == dangerous_string
+        assert args[2] == ('', (1, ('', (2, 3))))
+
+
 def test_no_input(capsys):
     """This test ensure that empty input do not lead the code to wait forever
     clingo to finish, since it will just wait for stdin input.
