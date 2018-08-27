@@ -1,5 +1,5 @@
 t: tests
-tests:
+tests: install
 	python -m pytest -vv clyngor --doctest-module -rs --failed-first
 qt: quick-tests
 tq: quick-tests
