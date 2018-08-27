@@ -124,19 +124,19 @@ class Propagator:
         else:
             return
 
-        if discard is not True:
-            return
         # object may have invalidated the model
         if discard:
-            one_literal = next(iter(self.symbols))
-            if value_of(one_literal) is None:
-                clause = [one_literal, -one_literal]
-            elif value_of(one_literal) is False:
-                clause = [one_literal]
-            elif value_of(one_literal) is True:
-                clause = [-one_literal]
-            if not ctl.add_clause(clause) or not ctl.propagate():
-                return
+            self.__discard_model(ctl)
+
+    def __discard_model(self, ctl):
+        """Make the current model false by adding a clause
+        """
+        one_literal = ctl.add_literal()
+        # make it true, then false.
+        if not ctl.add_clause([one_literal]) or not ctl.propagate():
+            return
+        if not ctl.add_nogood([one_literal]) or not ctl.propagate():
+            return
 
     def check(self, ctl):
         return self.propagate(ctl, [])

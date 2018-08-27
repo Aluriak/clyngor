@@ -9,24 +9,24 @@ p(1).
 p(X):- p(X-1) ; X<3.
 q(a,b,p(1)).
 """
-
-PYCONSTRAINT_CODE = """
+PYCONSTRAINT_CODE_ARGUMENT = """
 #script(python)
 from clyngor import Constraint, Variable as V, Main
 
 # Build the constraint on atom b
 def formula(inputs) -> bool:
-    return inputs['b', (2,)]
+    return inputs['b', ({value_to_avoid},)]
 
-constraint = Constraint(formula, {('b', (V,))})
+constraint = Constraint(formula, {{('b', (V,))}})
 
 # regular main function
 main = Main(propagators=constraint)
 
 #end.
 
-1{b(1..3)}1.
+1{{b(1..3)}}1.
 """
+PYCONSTRAINT_CODE = PYCONSTRAINT_CODE_ARGUMENT.format(value_to_avoid=2)
 
 
 class MyPropagator(clyngor.Propagator):
@@ -53,12 +53,15 @@ def test_the_subclass():
 
 @skipif_clingo_without_python
 def test_pyconstraint_from_embedded_code():
-    models = set(clyngor.solve(inline=PYCONSTRAINT_CODE, use_clingo_module=False))
-    assert len(models) == 2
-    assert models == {
-        frozenset({('b', (1,))}),
-        frozenset({('b', (3,))}),
-    }
+    possible_values = {1, 2, 3}
+    for value_to_avoid in possible_values:
+        source = PYCONSTRAINT_CODE_ARGUMENT.format(value_to_avoid=value_to_avoid)
+        models = set(clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True))
+        assert len(models) == len(possible_values) - 1
+        assert models == set(
+            frozenset({('b', (val,))})
+            for val in possible_values if val != value_to_avoid
+        )
 
 
 @skipif_no_clingo_module
