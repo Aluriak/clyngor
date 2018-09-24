@@ -231,7 +231,8 @@ class ClingoAnswers(Answers):
 
     def __iter__(self):
         """Yield answer sets"""
-        with self._solver.solve(yield_=True, async=True) as models:
+        kwargs = {'yield': True, 'async': True}  # compat with 3.7
+        with self._solver.solve(**kwargs) as models:
             for model in models:
                 answer_set = tuple((a.name, utils.clingo_value_to_python(a.arguments))
                                    for a in model.symbols(atoms=True))
