@@ -177,7 +177,10 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     infos = []
     while not line.startswith(ASW_FLAG):
         infos.append(line)
-        line = next(output)
+        try:
+            line = next(output)
+        except StopIteration:
+            return
 
     # first answer begins
     while True:
@@ -213,7 +216,10 @@ def validate_clasp_stderr(stderr:iter or str) -> iter:
     """Parse stderr of clingo, detect and yield defects lines in form of dict"""
     reg_err = re.compile(r'(.+):([0-9]+):([0-9]+)-([0-9]+): (\w+): (.+)')
     while True:
-        line = next(stderr).strip()
+        try:
+            line = next(stderr).strip()
+        except StopIteration:
+            return
         err_match = reg_err.fullmatch(line)
         if err_match:
             data = dict(zip(('filename', 'lineno', 'char_beg', 'char_end', 'level', 'message'), err_match.groups()))
