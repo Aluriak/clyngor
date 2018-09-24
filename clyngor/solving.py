@@ -181,11 +181,12 @@ def clingo_version(clingo_bin_path:str=None) -> dict:
         'lua': re.compile(r'with[out]{0,3}\sLua\s?([0-9\.]+)?'),
     }
     stdout = clingo.communicate()[0].decode()
+    values = {}
+    for field, reg in fields.items():
+        match = reg.search(stdout)
+        values[field] = match.groups()[0] if match else None
+    return values
 
-    return {
-        field: reg.search(stdout).groups()[0]
-        for field, reg in fields.items()
-    }
 
 
 def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
