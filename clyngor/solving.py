@@ -21,7 +21,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
           nb_model:int=0, time_limit:int=0, constants:dict={},
           clean_path:bool=True, stats:bool=True,
           clingo_bin_path:str=None, error_on_warning:bool=False,
-          force_tempfile:bool=False,
+          force_tempfile:bool=False, delete_tempfile:bool=True,
           use_clingo_module:bool=True, grounding_observers:iter=(),
           propagators:iter=(), solver_conf:object=None,
           running_sequence:callable=_default_running_sequence,
@@ -40,6 +40,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     error_on_warning -- raise an ASPWarning when encountering a clingo warning
     use_clingo_module -- will use the clingo module (if available)
     force_tempfile -- use tempfile, even if only inline code is given
+    delete_tempfile -- delete used tempfiles
 
     The following options needs the propagator support and/or python clingo module:
     grounding_observers -- iterable of observers to add to the grounding process
@@ -112,7 +113,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
         # remove the tempfile after the work.
         on_end = None
-        if inline and tempfile_to_del:
+        if inline and tempfile_to_del and delete_tempfile:
             on_end = lambda: os.remove(tempfile_to_del)
 
         return Answers(_gen_answers(stdout, stderr, statistics, error_on_warning),
