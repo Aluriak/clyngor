@@ -53,6 +53,28 @@ def make_hashable(val):
     return val
 
 
+def remove_quotes_arguments(arguments):
+    """
+    Remove quotes at the beginning and at the end of the argument.
+    >>> remove_quotes_arguments('"a","b"')
+    'a,b'
+    """
+    argument_cleans = []
+    for argument in arguments.split(','):
+        if isinstance(argument,str):
+            if argument[0] == '"' and argument[-1] == '"':
+                argument_clean = argument[1:-1]
+                argument_cleans.append(argument_clean)
+            else:
+                argument_cleans.append(argument)
+        else:
+            argument_cleans.append(argument)
+
+    argument_cleaned_string = ','.join(argument_cleans)
+
+    return argument_cleaned_string
+
+
 def clingo_value_to_python(value:object) -> int or str or tuple:
     """Convert a clingo.Symbol object to the python equivalent"""
     if isinstance(value, (int, str)):
