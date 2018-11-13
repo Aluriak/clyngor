@@ -112,9 +112,9 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         statistics = {}
 
         # remove the tempfile after the work.
-        on_end = None
+        on_end = lambda: (clingo.stderr.close(), clingo.stdout.close())
         if inline and tempfile_to_del and delete_tempfile:
-            on_end = lambda: os.remove(tempfile_to_del)
+            on_end = lambda: (os.remove(tempfile_to_del), clingo.stderr.close(), clingo.stdout.close())
 
         return Answers(_gen_answers(stdout, stderr, statistics, error_on_warning),
                        command=' '.join(run_command), on_end=on_end,
