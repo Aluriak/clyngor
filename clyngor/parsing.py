@@ -19,12 +19,13 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
 
     """
     def __init__(self, collapse_args:bool=True, collapse_atoms:bool=False,
-                 discard_quotes:bool=False, parse_integer:bool=True):
+                 discard_quotes:bool=False, first_arg_only:bool=False, parse_integer:bool=True):
         super().__init__()
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
         self._int_builder = int if parse_integer else str
         self.discard_quotes = bool(discard_quotes)
+        self.first_arg_only = bool(first_arg_only)
 
     def visit_number(self, node, children):
         return self._int_builder(node.value)
@@ -51,6 +52,10 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
 
     def visit_term(self, node, children):
         predicate, *args = children
+
+        if self.first_arg_only and args:
+            args = [[arg[0] for arg in args]]
+
         if self.collapse_atoms:
             return (predicate + '(' + ','.join(map(str, *args)) + ')') if args else predicate
         else:
@@ -76,7 +81,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
 
 class Parser:
     def __init__(self, collapse_atoms=False, collapse_args=True, discard_quotes:bool=False,
-                 callback=None, parse_integer:bool=True):
+                 first_arg_only:bool=False, callback=None, parse_integer:bool=True):
         """
         collapse_args -- function terms in predicate arguments are collapsed into strings
         collapse_atoms -- atoms (predicate plus terms) are collapsed into strings
@@ -112,10 +117,12 @@ class Parser:
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
         self.discard_quotes = bool(discard_quotes)
+        self.first_arg_only = bool(first_arg_only)
         self.atom_visitor = CollapsableAtomVisitor(
             bool(collapse_args),
             bool(collapse_atoms),
             bool(discard_quotes),
+            bool(first_arg_only),
             parse_integer
         )
         self.grammar = self.atom_visitor.grammar()

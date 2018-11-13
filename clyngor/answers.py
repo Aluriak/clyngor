@@ -155,6 +155,7 @@ class Answers:
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
                 self._discard_quotes and not self._atoms_as_string and not self._as_pyasp,
+                self._first_arg_only,
                 parse_integer=self._parse_int
             ).parse_terms(answer_set)
 
@@ -165,6 +166,10 @@ class Answers:
                     pred, args = match.groups()
                     if args is None:  # atom with no arg
                         args = ''
+                    elif self._first_arg_only:
+                        args = args.split(',')[0]
+                        if not args.endswith(')'):
+                            args = args + ')'
                     yield pred + args  # just send the match
                     continue
                 pred, args = match.groups()

@@ -85,9 +85,7 @@ def test_discard_quotes(quotes_answers):
     answers = quotes_answers.discard_quotes.by_predicate.first_arg_only
     assert next(answers) == {'a': frozenset({'c'}), 'b': frozenset({'d'})}
     answers = quotes_answers.discard_quotes.by_predicate.first_arg_only.atoms_as_string
-    assert next(answers) == {'a("c")', 'b("d","e")'}
-    # Above assert is not correct and will break if issue #8 is fixed.
-    # assert next(answers) == {'a("c")', 'b("d")'}
+    assert next(answers) == {'a("c")', 'b("d")'}
     assert next(answers, None) is None
 
 def test_discard_quotes_careful_parsing(quotes_answers):
@@ -100,9 +98,7 @@ def test_discard_quotes_careful_parsing(quotes_answers):
     answers = quotes_answers.discard_quotes.by_predicate.first_arg_only
     assert next(answers) == {'a': frozenset({'c'}), 'b': frozenset({'d'})}
     answers = quotes_answers.careful_parsing.discard_quotes.by_predicate.first_arg_only.atoms_as_string
-    assert next(answers) == {'a("c")', 'b("d","e")'}
-    # Above assert is not correct and will break if issue #8 is fixed.
-    # assert next(answers) == {'a("c")', 'b("d")'}
+    assert next(answers) == {'a("c")', 'b("d")'}
     assert next(answers, None) is None
 
 def test_discard_quotes_complex(complex_quotes_answers):
@@ -144,7 +140,13 @@ def test_tunning_first_arg_only(simple_answers):
 
 
 def test_tunning_atoms_as_string_and_sorted_more_complex(many_atoms_answers):
-    answers = many_atoms_answers.atoms_as_string.sorted
+    answers = many_atoms_answers.atoms_as_string.sorted.first_arg_only
+    assert next(answers) == tuple(sorted('a b(4) b(3) a(1) vv(1) vv v(a) v(b)'.split()))
+    assert next(answers, None) is None
+
+
+def test_tunning_atoms_as_string_and_sorted_more_complex_careful_parsing(many_atoms_answers):
+    answers = many_atoms_answers.atoms_as_string.sorted.first_arg_only.careful_parsing
     assert next(answers) == tuple(sorted('a b(4) b(3) a(1) vv(1) vv v(a) v(b)'.split()))
     assert next(answers, None) is None
 
