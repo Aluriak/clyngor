@@ -26,7 +26,7 @@ def quotes_answers():
 @pytest.fixture
 def complex_quotes_answers():
     return Answers((
-        'a("\"cou\"cou\"") b(""&"&"1234""&"")',
+        'a("\"cou\"cou\"") b(""&"&"1234""&"")',  # Random gibberish
     ))
 
 @pytest.fixture
@@ -149,6 +149,16 @@ def test_tunning_atoms_as_string_and_sorted_more_complex_careful_parsing(many_at
     answers = many_atoms_answers.atoms_as_string.sorted.first_arg_only.careful_parsing
     assert next(answers) == tuple(sorted('a b(4) b(3) a(1) vv(1) vv v(a) v(b)'.split()))
     assert next(answers, None) is None
+
+
+def test_first_arg_only():
+    answers = Answers(('p(1,2,3)',)).first_arg_only
+    assert next(answers) == {('p', 1)}
+
+
+def test_first_arg_only_with_careful_parsing():
+    answers = Answers(('p("1,5","2,456",3)',)).first_arg_only.careful_parsing
+    assert next(answers) == {('p', '"1,5"')}
 
 
 def test_tunning_atoms_as_string_and_sorted(simple_answers):

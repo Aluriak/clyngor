@@ -46,3 +46,11 @@ def test_file_saving_api_with_as_pyasp(asp_code):
     # must be the same as regular repr of answer sets
     answers = frozenset(ASP(asp_code))
     assert answers == read_answers
+
+
+def test_remove_quotes_argument():
+    example_inputs = ['"\"a\"","b\""', '\\"a\\","b\\"']
+    expected_results = ['"a",b"', '\\"a\\","b\\"']
+
+    for found, expected in zip(map(utils.remove_arguments_quotes,example_inputs), expected_results):
+        assert found == expected

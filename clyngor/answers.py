@@ -177,7 +177,7 @@ class Answers:
                 if args:
                     args = args[1:-1]
                     if self._discard_quotes and not self._as_pyasp:
-                        args = utils.remove_quotes_arguments(args)
+                        args = utils.remove_arguments_quotes(args)
                     if not self._collapse_atoms:  # else: atom as string
                         # parse also integers, if asked to
                         args = tuple(
