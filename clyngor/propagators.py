@@ -89,6 +89,7 @@ class Propagator:
                                         if isinstance(fol, str))
         self._raw_followeds = frozenset(fol for fol in self._followeds
                                         if not isinstance(fol, str))
+        self.__discarding_model = False
 
 
     def init(self, init):
@@ -109,6 +110,9 @@ class Propagator:
 
 
     def propagate(self, ctl, changes):
+        if self.__discarding_model:
+            # propagation during model discarding
+            return
         value_of = ctl.assignment.value
         values = {
             repr: value_of(lit)
@@ -124,22 +128,25 @@ class Propagator:
         else:
             return
 
-        # object may have invalidated the model
         if discard:
-            self.__discard_model(ctl)
+            self.__discard_model(ctl, use_lit=next(iter(changes)))
 
-    def __discard_model(self, ctl):
+
+    def __discard_model(self, ctl, use_lit):
         """Make the current model false by adding a clause
         """
-        one_literal = ctl.add_literal()
         # make it true, then false.
-        if not ctl.add_clause([one_literal]) or not ctl.propagate():
+        self.__discarding_model = True
+        add_clause_failure = not ctl.add_nogood([use_lit], tag=True, lock=True)
+        if add_clause_failure:
+            # print('STATE:', add_clause_failure)
+            self.__discarding_model = False
             return
-        if not ctl.add_nogood([one_literal]) or not ctl.propagate():
+        propagation_failure = not ctl.propagate()
+        self.__discarding_model = False
+        # print('STATE:', add_clause_failure, propagation_failure)
+        if add_clause_failure or propagation_failure:
             return
-
-    def check(self, ctl):
-        return self.propagate(ctl, [])
 
 
     def _match_str(self, atom:str) -> bool:

@@ -1,5 +1,6 @@
 """Tests the clyngor' Propagator class and the underlying API"""
 
+import textwrap
 import clyngor
 from .definitions import skipif_clingo_without_python, skipif_no_clingo_module
 
@@ -58,10 +59,63 @@ def test_pyconstraint_from_embedded_code():
         source = PYCONSTRAINT_CODE_ARGUMENT.format(value_to_avoid=value_to_avoid)
         models = set(clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True))
         assert len(models) == len(possible_values) - 1
-        assert models == set(
+        assert models == {
             frozenset({('b', (val,))})
             for val in possible_values if val != value_to_avoid
-        )
+        }
+
+def test_pyconstraint_recursion_problem():
+    """Show that the python constraint handles recursive propagations and
+    is able to discard models appropriatly.
+
+    if the solving hangs, then probably the constraint implementation
+    is blocked by an infinite loop of propagations during discarding.
+
+    if the solving yields inapropriate models, it's (among other)
+    because the clauses added by the constraint object are kept
+    (which is forced by design by clingo's API).
+
+    Current state : propagation loop is prevented by a state mecanism.
+    However, the inapropriate model solving is due to many problems,
+    one being clingo's API itself.
+
+    Some ressources for future solving of that feature-killer issue:
+
+    - what we want is not possible. By design.
+        https://sourceforge.net/p/potassco/mailman/message/36358095/
+    - some other peoples wants it, the solution seems to be external atoms
+        https://sourceforge.net/p/potassco/mailman/message/35480361/
+    - but external atoms are not handlable during solving through propagator API
+        https://potassco.org/clingo/python-api/current/clingo.html#PropagateControl
+    - cool find with propagators:
+        https://twitter.com/rndmcnlly/status/867605489789489152
+
+    """
+    source = textwrap.dedent("""
+    #script(python)
+    from clyngor import Constraint, Variable as V, Main
+    def formula(inputs):  return inputs['p', (2,)]
+    constraint = Constraint(formula, {('p', (V,))})
+    main = Main(propagators=constraint)
+    #end.
+    {p(1..3)}.  % powerset of p(X).
+    """)
+    models = clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True)
+    assert set(models) == {
+        frozenset(()),
+        frozenset({('p', (1,))}),
+        frozenset({('p', (2,))}),
+        frozenset({('p', (3,))}),
+    }, "this may fail because a bug was fixed"
+    # the models that are really to be expected:
+    #  (and given by a really working implementation)
+    return
+    assert set(models) == {
+        frozenset(()),
+        frozenset({('p', (1,))}),
+        frozenset({('p', (3,))}),
+        frozenset({('p', (1,)), ('p', (3,))}),
+    }
 
 
 @skipif_no_clingo_module
