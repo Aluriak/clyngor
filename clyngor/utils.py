@@ -53,6 +53,27 @@ def make_hashable(val):
     return val
 
 
+def remove_arguments_quotes(arguments:str):
+    """Remove quotes at the beginning and at the end
+    of the given arguments in ASP format.
+
+    This function is used by the weak parser, and therefore
+    does not need to meet robustness criterion.
+
+    >>> remove_arguments_quotes('a,b')
+    'a,b'
+    >>> remove_arguments_quotes('"a","b"')
+    'a,b'
+    >>> remove_arguments_quotes('"a",b')
+    'a,b'
+    """
+    def is_quoted(arg:str) -> bool:
+        return (isinstance(arg, str) and len(arg) >= 2
+                and arg[0] == '"' and arg[-1] == '"' and arg[-2] != '\\')
+    return ','.join(arg[1:-1] if is_quoted(arg) else arg
+                    for arg in arguments.split(','))
+
+
 def clingo_value_to_python(value:object) -> int or str or tuple:
     """Convert a clingo.Symbol object to the python equivalent"""
     if isinstance(value, (int, str)):

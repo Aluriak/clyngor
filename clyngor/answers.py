@@ -37,6 +37,8 @@ class Answers:
         self._group_atoms = False
         self._as_pyasp = False
         self._sorted = False
+        self._discard_quotes = False
+        # TODO: break api to add keep quotes instead of discard quotes.
         self._careful_parsing = False
         self._collapse_atoms= False
         self._collapse_args = True
@@ -77,6 +79,12 @@ class Answers:
     def sorted(self):
         """Sort the atom (or the args when grouped)"""
         self._sorted = True
+        return self
+
+    @property
+    def discard_quotes(self):
+        """Discard the quotes of the string"""
+        self._discard_quotes = True
         return self
 
     @property
@@ -141,8 +149,13 @@ class Answers:
         """Yield atoms as (pred, args) according to parsing options"""
         REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)(\([^)]+\))?')
         if self._careful_parsing:
+            # _discard_quotes is incompatible with atoms_as_string and as_pyasp.
+            # atom_as_string: remove the quotes delimiting arguments.
+            # as_pyasp: remove the quotes for the arguments.
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
+                self._discard_quotes and not self._atoms_as_string and not self._as_pyasp,
+                self._first_arg_only,
                 parse_integer=self._parse_int
             ).parse_terms(answer_set)
 
@@ -153,12 +166,18 @@ class Answers:
                     pred, args = match.groups()
                     if args is None:  # atom with no arg
                         args = ''
+                    elif self._first_arg_only:
+                        args = args.split(',')[0]
+                        if not args.endswith(')'):
+                            args = args + ')'
                     yield pred + args  # just send the match
                     continue
                 pred, args = match.groups()
                 assert args is None or (args.startswith('(') and args.endswith(')'))
                 if args:
                     args = args[1:-1]
+                    if self._discard_quotes and not self._as_pyasp:
+                        args = utils.remove_arguments_quotes(args)
                     if not self._collapse_atoms:  # else: atom as string
                         # parse also integers, if asked to
                         args = tuple(
