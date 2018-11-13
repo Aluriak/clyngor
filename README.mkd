@@ -225,12 +225,17 @@ the official module can be used by clyngor if it is available.
 
 ## Changelog
 
-- 0.4.0
+- 0.4.0 (todo)
     - predicat to know if python/lua are available with used clingo binary
     - easy interface for most use cases using type hint for embedded python
     - easy python constraints in ASP with Constraint type
     - add support for propagators
     - add support for clingo official python module
+- 0.3.10
+    - support for `.discard_quotes` option
+    - bugfix: `.atom_as_string` and `.first_arg_only` collision
+    - bugfix: more robust tempfile deletion and closing management
+    - [demonstration](examples/pyconstraint-is-not-working.lp) of the non-working Constraint type implementation
 
 
 ## from pyasp to clyngor
@@ -278,3 +283,9 @@ def find_direct_inclusions(model) -> dict:
     answers = tuple(clyngor.solve(programs, inline=add_atoms).as_pyasp.parse_args)
     return answers
 ```
+
+
+## Thanks
+To [Arnaud Belcour](https://github.com/ArnaudBelcour) for his works and frequent feedbacks.
+
+To [Domoritz](https://github.com/domoritz) for his questions and feedbacks.
