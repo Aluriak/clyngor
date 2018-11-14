@@ -154,7 +154,7 @@ class Answers:
             # as_pyasp: remove the quotes for the arguments.
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
-                self._discard_quotes and not self._atoms_as_string and not self._as_pyasp,
+                self._discard_quotes and not self._atoms_as_string,
                 self._first_arg_only,
                 parse_integer=self._parse_int
             ).parse_terms(answer_set)
@@ -176,7 +176,7 @@ class Answers:
                 assert args is None or (args.startswith('(') and args.endswith(')'))
                 if args:
                     args = args[1:-1]
-                    if self._discard_quotes and not self._as_pyasp:
+                    if self._discard_quotes:
                         args = utils.remove_arguments_quotes(args)
                     if not self._collapse_atoms:  # else: atom as string
                         # parse also integers, if asked to
