@@ -22,4 +22,5 @@ def formula(inputs):  return inputs['p', (2,)]
 constraint = Constraint(formula, {('p', (V,))})
 main = Main(propagators=constraint)
 #end.
+% :- p(2).  % equivalent (in theory) to the python code above
 {p(1..3)}.  % powerset of p(X).
