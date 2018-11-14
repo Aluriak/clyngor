@@ -39,8 +39,8 @@ def test_file_saving_api_with_dict(asp_code):
 
 def test_file_saving_api_with_as_pyasp(asp_code):
     # create the read_answers from the dictionary repr of answer sets
-    as_dict_answers = tuple(ASP(asp_code).as_pyasp)
-    fname = utils.save_answers_in_file(as_dict_answers)
+    as_pyasp_answers = tuple(ASP(asp_code).as_pyasp)
+    fname = utils.save_answers_in_file(as_pyasp_answers)
     read_answers = frozenset(utils.load_answers_from_file(fname))
 
     # must be the same as regular repr of answer sets
