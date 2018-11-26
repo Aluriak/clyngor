@@ -20,6 +20,12 @@ class Atom:
     def arg(self, n):
         return self.arguments[n]
 
+    def __eq__(self, other_atom)-> bool:
+        return self.predicate == other_atom.predicate and self.arguments == other_atom.arguments
+
+    def __hash__(self):
+        return hash((self.predicate, self.arguments))
+
     def __str__(self):
         if self.nb_args() > 0:
             return '{}({})'.format(self.predicate, ','.join(self.arguments))
@@ -43,7 +49,7 @@ class TermSet:
     """
 
     def __init__(self, terms:iter=None):
-        self._terms = set(terms)
+        self._terms = frozenset(terms)
 
     def __iter__(self):
         return iter(self._terms)
