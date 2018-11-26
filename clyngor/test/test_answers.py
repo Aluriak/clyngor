@@ -1,7 +1,7 @@
 
 import pytest
 from clyngor.answers import Answers
-from clyngor.as_pyasp import Atom
+from clyngor.as_pyasp import Atom, TermSet
 
 @pytest.fixture
 def simple_answers():
@@ -110,19 +110,31 @@ def test_discard_quotes_complex(complex_quotes_answers):
 def test_as_pyasp_atom():
     answers = Answers(('a("b","d")',)).as_pyasp
     for atom in next(answers):
-        assert atom.__eq__(Atom(predicate='a', args=('"b"','"d"')))
+        assert atom == Atom(predicate='a', args=('"b"','"d"'))
 
-def test_as_pyasp_termset():
+def test_as_pyasp_termset_frozenset():
     answers = Answers(('a("b","d")',)).as_pyasp
-    assert next(answers).__eq__(frozenset((Atom(predicate='a',args=('"b"','"d"')),)))
+    assert next(answers) == frozenset((Atom(predicate='a',args=('"b"','"d"')),))
+
+def test_as_pyasp_termset_termset():
+    answers = Answers(('a("b","d")',)).as_pyasp
+    assert next(answers) == TermSet((Atom(predicate='a',args=('"b"','"d"')),))
+
+def test_as_pyasp_termset_string():
+    answers = Answers(('a("b","d")',)).as_pyasp
+    assert str(next(answers)) == 'a("b","d").'
+
+def test_as_pyasp_termset_termset_by_predicate():
+    answers = Answers(('a("b","d")',)).as_pyasp.by_predicate
+    assert next(answers) == {'a': TermSet((Atom(predicate='a',args=('"b"','"d"')),))}
 
 def test_discard_quotes_with_as_pyasp_termset():
     answers = Answers(('a("b","d")',)).as_pyasp.discard_quotes
-    assert next(answers).__eq__(frozenset((Atom(predicate='a',args=('b','d')),)))
+    assert next(answers) == TermSet((Atom(predicate='a',args=('b','d')),))
 
 def test_discard_quotes_with_as_pyasp_termset_and_careful_parsing():
     answers = Answers(('a("b","d")',)).parse_args.as_pyasp.discard_quotes.careful_parsing
-    assert next(answers).__eq__(frozenset((Atom(predicate='a',args=('b','d')),)))
+    assert next(answers) == TermSet((Atom(predicate='a',args=('b','d')),))
 
 
 def test_multiple_tunning_no_arg(noarg_answers):

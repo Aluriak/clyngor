@@ -204,7 +204,7 @@ class Answers:
             if self._group_atoms:
                 return {pred: frozenset() for pred in answer_set}
             if self._as_pyasp:
-                return builder(as_pyasp.Atom(pred, ()) for pred in answer_set)
+                return as_pyasp.TermSet(as_pyasp.Atom(pred, ()) for pred in answer_set)
             return builder(answer_set)
         elif self._first_arg_only:
             answer_set = builder((pred, args[0] if args else ())
@@ -219,9 +219,12 @@ class Answers:
                 if self._as_pyasp:
                     args = as_pyasp.Atom(pred, args)
                 mapping[pred].add(args)
-            return {pred: builder(args) for pred, args in mapping.items()}
+            if self._as_pyasp:
+                return {pred: as_pyasp.TermSet(args) for pred, args in mapping.items()}
+            else:
+                return {pred: builder(args) for pred, args in mapping.items()}
         elif self._as_pyasp:
-            return builder(as_pyasp.Atom(*atom) for atom in answer_set)
+            return as_pyasp.TermSet(as_pyasp.Atom(*atom) for atom in answer_set)
         return answer_set
 
 
