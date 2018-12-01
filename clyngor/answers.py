@@ -47,6 +47,17 @@ class Answers:
         self._with_optimization = False
         self.__on_end = on_end or (lambda: None)
 
+    def __del__(self):
+        """Call the on_end function, avoiding a too-many-file-open error.
+
+        That error happened in a recent project where clyngor
+        was called thousands of times, without accessing all models,
+        which prevented __iter__ method to ever call on_end function.
+        Hence the use of __del__.
+
+        """
+        self.clean_resources()
+
     @property
     def command(self) -> str:  return self._command
 
@@ -142,7 +153,11 @@ class Answers:
             answer_set = tuple(self._parse_answer(answer_set))
             parsed = self._format(answer_set)
             yield (parsed, optimization) if self._with_optimization else parsed
+        self.clean_resources()
+
+    def clean_resources(self):
         self.__on_end()
+        self.__on_end = lambda: None  # don't call it again
 
 
     def _parse_answer(self, answer_set:str) -> iter:
