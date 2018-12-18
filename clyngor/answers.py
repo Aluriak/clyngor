@@ -169,7 +169,7 @@ class Answers:
             # as_pyasp: remove the quotes for the arguments.
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
-                self._discard_quotes and not self._atoms_as_string and not self._as_pyasp,
+                self._discard_quotes and not self._atoms_as_string,
                 self._first_arg_only,
                 parse_integer=self._parse_int
             ).parse_terms(answer_set)
@@ -191,7 +191,7 @@ class Answers:
                 assert args is None or (args.startswith('(') and args.endswith(')'))
                 if args:
                     args = args[1:-1]
-                    if self._discard_quotes and not self._as_pyasp:
+                    if self._discard_quotes:
                         args = utils.remove_arguments_quotes(args)
                     if not self._collapse_atoms:  # else: atom as string
                         # parse also integers, if asked to
@@ -219,7 +219,7 @@ class Answers:
             if self._group_atoms:
                 return {pred: frozenset() for pred in answer_set}
             if self._as_pyasp:
-                return builder(as_pyasp.Atom(pred, ()) for pred in answer_set)
+                return as_pyasp.TermSet(as_pyasp.Atom(pred, ()) for pred in answer_set)
             return builder(answer_set)
         elif self._first_arg_only:
             answer_set = builder((pred, args[0] if args else ())
@@ -234,9 +234,12 @@ class Answers:
                 if self._as_pyasp:
                     args = as_pyasp.Atom(pred, args)
                 mapping[pred].add(args)
-            return {pred: builder(args) for pred, args in mapping.items()}
+            if self._as_pyasp:
+                return {pred: as_pyasp.TermSet(args) for pred, args in mapping.items()}
+            else:
+                return {pred: builder(args) for pred, args in mapping.items()}
         elif self._as_pyasp:
-            return builder(as_pyasp.Atom(*atom) for atom in answer_set)
+            return as_pyasp.TermSet(as_pyasp.Atom(*atom) for atom in answer_set)
         return answer_set
 
 
