@@ -17,7 +17,7 @@ from clyngor.propagators import Main as _default_running_sequence
 
 
 def solve(files:iter=(), options:iter=[], inline:str=None,
-          subproc_shell:bool=False, print_command:bool=False,
+          decoders:iter=(), subproc_shell:bool=False, print_command:bool=False,
           nb_model:int=0, time_limit:int=0, constants:dict={},
           clean_path:bool=True, stats:bool=True,
           clingo_bin_path:str=None, error_on_warning:bool=False,
@@ -32,6 +32,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
     inline -- ASP source code to feed the solver with
+    decoders -- iterable of decoders to apply on ASP (see clyngor.decoder)
     subproc_shell -- use shell=True in subprocess call (NB: you should not)
     print_command -- print full command to stdout before running it
     clean_path -- clean the path of given files before using them
@@ -118,7 +119,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
         return Answers(_gen_answers(stdout, stderr, statistics, error_on_warning),
                        command=' '.join(run_command), on_end=on_end,
-                       statistics=statistics, with_optimization=True)
+                       decoders=decoders, statistics=statistics,
+                       with_optimization=True)
 
 
 def command(files:iter=(), options:iter=[], inline:str=None,

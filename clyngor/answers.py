@@ -18,9 +18,10 @@ class Answers:
     """
 
     def __init__(self, answers:iter, command:str='', statistics:dict={},
-                 *, with_optimization:bool=False, on_end:callable=None):
+                 *, decoders:iter=(), with_optimization:bool=False, on_end:callable=None):
         """Answer sets must be iterable of (predicate, args).
 
+        decoders -- iterable of decoders to apply on ASP (see clyngor.decoder).
         with_optimization -- answers are read as ((predicate, args), optimization)
                              allowing to retrieve optimization data of the answers.
                              See also Answers.with_optimization property.
@@ -33,6 +34,7 @@ class Answers:
         self._answers = iter(answers)
         self._command = str(command or '')
         self._statistics = statistics  # will be updated by reading method
+        self._decoders = tuple(decoders)
         self._first_arg_only = False
         self._group_atoms = False
         self._as_pyasp = False
