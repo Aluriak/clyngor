@@ -33,6 +33,13 @@ class ASPWarning(ValueError):
         self.atom = payload['atom']
 
 
+def parse_clingo_output(clingo_output:[str]):
+    "Yield answer sets found in given clingo output"
+    yield from (answer for anstype, answer
+                in parsing.Parser().parse_clasp_output(clingo_output)
+                if anstype == 'answer')
+
+
 def make_hashable(val):
     """Convert lists and sets into tuples and frozensets
 
@@ -104,14 +111,14 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
                     "".format(value, type(value)))
 
 
-def answer_set_to_str(answer_set:iter, atom_sep:str=' ') -> str:
+def answer_set_to_str(answer_set:iter, atom_end:str='', atom_sep:str=' ') -> str:
     """Returns the string representation of given answer set.
 
     answer_set -- iterable of tuple (predicate, args)
     atom_sep -- string joining the atoms
 
     """
-    return atom_sep.join(generate_answer_set_as_str(answer_set))
+    return atom_sep.join(generate_answer_set_as_str(answer_set, atom_end=atom_end))
 
 
 def generate_answer_set_as_str(answer_set:iter, atom_end:str='') -> iter:
