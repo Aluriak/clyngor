@@ -37,6 +37,7 @@ class Answers:
         self._decoders = tuple(decoders)
         self._first_arg_only = False
         self._group_atoms = False
+        self._group_atoms_with_arity = False
         self._as_pyasp = False
         self._sorted = False
         self._discard_quotes = False
@@ -80,6 +81,14 @@ class Answers:
         """Group atoms by predicate. Answer sets are then dict with predicate
         as keys and collection of args as value."""
         self._group_atoms = True
+        return self
+
+    @property
+    def by_arity(self):
+        """Group atoms by predicate and arity. Answer sets are then dict with
+        predicate/arity as keys and collection of args as value."""
+        self._group_atoms = True
+        self._group_atoms_with_arity = True
         return self
 
     @property
@@ -236,6 +245,9 @@ class Answers:
                 if self._as_pyasp:
                     args = as_pyasp.Atom(pred, args)
                 mapping[pred].add(args)
+                if self._group_atoms_with_arity:
+                    mapping[pred, len(args)].add(args)
+                    mapping[f'{pred}/{len(args)}'].add(args)
             if self._as_pyasp:
                 return {pred: as_pyasp.TermSet(args) for pred, args in mapping.items()}
             else:
