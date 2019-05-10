@@ -230,6 +230,20 @@ clyngor.CLINGO_BIN_PATH = 'path/to/clingo'
 ```
 
 Note that it will be the very first parameter to [`subprocess.Popen`](https://docs.python.org/3/library/subprocess.html#popen-constructor).
+The `solve` function also support the `clingo_bin_path` parameter.
+
+The third solution is to use the decorator `with_clingo_bin`, which modify the global variable
+during the execution of a specific function:
+
+```python
+import clyngor
+
+@clyngor.with_clingo_bin('clingo454')
+def sequence():
+    ...
+    clyngor.solve(...)  # will use clingo454, not clingo, unless clingo_bin_path is given
+    ...
+```
 
 
 ### `clyngor.solve` parameters
@@ -275,6 +289,7 @@ the official module can be used by clyngor if it is available.
     - see [further ideas](#Further-ideas)
 - 0.3.16
     - support for `.by_arity`, equivalent to `.by_predicate` but with predicate and arity
+    - decorator `with_clingo_bin`, changing clingo binary path for encapsulated function
 - 0.3.14
     - decoders support, see [`clyngor.decoder`](clyngor/decoder.py) and [doc](#decoders)
 - 0.3.10

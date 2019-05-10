@@ -1,7 +1,7 @@
 CLINGO_BIN_PATH = 'clingo'
 __version__ = '0.3.16.dev0'
 
-from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python
+from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python, with_clingo_bin
 from clyngor.answers import Answers, ClingoAnswers
 from clyngor.solving import solve, clingo_version, command
 from clyngor.inline import ASP

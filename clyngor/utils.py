@@ -3,6 +3,7 @@
 
 import os
 import tempfile
+import functools
 from clyngor import parsing
 
 try:
@@ -208,3 +209,28 @@ def cleaned_path(path:str, error_if_invalid:bool=True) -> str:
     if error_if_invalid and not os.path.exists(path):
         open(path)  # will raise FileExistsError
     return path
+
+
+def with_clingo_bin(clingo_bin:str) -> callable:
+    """Generate a wrapper where, during func call, the CLINGO_BIN_PATH clyngor
+    variable is set of *clingo_bin*.
+
+    Example:
+
+        @with_clingo_bin('~/bin/clingo-3.2.1')
+        def solve_problem(...):
+            clyngor.solve(...)
+
+    Not thread safe.
+
+    """
+    def wrapper(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            import clyngor
+            regular_bin, clyngor.CLINGO_BIN_PATH = clyngor.CLINGO_BIN_PATH, clingo_bin
+            ret = func(*args, **kwargs)
+            clyngor.CLINGO_BIN_PATH = regular_bin
+            return ret
+        return wrapped
+    return wrapper
