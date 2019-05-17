@@ -163,6 +163,8 @@ def test_multiple_opt_values():
             assert model == frozenset(next(expected_answer))
         elif type == 'optimization':
             assert model == next(expected_optimization)
+        elif type == 'optimum found':
+            assert model == True
         else:  # impossible
             assert False
     # ensure that all data has been found

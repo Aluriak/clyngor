@@ -200,11 +200,11 @@ def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
     """
     answer = None  # is used to generate a model only when we are sur there is (no) optimization
     for ptype, payload in parse_clasp_output(stdout, yield_stats=True):
-        if ptype == 'answer':
+        if ptype == 'answer':  # yield previously found answer
             if answer is not None:
                 yield answer, None  # no optimization to yield
             answer = payload
-        elif ptype == 'optimization':
+        elif ptype in {'optimization', 'optimum found'}:
             if answer is not None:
                 yield answer, payload
                 answer = None

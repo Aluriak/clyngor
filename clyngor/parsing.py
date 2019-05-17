@@ -170,7 +170,7 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     yield_stats -- yields final statistics as a mapping {field: value}
                    under type 'statistics'
     yield_opti  -- yields line sometimes following an answer set,
-                   beginning with 'Optimization: '.
+                   beginning with 'Optimization: ' or 'OPTIMUM FOUND'.
     yield_info  -- yields all lines not included in other types, including the
                    first lines not related to first answer
                    under type 'info' as a tuple of lines
@@ -182,7 +182,7 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     with termset a string containing the raw data.
 
     """
-    ASW_FLAG, OPT_FLAG, PROGRESS = 'Answer: ', 'Optimization: ', 'Progression :'
+    ASW_FLAG, OPT_FLAG, OPT_FOUND, PROGRESS = 'Answer: ', 'Optimization: ', 'OPTIMUM FOUND', 'Progression :'
     output = iter(output.splitlines() if isinstance(output, str) else output)
 
     # get the first lines
@@ -201,6 +201,8 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
             yield 'answer', next(output)
         elif line.startswith(OPT_FLAG) and yield_opti:
             yield 'optimization', tuple(map(int, line[len(OPT_FLAG):].strip().split()))
+        elif line.startswith(OPT_FOUND) and yield_opti:
+            yield 'optimum found', True
         elif line.startswith(PROGRESS) and yield_prgs:
             yield 'progression', line[len(PROGRESS):].strip()
         elif not line.strip():  # empty line: statistics are beginning
