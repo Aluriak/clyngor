@@ -78,7 +78,6 @@ class Answers:
         self._with_optimality = True
         return self
 
-
     @property
     def first_arg_only(self):
         """Keep only the first argument, and do not enclose it in a tuple."""
