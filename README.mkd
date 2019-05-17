@@ -290,6 +290,7 @@ the official module can be used by clyngor if it is available.
 - 0.3.16
     - support for `.by_arity`, equivalent to `.by_predicate` but with predicate and arity
     - decorator `with_clingo_bin`, changing clingo binary path for encapsulated function
+    - support for `.with_optimality`, giving optimization and optimality along with the model
 - 0.3.14
     - decoders support, see [`clyngor.decoder`](clyngor/decoder.py) and [doc](#decoders)
 - 0.3.10

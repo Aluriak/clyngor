@@ -22,7 +22,7 @@ class Answers:
         """Answer sets must be iterable of (predicate, args).
 
         decoders -- iterable of decoders to apply on ASP (see clyngor.decoder).
-        with_optimization -- answers are read as ((predicate, args), optimization)
+        with_optimization -- answers are read as ((predicate, args), optimization, optimality)
                              allowing to retrieve optimization data of the answers.
                              See also Answers.with_optimization property.
         on_end -- if callable, called when all answer sets are exhausted.
@@ -30,7 +30,7 @@ class Answers:
         """
         if not with_optimization:
             # emulate optimization with None value
-            answers = ((answer, None) for answer in answers)
+            answers = ((answer, None, False) for answer in answers)
         self._answers = iter(answers)
         self._command = str(command or '')
         self._statistics = statistics  # will be updated by reading method
@@ -48,6 +48,7 @@ class Answers:
         self._parse_int = True
         self._ignore_args = False
         self._with_optimization = False
+        self._with_optimality = False
         self.__on_end = on_end or (lambda: None)
 
     def __del__(self):
@@ -69,6 +70,14 @@ class Answers:
         """Yield (model, optimization) instead of just model"""
         self._with_optimization = True
         return self
+
+    @property
+    def with_optimality(self):
+        """Yield (model, optimization, optimality) instead of just model"""
+        self._with_optimization = True
+        self._with_optimality = True
+        return self
+
 
     @property
     def first_arg_only(self):
@@ -160,10 +169,15 @@ class Answers:
 
     def __iter__(self):
         """Yield answer sets"""
-        for answer_set, optimization in self._answers:
+        for answer_set, optimization, optimality in self._answers:
             answer_set = tuple(self._parse_answer(answer_set))
             parsed = self._format(answer_set)
-            yield (parsed, optimization) if self._with_optimization else parsed
+            if self._with_optimality:
+                yield parsed, optimization, optimality
+            elif self._with_optimization:
+                yield parsed, optimization
+            else:
+                yield parsed
         self.clean_resources()
 
     def clean_resources(self):
@@ -288,7 +302,7 @@ class ClingoAnswers(Answers):
                 answer_set = tuple((a.name, utils.clingo_value_to_python(a.arguments))
                                    for a in model.symbols(atoms=True))
                 parsed = self._format(answer_set)
-                yield (parsed, optimization) if self._with_optimization else parsed
+                yield (parsed, None, None) if self._with_optimization else parsed
 
 
     @property
