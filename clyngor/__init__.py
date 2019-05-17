@@ -1,5 +1,5 @@
 CLINGO_BIN_PATH = 'clingo'
-__version__ = '0.3.16.dev0'
+__version__ = '0.3.16'
 
 from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python, with_clingo_bin
 from clyngor.answers import Answers, ClingoAnswers
