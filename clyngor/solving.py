@@ -215,7 +215,7 @@ def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
         elif ptype == 'info':
             pass  # don't care
         else:
-            assert ptype in parse_clasp_output.out_types, 'solving.parse_clasp_output yields an unexpceted type ' + repr(ptype)
+            assert ptype in parse_clasp_output.out_types, 'solving.parse_clasp_output yields an unexpected type ' + repr(ptype)
     if answer is not None:  # if no optimization, probably one miss
         yield answer, None
 
