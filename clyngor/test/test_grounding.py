@@ -12,7 +12,6 @@ def test_simple():
     assert found == expected
 
 
-
 def test_with_opts():
     ASP = r"""
 q(1..10).
@@ -27,4 +26,3 @@ nb(sum,N):- N=#sum{X:p(X)}.
     found = frozenset(opt_models_from_clyngor_answers(solve_from_grounded(grounded).by_predicate))
     expected = frozenset(opt_models_from_clyngor_answers(solve_standard(inline=ASP).by_predicate))
     assert found == expected
-
