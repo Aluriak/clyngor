@@ -287,6 +287,10 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.18
+    - TermSet bugfix
+    - `TermSet.add` to add atoms to the TermSet
+    - `TermSet.union` to generate the union of multiple TermSet instances
 - 0.3.17
     - support for decoupled grounding and solving, as shown in [dedicated example](examples/decoupled-grounding.py)
     - new parameter `return_raw_output` for clyngor.solve, allowing to get stdout/stderr without treatments

@@ -5,6 +5,7 @@ Note that all the interface is not available. Just the very basics.
 
 """
 
+import itertools
 
 class Atom:
     """Keep an interface close to pyasp"""
@@ -59,6 +60,14 @@ class TermSet:
 
     def __eq__(self, other):
         return set(self._terms) == other
+
+    def add(self, atom:Atom):
+        "Add given Atom to self"
+        self._terms |= frozenset({atom})
+
+    def union(self, *others:object) -> object:
+        "Return a new TermSet containing all Atoms of self and each of others TermSet"
+        return TermSet(itertools.chain(self._terms, *(other._terms for other in others)))
 
     def to_file(self, fname:str=None):
         """Return the filename in which term set have been written"""

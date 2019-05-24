@@ -112,9 +112,38 @@ def test_as_pyasp_atom():
     for atom in next(answers):
         assert atom == Atom(predicate='a', args=('"b"','"d"'))
 
+
 def test_as_pyasp_termset_frozenset():
     answers = Answers(('a("b","d")',)).as_pyasp
     assert next(answers) == frozenset((Atom(predicate='a',args=('"b"','"d"')),))
+
+def test_as_pyasp_termset_frozenset_union():
+    answers = Answers(('a("b","d")',)).as_pyasp
+    answer_a = next(answers)
+    expected_a = frozenset((Atom(predicate='a',args=('"b"','"d"')),))
+    assert answer_a == expected_a
+    assert next(answers, None) is None
+    answers = Answers(('b("b","d")',)).as_pyasp
+    answer_b = next(answers)
+    expected_b = frozenset((Atom(predicate='b',args=('"b"','"d"')),))
+    assert answer_b == expected_b
+    assert next(answers, None) is None
+    assert isinstance(answer_a, TermSet)
+    assert isinstance(answer_b, TermSet)
+    assert answer_a.union(answer_b) == frozenset((Atom(predicate='a',args=('"b"','"d"')), Atom(predicate='b',args=('"b"','"d"'))))
+    # no modification of objects
+    assert answer_a == expected_a
+    assert answer_b == expected_b
+
+def test_as_pyasp_termset_add():
+    answers = Answers(('a("b","d")',)).as_pyasp
+    answer_a = next(answers)
+    expected_a = frozenset((Atom(predicate='a',args=('"b"','"d"')),))
+    assert answer_a == expected_a
+    assert next(answers, None) is None
+    answer_a.add(Atom(predicate='b',args=('"b"','"d"')))
+    expected_a = frozenset((Atom(predicate='a',args=('"b"','"d"')), Atom(predicate='b',args=('"b"','"d"'))))
+    assert answer_a == expected_a
 
 def test_as_pyasp_termset_termset():
     answers = Answers(('a("b","d")',)).as_pyasp
