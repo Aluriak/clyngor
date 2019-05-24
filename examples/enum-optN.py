@@ -7,6 +7,8 @@ import clyngor
 def opt_models_from_clyngor_answers(answers:iter, *, repeated_optimal:bool=True):
     """Return tuple of optimal models found by clingor.solve from answers.
 
+    Available as clyngor.opt_models_from_clyngor_answers
+
     This function assumes that:
 
     - Option '--opt-mode=optN' have been given to clingo.

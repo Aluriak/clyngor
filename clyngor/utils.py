@@ -234,3 +234,28 @@ def with_clingo_bin(clingo_bin:str) -> callable:
             return ret
         return wrapped
     return wrapper
+
+
+def opt_models_from_clyngor_answers(answers:iter, *, repeated_optimal:bool=True):
+    """Return tuple of optimal models found by clingor.solve from answers.
+
+    This function assumes that:
+
+    - Option '--opt-mode=optN' have been given to clingo.
+
+    - that models are yielded by clingo in increasing optimization value,
+    therefore there is no need to verify that a model B succeeding a model A
+    is better if they have different optimization value.
+
+    - that the first found optimal model will be given a second time, unless option repeated_optimal is set to False.
+
+    """
+    current_opt, models = None, []
+    for model, opt in answers.with_optimization:
+        if opt != current_opt:
+            current_opt, models = opt, []
+            if not repeated_optimal:  # the first optimal model will not be given again as last model
+                models.append(model)
+        else:
+            models.append(model)
+    return tuple(models)
