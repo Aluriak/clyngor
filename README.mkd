@@ -287,6 +287,10 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.17
+    - support for decoupled grounding and solving, as shown in [dedicated example](examples/decoupled-grounding.py)
+    - new parameter `return_raw_output` for clyngor.solve, allowing to get stdout/stderr without treatments
+    - [new example](examples/enum-optN.py) showing how to retrieve all optimal models
 - 0.3.16
     - support for `.by_arity`, equivalent to `.by_predicate` but with predicate and arity
     - decorator `with_clingo_bin`, changing clingo binary path for encapsulated function

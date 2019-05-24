@@ -25,7 +25,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
           use_clingo_module:bool=True, grounding_observers:iter=(),
           propagators:iter=(), solver_conf:object=None,
           running_sequence:callable=_default_running_sequence,
-          programs:iter=(['base', ()],)) -> iter:
+          programs:iter=(['base', ()],), return_raw_output:bool=False) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -42,6 +42,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     use_clingo_module -- will use the clingo module (if available)
     force_tempfile -- use tempfile, even if only inline code is given
     delete_tempfile -- delete used tempfiles
+    return_raw_output -- don't parse anything, just return iterators over stdout
+                         and stderr, without using clingo module
 
     The following options needs the propagator support and/or python clingo module:
     grounding_observers -- iterable of observers to add to the grounding process
@@ -84,6 +86,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         # so better not call clingo at all
         return Answers((), command=' '.join(run_command))
 
+    if return_raw_output:  use_clingo_module = False  # incompatibility
+
     if use_clingo_module:
         if time_limit != 0 or constants:
             raise ValueError("Options 'time_limit' and 'constants' are not "
@@ -110,6 +114,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
             clingo.stdin.close()
         stdout = (line.decode() for line in clingo.stdout)
         stderr = (line.decode() for line in clingo.stderr)
+        if return_raw_output:  return ''.join(stdout), ''.join(stderr)
         statistics = {}
 
         # remove the tempfile after the work.
