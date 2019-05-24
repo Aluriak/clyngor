@@ -48,7 +48,7 @@ class TermSet:
 
     """
 
-    def __init__(self, terms:iter=None):
+    def __init__(self, terms:iter=()):
         self._terms = frozenset(terms)
 
     def __iter__(self):
