@@ -29,7 +29,7 @@ class Atom:
 
     def __str__(self):
         if self.nb_args() > 0:
-            return '{}({})'.format(self.predicate, ','.join(self.arguments))
+            return '{}({})'.format(self.predicate, ','.join(map(str, self.arguments)))
         else:
             return self.predicate
     def __repr__(self): return str(self)

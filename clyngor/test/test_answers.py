@@ -111,6 +111,12 @@ def test_as_pyasp_atom():
     answers = Answers(('a("b","d")',)).as_pyasp
     for atom in next(answers):
         assert atom == Atom(predicate='a', args=('"b"','"d"'))
+        print(atom)
+    answers = Answers(('a(1,"2.3")',)).as_pyasp
+    for atom in next(answers):
+        assert atom == Atom(predicate='a', args=(1,'"2.3"'))
+        print(atom)
+
 
 
 def test_as_pyasp_termset_frozenset():
