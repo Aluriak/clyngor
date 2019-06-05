@@ -79,7 +79,7 @@ installed and importable, clyngor can use it for various tasks.
 Using the official API leads to the following changes :
 
 - both robust and quick parsing, instead of the simple vs slow method
-- some options are not supported : constants, time-limit, parsing error handling
+- some options are not supported : constants, [time-limit](clyngor/test/test_time_limit.py), parsing error handling, [decoupled grounding/solving](clyngor/test/test_grounding.py)
 
 You can activate the use of the clingo module by calling once `clyngor.activate_clingo_module()`
 or calling `clyngor.solve` with argument `use_clingo_module` set to `True`.
