@@ -90,28 +90,28 @@ class Parser:
 
         examples:
 
-            >>> Parser(False, True).parse_terms('a(b,c(d))')
-            frozenset({('a', ('b', 'c(d)'))})
+        >>> Parser(False, True).parse_terms('a(b,c(d))')
+        frozenset({('a', ('b', 'c(d)'))})
 
-            >>> Parser(True, True).parse_terms('a(b,c(d))')
-            frozenset({'a(b,c(d))'})
+        >>> Parser(True, True).parse_terms('a(b,c(d))')
+        frozenset({'a(b,c(d))'})
 
-            >>> Parser(False, False).parse_terms('a(b,c(d))')
-            frozenset({('a', ('b', ('c', ('d',))))})
+        >>> Parser(False, False).parse_terms('a(b,c(d))')
+        frozenset({('a', ('b', ('c', ('d',))))})
 
-            >>> Parser(False, False).parse_terms('a')
-            frozenset({('a', ())})
+        >>> Parser(False, False).parse_terms('a')
+        frozenset({('a', ())})
 
-            >>> Parser(True, False).parse_terms('a(b,c(d))')  # doctest: +IGNORE_EXCEPTION_DETAIL
-            Traceback (most recent call last):
-            ...
-            ValueError
+        >>> Parser(True, False).parse_terms('a(b,c(d))')  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError
 
-            >>> Parser(parse_integer=False).parse_terms('a(3)')
-            frozenset({('a', ('3',))})
+        >>> Parser(parse_integer=False).parse_terms('a(3)')
+        frozenset({('a', ('3',))})
 
-            >>> Parser().parse_terms('a(3)')
-            frozenset({('a', (3,))})
+        >>> Parser().parse_terms('a(3)')
+        frozenset({('a', (3,))})
 
         """
         self.collapse_args = bool(collapse_args)
