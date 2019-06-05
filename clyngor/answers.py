@@ -299,22 +299,18 @@ class ClingoAnswers(Answers):
     """
     def __init__(self, solver, statistics:callable=(lambda: {})):
         assert clyngor.have_clingo_module()
-        super().__init__(())
+        super().__init__(self.__compute_answers(), with_optimization=True)
         self._solver = solver
         self._statistics = lambda s=solver: s.statistics
         assert callable(self._statistics)
 
-
-    def __iter__(self):
-        """Yield answer sets"""
+    def __compute_answers(self):
         kwargs = {'yield_': True, 'async': True}  # compat with 3.7
         with self._solver.solve(**kwargs) as models:
             for model in models:
-                answer_set = tuple((a.name, utils.clingo_value_to_python(a.arguments))
-                                   for a in model.symbols(atoms=True))
-                parsed = self._format(answer_set)
-                yield (parsed, None, None) if self._with_optimization else parsed
-
+                answer_set = set((a.name, utils.clingo_value_to_python(a.arguments))
+                                 for a in model.symbols(atoms=True))
+                yield answer_set, model.cost, model.optimality_proven
 
     @property
     def statistics(self) -> dict:
