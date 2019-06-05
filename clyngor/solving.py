@@ -63,7 +63,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
     stdin_feed = None  # data to send to stdin
-    use_clingo_module = use_clingo_module and clyngor.have_clingo_module()
+    use_clingo_module = use_clingo_module and clyngor.have_clingo_module() and not return_raw_output
     if use_clingo_module:
         # the clingo API do not handle stdin feeding
         force_tempfile = True
@@ -83,10 +83,9 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
 
     if not files and not inline and not stdin_feed:
         # in this case, clingo will wait for stdin input, which will never come
-        # so better not call clingo at all
+        # so better not call clingo at all, because answer is obvious: one empty model.
         return Answers((), command=' '.join(run_command))
 
-    if return_raw_output:  use_clingo_module = False  # incompatibility
 
     if use_clingo_module:
         if time_limit != 0 or constants:
@@ -95,7 +94,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         if solver_conf:
             raise NotImplementedError("Solver configuration handling is currently"
                                       "not implemented")
-        options = options.split() if isinstance(options, str) else options
+        options = list(shlex.split(options) if isinstance(options, str) else options)
         ctl = clyngor.clingo_module.Control(options)
         main = running_sequence(programs=programs, files=files, nb_model=nb_model,
                                 propagators=propagators, observers=grounding_observers,
