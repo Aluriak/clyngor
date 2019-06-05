@@ -68,8 +68,9 @@ def Main(files:iter=(), inline:str='', nb_model:int=0,
         prg.ground(programs)
         prg.configuration.solve.models = nb_model
         if generator:
-            return ClingoAnswers(prg)
-        prg.solve()
+            return ClingoAnswers(prg)  # will take care of solving by itself
+        else:
+            prg.solve()
     return main
 
 
