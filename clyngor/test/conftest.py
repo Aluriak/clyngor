@@ -4,6 +4,10 @@
 
 import pytest
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "slow: this test is slow to execute"
+    )
 
 def pytest_addoption(parser):
     parser.addoption('--quick', action='store_true',
