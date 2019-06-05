@@ -1,5 +1,6 @@
 
 import pytest
+import clyngor
 from clyngor.answers import Answers
 from clyngor.as_pyasp import Atom, TermSet
 
@@ -117,7 +118,14 @@ def test_as_pyasp_atom():
         assert atom == Atom(predicate='a', args=(1,'"2.3"'))
         print(atom)
 
-
+def test_bug_issue_7():
+    "inconsistencies in parsing when clingo module is used"
+    models = clyngor.solve(inline='a(1). e(X):- a(X).', use_clingo_module=True).sorted.atoms_as_string
+    model = next(models)
+    assert model == ('a(1)', 'e(1)')
+    with pytest.raises(StopIteration):
+        next(models)  # only one model
+    # assert False, 'everything ok'
 
 def test_as_pyasp_termset_frozenset():
     answers = Answers(('a("b","d")',)).as_pyasp
