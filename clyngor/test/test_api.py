@@ -73,7 +73,7 @@ def test_api_command():
 
 
 def test_api_asp(asp_code):
-    answers = ASP(asp_code)
+    answers = ASP(asp_code, use_clingo_module=False)  # clingo module offers a *really* different statistics set
     found = set()
     for answer in answers.by_predicate.sorted.first_arg_only:
         found.add(''.join(answer['obj']) + '×' + ''.join(answer['att']))
