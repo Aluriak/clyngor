@@ -288,8 +288,7 @@ class ClingoAnswers(Answers):
         assert clyngor.have_clingo_module()
         super().__init__(())
         self._solver = solver
-        self._statistics = lambda s=solver: json.dumps(s.statistics, sort_keys=True,
-                                                       indent=4, separators=(',', ': '))
+        self._statistics = lambda s=solver: s.statistics
         assert callable(self._statistics)
 
 
