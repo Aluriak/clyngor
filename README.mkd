@@ -114,6 +114,9 @@ p(X):- (X)=@f(1,2).  % ignored, because types do not match
 Without `converted_types`, user have to ensure that `f` is a function returning a list,
 and that arguments are of the expected type.
 
+Note that the [incoming clingo version](https://github.com/potassco/clingo/issues/147)
+is leading to that flexibility regarding returned values.
+
 
 ### Generalist propagators
 Propagators are presented in [this paper](http://drops.dagstuhl.de/opus/volltexte/2016/6733/). They are basically active
