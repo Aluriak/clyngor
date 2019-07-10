@@ -197,7 +197,7 @@ Remaining features for a good decoder support:
 
 
 ## Alternatives
-Clyngor is basically the total rewriting of [pyasp](https://github.com/sthiele/pyasp), which is now abandonned.
+Clyngor is basically the total rewriting of [pyasp](https://github.com/sthiele/pyasp), which is now abandoned.
 
 For an ORM approach, give a try to [clorm](https://github.com/daveraja/clorm).
 
