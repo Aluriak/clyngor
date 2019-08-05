@@ -1,6 +1,6 @@
 import pytest
 
-from clyngor import parsing
+from clyngor import parsing, answer_set_to_str
 from clyngor.parsing import Parser
 
 
@@ -39,6 +39,7 @@ def test_parse_args_without_predicat():
         ('c', ('""', ('', ('""', '""')))),
     }
     assert Parser().parse_terms(string) == expected
+    assert sorted(answer_set_to_str(expected).split()) == sorted(string.split())
 
 def test_parse_termset():
     string = 'a(b,10) c(d("a",d_d),"v,v",c) d(-2,0)'

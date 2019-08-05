@@ -1,7 +1,7 @@
 
 import tempfile
 from .test_api import asp_code  # fixture
-from clyngor import ASP, utils
+from clyngor import solve, ASP, utils
 
 
 def test_save_in_file(asp_code):
@@ -54,3 +54,21 @@ def test_remove_quotes_argument():
 
     for found, expected in zip(map(utils.remove_arguments_quotes,example_inputs), expected_results):
         assert found == expected
+
+def test_answer_set_to_str():
+    generate_answer_set_as_str = utils.generate_answer_set_as_str
+    assert '.'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())))) == 'a(1,2).b'
+    assert ''.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='.')) == 'a(1,2).b.'
+    assert '1'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='2')) == 'a(1,2)21b2'
+    assert ' '.join(generate_answer_set_as_str((('', ('v', 2)), ('b', (['v', 3],))), atom_end='.')) == '(v,2). b((v,3)).'
+    assert ' '.join(generate_answer_set_as_str((('', ('', ('', (2,)))),))) == '("",(2,))'
+
+def test_answer_set_to_str_complex():
+    generate_answer_set_as_str = utils.generate_answer_set_as_str
+    asp = 'a(a(2,3),(2,),b(c((d,),(e,f)))).'
+    models = tuple(ASP(asp).careful_parsing)
+    print('CAREFUL:', models)
+    models = tuple(ASP(asp))
+    print('NORMAL :', models)
+    answerset = models[0]
+    assert ' '.join(generate_answer_set_as_str(answerset, atom_end='.')) == asp

@@ -112,6 +112,26 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
                     "".format(value, type(value)))
 
 
+def python_value_to_asp(val:str or int or list or tuple, *, first_order:bool=True) -> str or tuple:
+    """Convert given python value in an ASP format"""
+    if isinstance(val, (str, int)):
+        return str(val) or '""'
+    elif isinstance(val, float):
+        return '"' + str(val) + '"'
+    elif isinstance(val, tuple):
+        assert len(val) == 2, "tuple value should be of size 2: (predicate, args))"
+        predicate, args = val
+        if args:
+            return predicate + python_value_to_asp(list(args), first_order=first_order)
+        else:  # no args
+            return predicate
+    elif isinstance(val, list):
+        ender = ',)' if len(val) == 1 and not first_order else ')'
+        return '(' + ','.join(map(python_value_to_asp.second_order, val)) + ender
+    raise ValueError(f"Python value '{repr(val)}' of type {type(val)} is not convertible in ASP.")
+python_value_to_asp.second_order = lambda x: python_value_to_asp(x, first_order=False)
+
+
 def answer_set_to_str(answer_set:iter, atom_end:str='', atom_sep:str=' ') -> str:
     """Returns the string representation of given answer set.
 
@@ -130,10 +150,6 @@ def generate_answer_set_as_str(answer_set:iter, atom_end:str='') -> iter:
 
     >>> '.'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ()))))
     'a(1,2).b'
-    >>> ''.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='.'))
-    'a(1,2).b.'
-    >>> '1'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='2'))
-    'a(1,2)21b2'
 
     """
     if isinstance(answer_set, dict):  # have been created using by_predicate, probably
@@ -145,10 +161,7 @@ def generate_answer_set_as_str(answer_set:iter, atom_end:str='') -> iter:
 
     template = '{}({})' + str(atom_end)
     for predicate, args in answer_set:
-        if args:
-            yield template.format(predicate, ','.join(map(str, args)))
-        else:
-            yield predicate + str(atom_end)
+        yield python_value_to_asp((predicate, args)) + str(atom_end)
 
 
 def answer_set_from_str(line:str, collapse_atoms:bool=False,
