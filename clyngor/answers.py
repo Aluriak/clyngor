@@ -299,7 +299,7 @@ class ClingoAnswers(Answers):
     """
     def __init__(self, solver, statistics:callable=(lambda: {})):
         assert clyngor.have_clingo_module()
-        super().__init__(self.__compute_answers(), with_optimization=True)
+        super().__init__(self.__compute_answers(), with_optimization=True, command='[clingo module call]')
         self._solver = solver
         self._statistics = lambda s=solver: s.statistics
         assert callable(self._statistics)
