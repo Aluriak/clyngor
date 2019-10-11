@@ -197,18 +197,22 @@ def clingo_version(clingo_bin_path:str=None) -> dict:
 
 
 def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
-                 error_on_warning:bool) -> (str, int or None, bool):
-    """Yield 3-uplet (answer set, optimization, optimum found),
+                 error_on_warning:bool) -> (str, int or None, bool, int):
+    """Yield 4-uplet (answer set, optimization, optimum found, answer number),
     and update given statistics dict with statistics payloads
 
     """
     answer = None  # is used to generate a model only when we are sur there is (no) optimization
+    answer_number = None
     optimization, optimum_found = None, False
     for ptype, payload in parse_clasp_output(stdout, yield_stats=True):
-        if ptype == 'answer':  # yield previously found answer
+        if ptype == 'answer_number':
             if answer is not None:
-                yield answer, optimization, optimum_found
-            answer, optimization, optimum_found = payload, None, False
+                yield answer, optimization, optimum_found, answer_number
+            answer, optimization, optimum_found, answer_number = payload, None, False, None
+            answer_number = payload
+        elif ptype == 'answer':  # yield previously found answer
+            answer = payload
         elif ptype == 'optimum found':
             optimum_found = payload
         elif ptype == 'optimization':
@@ -220,7 +224,8 @@ def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
         else:
             assert ptype in parse_clasp_output.out_types, 'solving.parse_clasp_output yields an unexpected type ' + repr(ptype)
     if answer is not None:  # if no optimization, probably one miss
-        yield answer, optimization, optimum_found
+        assert answer_number is not None, answer_number
+        yield answer, optimization, optimum_found, answer_number
 
     # handle stderr
     for payload in validate_clasp_stderr(stderr):

@@ -9,11 +9,13 @@ def test_simple_case():
                                          yield_stats=True, yield_info=True)
     models = []
     for type, payload in parsed:
-        assert type in ('statistics', 'info', 'answer')
+        assert type in ('statistics', 'info', 'answer', 'answer_number')
         if type == 'statistics':
             stats = payload
         elif type == 'answer':
             models.append(payload)
+        elif type == 'answer_number':
+            pass
         else:
             assert type == 'info'
             info = payload
@@ -73,6 +75,8 @@ def test_parse_termset_impossible():
 def test_string():
     """Show that string with comma in it is handled correctly"""
     parsed = Parser().parse_clasp_output(OUTCLASP_STRING.splitlines())
+    type, answer_number = next(parsed)
+    assert type == 'answer_number'
     type, model = next(parsed)
     assert next(parsed, None) is None, "there is only one model"
     assert type == 'answer', "the model is an answer"
@@ -84,6 +88,8 @@ def test_string():
 
 def test_complex_atoms():
     parsed = Parser().parse_clasp_output(OUTCLASP_COMPLEX_ATOMS.splitlines())
+    type, answer_number = next(parsed)
+    assert type == 'answer_number'
     type, model = next(parsed)
     assert next(parsed, None) is None, "there is only one model"
     assert type == 'answer', "the model is an answer"
@@ -135,6 +141,8 @@ def test_time_limit():
             assert model == next(expected_info)
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
+        elif type == 'answer_number':
+            assert isinstance(model, int) and model > 0, model
         elif type == 'optimization':
             assert model == (next(expected_optimization),)
         elif type == 'progression':
@@ -162,6 +170,8 @@ def test_multiple_opt_values():
             assert False, 'no info'
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
+        elif type == 'answer_number':
+            assert isinstance(model, int) and model > 0, model
         elif type == 'optimization':
             assert model == next(expected_optimization)
         elif type == 'optimum found':
@@ -196,6 +206,8 @@ def test_multithread_with_progression():
             assert False, 'no info'
         elif type == 'answer':
             assert model == frozenset(next(expected_answer))
+        elif type == 'answer_number':
+            assert isinstance(model, int) and model > 0, model
         elif type == 'optimization':
             assert model == next(expected_optimization)
         elif type == 'progression':

@@ -58,11 +58,11 @@ def many_atoms_answers():
 @pytest.fixture
 def optimized_answers():
     return Answers((
-        ('edge(4,"s…lp.") r_e_l(1,2)', 1, False),
-        ('edge(4,"s…lp.") r_e_l(1,2)', 1, False),
-        ('edge(4,"s…lp.") r_e_l(1,2)', 2, False),
-        ('edge(4,"s…lp.") r_e_l(1,2)', 3, False),
-        ('edge(4,"s…lp.") r_e_l(1,2)', 4, False),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 1, False, 1),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 1, False, 2),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 2, False, 3),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 3, False, 4),
+        ('edge(4,"s…lp.") r_e_l(1,2)', 4, False, 5),
     ), with_optimization=True)
 
 
@@ -288,8 +288,8 @@ def test_optimization_access(optimized_answers):
     assert next(answers) == ({('edge', (4, 's…lp.')), ('r_e_l', (1, 2))}, 1)
     answers = answers.no_arg
     assert next(answers) == ({'edge', 'r_e_l'}, 2)
-    answers.atoms_as_string
-    assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 3)
-    answers.with_optimality
-    assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 4, False)
+    answers.atoms_as_string.with_optimality
+    assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 3, False)
+    answers.with_answer_number
+    assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 4, False, 5)
     assert next(answers, None) is None

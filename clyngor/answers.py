@@ -53,7 +53,8 @@ class Answers:
         """
         if not with_optimization:
             # emulate optimization with None value
-            answers = ((answer, None, False) for answer in answers)
+            # TODO: verify that in absence of optimization, all answers are ALWAYS enumerated from 1 to n.
+            answers = ((answer, None, False, idx) for idx, answer in enumerate(answers, start=1))
         self._answers = iter(answers)
         self._command = str(command or '')
         self._statistics = statistics  # will be updated by reading method
@@ -72,6 +73,7 @@ class Answers:
         self._ignore_args = False
         self._with_optimization = False
         self._with_optimality = False
+        self._with_answer_number = False
         self.__on_end = on_end or (lambda: None)
 
     def __del__(self):
@@ -99,6 +101,14 @@ class Answers:
         """Yield (model, optimization, optimality) instead of just model"""
         self._with_optimization = True
         self._with_optimality = True
+        return self
+
+    @property
+    def with_answer_number(self):
+        """Yield (model, optimization, optimality, answer_number) instead of just model"""
+        self._with_optimization = True
+        self._with_optimality = True
+        self._with_answer_number = True
         return self
 
     @property
@@ -190,10 +200,12 @@ class Answers:
 
     def __iter__(self):
         """Yield answer sets"""
-        for answer_set, optimization, optimality in self._answers:
+        for answer_set, optimization, optimality, answer_number in self._answers:
             answer_set = tuple(self._parse_answer(answer_set))
             parsed = self._format(answer_set)
-            if self._with_optimality:
+            if self._with_answer_number:
+                yield parsed, optimization, optimality, answer_number
+            elif self._with_optimality:
                 yield parsed, optimization, optimality
             elif self._with_optimization:
                 yield parsed, optimization
