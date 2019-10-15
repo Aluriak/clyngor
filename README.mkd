@@ -290,12 +290,17 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.22
+    - optimize `opt_models_from_clyngor_answers` by using yield and answer number
+    - warning: this function returns now a generator instead of a tuple and loses `repeated_optimal` option
+- 0.3.21
+    - support for `.with_answer_number`, giving model, optimization, optimality and answer number
 - 0.3.20
-    - fix #7
+    - fix [#7](https://github.com/Aluriak/clyngor/issues/7)
     - improve testing cover, fix warning in recent versions of pytest
     - more robust options parsing when solving with clingo module
 - 0.3.19
-    - fix #16
+    - fix [#16](https://github.com/Aluriak/clyngor/issues/16)
 - 0.3.18
     - TermSet bugfix
     - `TermSet.add` to add atoms to the TermSet
