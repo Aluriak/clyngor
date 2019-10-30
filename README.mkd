@@ -290,6 +290,10 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.24
+    - access to the answer set number with `.with_answer_number`
+    - parsing and string reproduction of nested atoms such as `a((a("g(2,3)",(2)),))` is now correctly handled and tested
+    - fix the `models.command` output when clingo module is used
 - 0.3.20
     - fix #7
     - improve testing cover, fix warning in recent versions of pytest
