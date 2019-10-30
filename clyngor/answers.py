@@ -322,7 +322,7 @@ class ClingoAnswers(Answers):
             for model in models:
                 answer_set = set((a.name, utils.clingo_value_to_python(a.arguments))
                                  for a in model.symbols(atoms=True))
-                yield answer_set, model.cost, model.optimality_proven
+                yield answer_set, model.cost, model.optimality_proven, model.number
 
     @property
     def statistics(self) -> dict:
