@@ -291,10 +291,11 @@ the official module can be used by clyngor if it is available.
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
 - 0.3.24
-    - when using clingo module, the models contains only the output atoms, not everything
-    - access to the answer set number with `.with_answer_number`
-    - parsing and string reproduction of nested atoms such as `a((a("g(2,3)",(2)),))` is now correctly handled and tested
-    - fix the `models.command` output when clingo module is used
+    - `#show 3.` and `#show "hello !".` are [now handled](eb2002dc906d9fc32efd50738fc2c67100e1cd2)
+    - when using clingo module, the models contains only the output atoms, [not everything](31375774c437403e8a05f5fe8d0346caba0f43e4) (thank you Arnaud)
+    - [access to](cc60217975de123a5ef0d083fb10971e0d89c03e) the answer set number with `.with_answer_number`
+    - [parsing and string reproduction](c0c090c34a7028ba34c49815f0197c67c76e7bfb) of nested atoms such as `a((a("g(2,3)",(2)),))` is now correctly handled and tested
+    - [fix](1840c36e3f57c926a565fef7352cd1b083194e58) the `models.command` output when clingo module is used
 - 0.3.20
     - fix #7
     - improve testing cover, fix warning in recent versions of pytest

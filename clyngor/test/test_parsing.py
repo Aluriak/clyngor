@@ -93,6 +93,17 @@ def test_string():
     assert args == ('","',)
 
 
+def test_single_litteral():
+    """Show that string with comma in it is handled correctly"""
+    parsed = Parser().parse_clasp_output(OUTCLASP_SINGLE_LITERAL.splitlines())
+    type, answer_number = next(parsed)
+    assert type == 'answer_number'
+    type, model = next(parsed)
+    assert next(parsed, None) is None, "there is only one model"
+    assert type == 'answer', "the model is an answer"
+    assert len(model) == 2, "only 2 atom in it"
+    assert model == {3, '"hello !"'}
+
 def test_complex_atoms():
     parsed = Parser().parse_clasp_output(OUTCLASP_COMPLEX_ATOMS.splitlines())
     type, answer_number = next(parsed)
@@ -261,6 +272,19 @@ Models       : 1
 Calls        : 1
 Time         : 0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
 CPU Time     : 0.000s
+"""
+
+OUTCLASP_SINGLE_LITERAL = """clasp version 3.2.0
+Reading from test.lp
+Solving...
+Answer: 1
+3 "hello !"
+SATISFIABLE
+
+Models       : 1
+Calls        : 1
+Time         : 0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)
+CPU Time     : 0.001s
 """
 
 OUTCLASP_STRING = """clasp version 3.2.0

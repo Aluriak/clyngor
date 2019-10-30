@@ -84,7 +84,9 @@ def remove_arguments_quotes(arguments:str):
 
 def clingo_value_to_python(value:object) -> int or str or tuple:
     """Convert a clingo.Symbol object to the python equivalent"""
-    if isinstance(value, (int, str)):
+    if str(type(value)) == 'clingo.Symbol':
+        return clingo_symbol_as_python_value(value)
+    elif isinstance(value, (int, str)):
         return value
     elif isinstance(value, (tuple, list)):
         return tuple(map(clingo_value_to_python, value))
@@ -111,6 +113,20 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
     raise TypeError("Can't handle values like {} of type {}."
                     "".format(value, type(value)))
 
+
+def clingo_symbol_as_python_value(term) -> object:
+    "Convert a clingo.Symbol object to the python equivalent"
+    if str(term.type) == 'Function':
+        assert term.name is not None
+        return (term.name, clingo_value_to_python(term.arguments))
+    elif str(term.type) == 'String':
+        assert term.name is None
+        return ('"' + term.string + '"', ())
+    elif str(term.type) == 'Number':
+        assert term.name is None
+        return (term.number, ())
+    raise TypeError("Can't handle clingo.Symbol like {} of type {}."
+                    "".format(value, type(value)))
 
 def python_value_to_asp(val:str or int or list or tuple, *, args_of_predicate:bool=False) -> str or tuple:
     """Convert given python value in an ASP format"""

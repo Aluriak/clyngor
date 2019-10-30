@@ -36,9 +36,9 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
     def visit_single_value(self, node, children):
         return self.visit_subterm(node, children)
     def visit_one_uplet(self, node, children):
-        return self.visit_term(node, ('', children))
+        return self.visit_atom(node, ('', children))
     def visit_n_uplet(self, node, children):
-        return self.visit_term(node, ('', children))
+        return self.visit_atom(node, ('', children))
 
     def visit_text(self, node, children):
         text = tuple(children)[0] if children else ''
@@ -54,7 +54,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         else:
             return (predicate, tuple(args[0])) if args else predicate
 
-    def visit_term(self, node, children):
+    def visit_atom(self, node, children):
         predicate, *args = children
 
         if self.first_arg_only and args:
@@ -81,7 +81,8 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         def one_uplet():  return '(', subterm, ',', ')'
         def n_uplet():    return '(', subterm, ap.OneOrMore(',', subterm), ')'
         # NB: litteral outputed by #show are not handled.
-        def term():       return ident, ap.Optional("(", args, ")")
+        def atom():       return ident, ap.Optional("(", args, ")")
+        def term():       return [litteral, atom]
         def terms():      return ap.ZeroOrMore(term)
         return terms
 

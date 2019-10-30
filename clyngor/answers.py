@@ -11,7 +11,7 @@ from clyngor import as_pyasp, parsing, utils
 def naive_parsing_of_answer_set(answer_set:str, *, discard_quotes:bool=False, parse_int:bool=True, parse_args:bool=True) -> [(str, tuple)]:
     """Yield (pred, args), naively parsed from given answer set encoded as clingo output string"""
     # print('NAIVE_PARSING_OF_ANSWER_SET:', answer_set, f'\t discard_quotes={discard_quotes}, parse_int={parse_int}, parse_args={parse_args}')
-    REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*)(\([^)]+\))?')
+    REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*|[0-9]+|"[^"]*")(\([^)]+\))?')
 
     for match in REG_ANSWER_SET.finditer(answer_set):
         pred, args = match.groups()
@@ -27,6 +27,7 @@ def naive_parsing_of_answer_set(answer_set:str, *, discard_quotes:bool=False, pa
             ) if parse_args else args
         elif args:  # args should not be parsed
             args = args
+        pred = int(pred) if pred.isnumeric() else pred  # handle
         yield pred, args or ()
         # print('\t>', pred, args)
 
@@ -234,7 +235,7 @@ class Answers:
         elif isinstance(answer_set, str):  # the good ol' split
             # print('THE GOOD OLD SPLIT:', f"discard_quotes={self._discard_quotes}  collapse_atoms={self._collapse_atoms}")
             yield from self.__finish_parsing(naive_parsing_of_answer_set(answer_set, discard_quotes=self._discard_quotes and not self._collapse_atoms, parse_int=self._parse_int, parse_args=True or self._collapse_args or self._first_arg_only))
-        elif isinstance(answer_set, (set, tuple)) and all(isinstance(atom, tuple) for atom in answer_set):  # already parsed
+        elif isinstance(answer_set, (set, tuple)) and all(isinstance(atom, (str, int, tuple)) for atom in answer_set):  # already parsed
             # print('FROM SET OR TUPLE')
             yield from self.__finish_parsing(answer_set)
         else:  # unknown format
@@ -316,11 +317,12 @@ class ClingoAnswers(Answers):
         self._statistics = lambda s=solver: s.statistics
         assert callable(self._statistics)
 
+
     def __compute_answers(self):
         kwargs = {'yield_': True, 'async': True}  # compat with 3.7
         with self._solver.solve(**kwargs) as models:
             for model in models:
-                answer_set = set((a.name, utils.clingo_value_to_python(a.arguments))
+                answer_set = set(utils.clingo_symbol_as_python_value(a)
                                  for a in model.symbols(shown=True))
                 yield answer_set, model.cost, model.optimality_proven, model.number
 
