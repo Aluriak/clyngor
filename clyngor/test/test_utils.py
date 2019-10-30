@@ -64,12 +64,16 @@ def test_answer_set_to_str():
     assert ' '.join(generate_answer_set_as_str((('', ('', ('', (2,)))),))) == '("",(2,))'
     assert '.'.join(generate_answer_set_as_str((('a', (('', ('1', '2')),)),))) == 'a((1,2))'
 
+def test_answer_set_to_str_with_tuple():
+    asp = 'a(b,(2,3,(a,b))).'
+    model = next(ASP(asp).parse_args)
+    assert ' '.join(utils.generate_answer_set_as_str(model, atom_end='.')) == asp
+
 def test_answer_set_to_str_complex():
-    generate_answer_set_as_str = utils.generate_answer_set_as_str
     asp = 'a(a(2,3),(2,),b(c((d,),(e,f)))).'
     models = tuple(ASP(asp).parse_args)
     print('CAREFUL:', models)
     answerset = models[0]
     models = tuple(ASP(asp))
     print('NORMAL :', models)
-    assert ' '.join(generate_answer_set_as_str(answerset, atom_end='.')) == asp
+    assert ' '.join(utils.generate_answer_set_as_str(answerset, atom_end='.')) == asp
