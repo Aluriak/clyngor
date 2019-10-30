@@ -48,5 +48,6 @@ def ASP_one_model(source_code:str, **kwargs):
 
 # shortcuts
 ASP.best_model = ASP_last_model
+ASP.last_model = ASP_last_model
 ASP.one_model = ASP_one_model
 ASP.all_models = ASP
