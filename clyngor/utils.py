@@ -112,7 +112,7 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
                     "".format(value, type(value)))
 
 
-def python_value_to_asp(val:str or int or list or tuple, *, first_order:bool=True) -> str or tuple:
+def python_value_to_asp(val:str or int or list or tuple, *, args_of_predicate:bool=False) -> str or tuple:
     """Convert given python value in an ASP format"""
     if isinstance(val, (str, int)):
         return str(val) or '""'
@@ -122,14 +122,14 @@ def python_value_to_asp(val:str or int or list or tuple, *, first_order:bool=Tru
         assert len(val) == 2, "tuple value should be of size 2: (predicate, args))"
         predicate, args = val
         if args:
-            return predicate + python_value_to_asp(list(args), first_order=first_order)
+            return predicate + '(' + python_value_to_asp(list(args), args_of_predicate=bool(predicate)) + ')'
         else:  # no args
             return predicate
     elif isinstance(val, list):
-        ender = ',)' if len(val) == 1 and not first_order else ')'
-        return '(' + ','.join(map(python_value_to_asp.second_order, val)) + ender
+        ender = ',' if len(val) == 1 and not args_of_predicate else ''
+        return ','.join(map(python_value_to_asp, val)) + ender
     raise ValueError(f"Python value '{repr(val)}' of type {type(val)} is not convertible in ASP.")
-python_value_to_asp.second_order = lambda x: python_value_to_asp(x, first_order=False)
+# python_value_to_asp.in_predicate = lambda x: python_value_to_asp(x, args_of_predicate=True)
 
 
 def answer_set_to_str(answer_set:iter, atom_end:str='', atom_sep:str=' ') -> str:

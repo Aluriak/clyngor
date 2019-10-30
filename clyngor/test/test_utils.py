@@ -60,15 +60,16 @@ def test_answer_set_to_str():
     assert '.'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())))) == 'a(1,2).b'
     assert ''.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='.')) == 'a(1,2).b.'
     assert '1'.join(generate_answer_set_as_str((('a', (1, 2)), ('b', ())), atom_end='2')) == 'a(1,2)21b2'
-    assert ' '.join(generate_answer_set_as_str((('', ('v', 2)), ('b', (['v', 3],))), atom_end='.')) == '(v,2). b((v,3)).'
+    assert ' '.join(generate_answer_set_as_str((('', ('v', 2)), ('b', (('', ['v', 3]),))), atom_end='.')) == '(v,2). b((v,3)).'
     assert ' '.join(generate_answer_set_as_str((('', ('', ('', (2,)))),))) == '("",(2,))'
+    assert '.'.join(generate_answer_set_as_str((('a', (('', ('1', '2')),)),))) == 'a((1,2))'
 
 def test_answer_set_to_str_complex():
     generate_answer_set_as_str = utils.generate_answer_set_as_str
     asp = 'a(a(2,3),(2,),b(c((d,),(e,f)))).'
-    models = tuple(ASP(asp).careful_parsing)
+    models = tuple(ASP(asp).parse_args)
     print('CAREFUL:', models)
+    answerset = models[0]
     models = tuple(ASP(asp))
     print('NORMAL :', models)
-    answerset = models[0]
     assert ' '.join(generate_answer_set_as_str(answerset, atom_end='.')) == asp

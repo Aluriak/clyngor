@@ -34,6 +34,13 @@ def test_parse_termset_default():
     }
     assert Parser().parse_terms(string) == expected
 
+def test_parse_tuple():
+    string = 'a(b,(2,3,(a,b)))'
+    expected = {
+        ('a', ('b', ('', (2, 3, ('', ('a', 'b')))))),
+    }
+    assert Parser().parse_terms(string) == expected
+
 def test_parse_args_without_predicat():
     string = 'a((b,10)) c("",("",""))'
     expected = {
