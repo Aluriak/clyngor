@@ -77,3 +77,12 @@ def test_answer_set_to_str_complex():
     models = tuple(ASP(asp))
     print('NORMAL :', models)
     assert ' '.join(utils.generate_answer_set_as_str(answerset, atom_end='.')) == asp
+
+def test_with_opts():
+    ASP = r"""
+1 { a; b }.
+#minimize { 2,t:a; 2,t:b; 1,u:b; 2,v:b }.
+    """
+    answer = solve(inline=ASP, options='--opt-mode=optN')
+    found = list(utils.opt_models_from_clyngor_answers(answer))
+    assert found == [frozenset({('a', ())})]
