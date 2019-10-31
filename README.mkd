@@ -291,12 +291,12 @@ the official module can be used by clyngor if it is available.
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
 - 0.3.24
-    - `#show 3.` and `#show "hello !".` are [now handled](eb2002dc906d9fc32efd50738fc2c67100e1cd2)
-    - when using clingo module, the models contains only the output atoms, [not everything](31375774c437403e8a05f5fe8d0346caba0f43e4) (thank you Arnaud)
-    - [support](cc60217975de123a5ef0d083fb10971e0d89c03e) for `.with_answer_number`, giving model, optimization, optimality and answer number
-    - [parsing and string reproduction](c0c090c34a7028ba34c49815f0197c67c76e7bfb) of nested atoms such as `a((a("g(2,3)",(2)),))` is now correctly handled and tested
-    - [fix](1840c36e3f57c926a565fef7352cd1b083194e58) the `models.command` output when clingo module is used
-    - optimize memory usage of `opt_models_from_clyngor_answers` by using yield and answer number, but is now a generator and loses (the useless) `repeated_optimal` option
+    - [f92248e91](https://github.com/aluriak/clyngor/commit/f92248e91def2c979fd2f8f8af3755b86485becf): `#show 3.` and `#show "hello !".` are now handled
+    - [31375774c](https://github.com/aluriak/clyngor/commit/31375774c437403e8a05f5fe8d0346caba0f43e4): when using clingo module, the models contains only the output atoms, not everything (thank you Arnaud)
+    - [cc6021797](https://github.com/aluriak/clyngor/commit/cc60217975de123a5ef0d083fb10971e0d89c03e): support for `.with_answer_number`, giving model, optimization, optimality and answer number
+    - [c0c090c34](https://github.com/aluriak/clyngor/commit/c0c090c34a7028ba34c49815f0197c67c76e7bfb): parsing and string reproduction of nested atoms such as `a((a("g(2,3)",(2)),))` is now correctly handled and tested
+    - [1840c36e3](https://github.com/aluriak/clyngor/commit/1840c36e3f57c926a565fef7352cd1b083194e58): fix the `models.command` output when clingo module is used
+    - [2679d26a9](https://github.com/aluriak/clyngor/commit/2679d26a91720ab507fb7c2ffc41c064e8ca9cb9): optimize memory usage of `opt_models_from_clyngor_answers` by using yield and answer number, but is now a generator and loses (the useless) `repeated_optimal` option
 - 0.3.20
     - fix [#7](https://github.com/Aluriak/clyngor/issues/7)
     - improve testing cover, fix warning in recent versions of pytest
