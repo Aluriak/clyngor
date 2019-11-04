@@ -148,6 +148,19 @@ def python_value_to_asp(val:str or int or list or tuple, *, args_of_predicate:bo
 # python_value_to_asp.in_predicate = lambda x: python_value_to_asp(x, args_of_predicate=True)
 
 
+def integers_to_string_atoms(model:iter) -> object:
+    """Return an identical structure of (frozen)set, tuple and list, but with integer values as string"""
+    if isinstance(model, (list, tuple, frozenset, set)):
+        return type(model)(map(integers_to_string_atoms, model))
+    elif isinstance(model, dict):
+        return {integers_to_string_atoms(k): integers_to_string_atoms(v)
+                for k, v in model.items()}
+    elif isinstance(model, int):
+        return str(model)
+    else:
+        return model
+
+
 def answer_set_to_str(answer_set:iter, atom_end:str='', atom_sep:str=' ') -> str:
     """Returns the string representation of given answer set.
 

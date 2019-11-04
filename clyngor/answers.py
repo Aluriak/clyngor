@@ -237,6 +237,8 @@ class Answers:
             yield from self.__finish_parsing(naive_parsing_of_answer_set(answer_set, discard_quotes=self._discard_quotes and not self._collapse_atoms, parse_int=self._parse_int, parse_args=True or self._collapse_args or self._first_arg_only))
         elif isinstance(answer_set, (set, tuple)) and all(isinstance(atom, (str, int, tuple)) for atom in answer_set):  # already parsed
             # print('FROM SET OR TUPLE')
+            if not self._parse_int:
+                answer_set = utils.integers_to_string_atoms(answer_set)
             yield from self.__finish_parsing(answer_set)
         else:  # unknown format
             raise ValueError(f"unknow answer set format: {type(answer_set)}, {answer_set}")

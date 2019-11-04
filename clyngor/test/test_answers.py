@@ -293,3 +293,13 @@ def test_optimization_access(optimized_answers):
     answers.with_answer_number
     assert next(answers) == ({'edge(4,"s…lp.")', 'r_e_l(1,2)'}, 4, False, 5)
     assert next(answers, None) is None
+
+def test_int_not_parsed():
+    "Ensures that .int_not_parsed modifier behave correctly"
+    asp = 'a(1). #show a/1.'
+    for model in next(clyngor.ASP(asp)):
+        t = type(model[1][0])
+        assert t is int, t
+    for model in next(clyngor.ASP(asp).int_not_parsed):
+        t = type(model[1][0])
+        assert t is str, t
