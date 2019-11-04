@@ -45,10 +45,10 @@ def test_simple_case():
 
 
 def test_parse_termset_default():
-    string = 'a(b,10) c(d("a",d_d),"v,v",c) d(-2,0)'
+    string = r'a(b,10) c(d("a",d_d),"v,\"v\"",c) d(-2,0)'
     expected = {
         ('a', ('b', 10)),
-        ('c', ('d("a",d_d)', '"v,v"', 'c')),
+        ('c', ('d("a",d_d)', r'"v,\"v\""', 'c')),
         ('d', (-2, 0)),
     }
     assert Parser().parse_terms(string) == expected
