@@ -9,7 +9,8 @@ from clyngor import as_pyasp, parsing, utils
 
 
 def naive_parsing_of_answer_set(answer_set:str, *, discard_quotes:bool=False, parse_int:bool=True, parse_args:bool=True) -> [(str, tuple)]:
-    """Yield (pred, args), naively parsed from given answer set encoded as clingo output string"""
+    """Yield (pred, args), naively parsed from given answer set encoded as clingo output string.
+    Some atoms may be missing. Some others may be poorly parsed."""
     # print('NAIVE_PARSING_OF_ANSWER_SET:', answer_set, f'\t discard_quotes={discard_quotes}, parse_int={parse_int}, parse_args={parse_args}')
     REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*|[0-9]+|"[^"]*")(\([^)]+\))?')
 
@@ -221,7 +222,8 @@ class Answers:
 
     def _parse_answer(self, answer_set:str) -> iter:
         """Yield atoms as (pred, args) from given answer set"""
-        if isinstance(answer_set, str) and self._careful_parsing:
+        careful_parsing = self._careful_parsing or parsing.careful_parsing_required(answer_set)
+        if isinstance(answer_set, str) and careful_parsing:
             # print('CAREFUL PARSING:', answer_set)
             # _discard_quotes is incompatible with atoms_as_string and as_pyasp.
             # atom_as_string: remove the quotes delimiting arguments.

@@ -4,6 +4,25 @@ from clyngor import parsing, answer_set_to_str
 from clyngor.parsing import Parser
 
 
+def test_careful_parsing_required():
+    yeses = (
+        'a(b(1)).',
+        'a("hello ; a(b)").',
+        'a("hello,b").',
+        'a((1,2,3),4).',
+    )
+    nos = (
+        'a(1,2,3).',
+        'a(1,"hello",3).',
+    )
+    for yes in yeses:
+        print('YES:', yes)
+        assert     parsing.careful_parsing_required(yes)
+    for no in nos:
+        print('NO :', no)
+        assert not parsing.careful_parsing_required(no)
+
+
 def test_simple_case():
     parsed = Parser().parse_clasp_output(OUTCLASP_SIMPLE.splitlines(),
                                          yield_stats=True, yield_info=True)

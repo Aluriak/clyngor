@@ -261,3 +261,30 @@ def validate_clasp_stderr(stderr:iter or str) -> iter:
                     data['atom'], data['filename'], data['lineno'], data['char_beg'], data['char_end']
                 )
             yield data
+
+
+def careful_parsing_required(answer_set:str) -> bool:
+    """True if given answer set as string requires to be carefully parsed.
+    Note that this function has no false positive, but numerous false negative.
+    """
+    in_paren = False
+    in_quotes = False
+    ignore_next_quote = False
+    for char in answer_set:
+        if char == '(':
+            if in_paren or in_quotes:
+                return True  # paren in paren (or quotes) requires careful parsing
+            in_paren = True
+        elif char == ')':
+            in_paren = False
+        elif char == '"':
+            if ignore_next_quote:
+                ignore_next_quote = False
+                continue
+            in_quotes = not in_quotes
+        elif char == ',':
+            if in_quotes:
+                return True  # comma in quotes requires careful parsing
+        elif char == '\\':
+            ignore_next_quote = True
+    return False

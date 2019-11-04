@@ -27,7 +27,7 @@ def quotes_answers():
 @pytest.fixture
 def complex_quotes_answers():
     return Answers((
-        'a("\"cou\"cou\"") b(""&"&"1234""&"")',  # Random gibberish
+        'a("\\"cou\\"cou\\"") b("\\"&\\"&\\"1234\\"\\"&\\"")',  # Random gibberish
     ))
 
 @pytest.fixture
@@ -102,9 +102,15 @@ def test_discard_quotes_careful_parsing(quotes_answers):
     assert next(answers) == {'a("c")', 'b("d")'}
     assert next(answers, None) is None
 
+
 def test_discard_quotes_complex(complex_quotes_answers):
     answers = complex_quotes_answers.discard_quotes
-    assert next(answers) == {('a', ('\"cou\"cou\"',)), ('b', ('"&"&"1234""&"',))}
+    assert next(answers) == {('a', (r'\"cou\"cou\"',)), ('b', (r'\"&\"&\"1234\"\"&\"',))}
+    assert next(answers, None) is None
+
+def test_discard_quotes_complex_careful_parsing(complex_quotes_answers):
+    answers = complex_quotes_answers.discard_quotes.careful_parsing
+    assert next(answers) == {('a', (r'\"cou\"cou\"',)), ('b', (r'\"&\"&\"1234\"\"&\"',))}
     assert next(answers, None) is None
 
 
