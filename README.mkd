@@ -290,6 +290,9 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.25
+    - [d6507f17d](https://github.com/aluriak/clyngor/commit/d6507f17dbf27c6c309e3e4009a234b9d63134ba): careful parsing is automatically set when answer set [obviously needs it](clyngor/parsing.py#L266).
+    - [f2c65e8ae](https://github.com/aluriak/clyngor/commit/f2c65e8ae018b9d3589a058a09f9de87e1f3fdf3): fixed bug when using clingo module and `.int_not_parsed`.
 - 0.3.24
     - [f92248e91](https://github.com/aluriak/clyngor/commit/f92248e91def2c979fd2f8f8af3755b86485becf): `#show 3.` and `#show "hello !".` are now handled
     - [31375774c](https://github.com/aluriak/clyngor/commit/31375774c437403e8a05f5fe8d0346caba0f43e4): when using clingo module, the models contains only the output atoms, not everything (thank you Arnaud)
