@@ -309,3 +309,51 @@ def test_int_not_parsed():
     for model in next(clyngor.ASP(asp).int_not_parsed):
         t = type(model[1][0])
         assert t is str, t
+
+def test_atoms_with_leading_underscore():
+    """needed to test leading underscores in naive parsing ;
+    next test will fall under the case where careful parsing is automatically activated"""
+    get_answers = lambda: Answers(('_a(_b,_c,d) _e',)).parse_args
+    # naive parsing
+    answers = get_answers()
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((('_a', ('_b', '_c', 'd')), ('_e', ())))
+    assert answer_a == expected_a, (answer_a, type(answer_a))
+    # careful parsing
+    answers = get_answers().careful_parsing
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((('_a', ('_b', '_c', 'd')), ('_e', ())))
+    assert answer_a == expected_a, answer_a
+
+def test_atoms_with_leading_underscore_with_nested():
+    get_answers = lambda: Answers(('_a("b",_b(c,_d)) _c',)).parse_args
+    # naive parsing (NB: careful parsing should be automatically activated)
+    answers = get_answers()
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((('_a', ('"b"', ('_b', ('c', '_d')))), ('_c', ())))
+    assert answer_a == expected_a, (answer_a, type(answer_a))
+    # careful parsing
+    answers = get_answers().careful_parsing
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((('_a', ('"b"', ('_b', ('c', '_d')))), ('_c', ())))
+    assert answer_a == expected_a, answer_a
+
+def test_pyasp_and_nested_atoms():
+    get_answers = lambda: Answers(('a(b(c,d))',)).parse_args
+    # without as_pyasp
+    answers = get_answers()
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((('a', (('b', ('c', 'd')),)),))
+    assert answer_a == expected_a, (answer_a, type(answer_a))
+    # with as_pyasp
+    answers = get_answers().as_pyasp
+    answer_a = next(answers)
+    assert next(answers, None) is None, "there is more than one model"
+    expected_a = frozenset((Atom('a', (Atom('b', ('c', 'd')),)),))
+    print('LBTL:', type(answer_a), answer_a)
+    assert answer_a == expected_a, (answer_a, type(answer_a))

@@ -32,11 +32,24 @@ class Atom:
             return '{}({})'.format(self.predicate, ','.join(map(str, self.arguments)))
         else:
             return self.predicate
+
     def __repr__(self): return str(self)
 
     def __iter__(self):
         """Conserve the same API as regular representation of atoms"""
         return iter((self.predicate, self.arguments))
+
+    def from_tuple_repr(atom:tuple) -> object:
+        "Expects something like ('a', (('b', ('c', 'd')))), encoding a(b(c,d))"
+        def from_args(args:tuple) -> object:
+            for arg in args:
+                if isinstance(arg, (tuple, list)):
+                    yield Atom.from_tuple_repr(arg)
+                else:
+                    yield arg
+        pred, args = atom
+        return Atom(pred, from_args(args))
+
 
 
 # aliases used by pyasp
