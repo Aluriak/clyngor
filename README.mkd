@@ -291,6 +291,8 @@ the official module can be used by clyngor if it is available.
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
 - 0.3.25
+    - [6efdb6ab0](https://github.com/aluriak/clyngor/commit/6efdb6ab0f0304b28b35d6ceb16545226b2f9e3e): fix combination of .as_pyasp and .parse_args, where atoms in args were not transformed as pyasp Atom objects.
+    - [fe4107573](https://github.com/aluriak/clyngor/commit/fe410757386e2c3e0881ecc90d7f18ee97672194): correctly parse atoms starting with underscores.
     - [d6507f17d](https://github.com/aluriak/clyngor/commit/d6507f17dbf27c6c309e3e4009a234b9d63134ba): careful parsing is automatically set when answer set [obviously needs it](clyngor/parsing.py#L266).
     - [f2c65e8ae](https://github.com/aluriak/clyngor/commit/f2c65e8ae018b9d3589a058a09f9de87e1f3fdf3): fixed bug when using clingo module and `.int_not_parsed`.
 - 0.3.24
