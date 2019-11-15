@@ -12,7 +12,7 @@ def naive_parsing_of_answer_set(answer_set:str, *, discard_quotes:bool=False, pa
     """Yield (pred, args), naively parsed from given answer set encoded as clingo output string.
     Some atoms may be missing. Some others may be poorly parsed."""
     # print('NAIVE_PARSING_OF_ANSWER_SET:', answer_set, f'\t discard_quotes={discard_quotes}, parse_int={parse_int}, parse_args={parse_args}')
-    REG_ANSWER_SET = re.compile(r'([a-z][a-zA-Z0-9_]*|[0-9]+|"[^"]*")(\([^)]+\))?')
+    REG_ANSWER_SET = re.compile(r'([a-z_][a-zA-Z0-9_]*|[0-9]+|"[^"]*")(\([^)]+\))?')
 
     for match in REG_ANSWER_SET.finditer(answer_set):
         pred, args = match.groups()

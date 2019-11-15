@@ -70,7 +70,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
 
     @staticmethod
     def grammar():
-        def ident():      return ap.RegExMatch(r'[a-z][a-zA-Z0-9_]*')
+        def ident():      return ap.RegExMatch(r'[a-z_][a-zA-Z0-9_]*')
         def number():     return ap.RegExMatch(r'-?[0-9]+')
         def text():       return '"', ap.RegExMatch(r'((\\")|([^"]))*'), '"'
         def litteral():   return [text, number]
