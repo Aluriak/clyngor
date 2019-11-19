@@ -36,7 +36,7 @@ class ConceptList:
     def __hash__(self):  # ensure equivalence in set
         return hash(tuple(map(hash, (self.id, self.extent, self.intent))))
     def __repr__(self):  # help for debug
-        return f"<{self.id}: {{{','.join(sorted(self.extent))}}} × {{{','.join(sorted(self.intent))}}}>"
+        return "<{}: {{{}}} × {{{}}}>".format(self.id, ','.join(sorted(self.extent)), ','.join(sorted(self.intent)))
     @staticmethod
     def expected():
         return {

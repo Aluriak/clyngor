@@ -36,7 +36,7 @@ def objects_from_model(decoder:type, model:dict):
 @lru_cache(maxsize=32)
 def object_builder_from_decoder(decoder:type) -> dict:
     if not hasattr(decoder, '__init__'):
-        raise ValueError(f"Decoder {decoder} has no __init__ method")
+        raise ValueError("Decoder {} has no __init__ method".format(decoder))
     constructor = decoder.__init__
     sig = signature(constructor)
     params = iter(sig.parameters.items())
@@ -49,7 +49,7 @@ def object_builder_from_decoder(decoder:type) -> dict:
         elif anno == 1:  # one for each atom
             atoms_each.add(name)
         else:
-            raise ValueError(f"Decoder can't handle the annotation '{anno}'")
+            raise ValueError("Decoder can't handle the annotation '{}'".format(anno))
     return {
         'all': frozenset(atoms_all),
         'foreach': frozenset(atoms_each),

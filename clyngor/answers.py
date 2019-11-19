@@ -243,7 +243,7 @@ class Answers:
                 answer_set = utils.integers_to_string_atoms(answer_set)
             yield from self.__finish_parsing(answer_set)
         else:  # unknown format
-            raise ValueError(f"unknow answer set format: {type(answer_set)}, {answer_set}")
+            raise ValueError("unknow answer set format: {}, {}".format(type(answer_set), answer_set))
 
     def __finish_parsing(self, answer_set:[(str, tuple)]) -> [(str, tuple) or str]:
         """Modify (pred, args) atoms according to parsing options"""
