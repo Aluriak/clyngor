@@ -291,7 +291,7 @@ the official module can be used by clyngor if it is available.
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
 - 0.3.25
-    - [a7b05ecdb](https://github.com/aluriak/clyngor/commit/a7b05ecdbd5f73dbee5a7244a96995d9035f3695): remove f-strings for 3.4 and 3.5 compat.
+    - [80245b2a7](https://github.com/aluriak/clyngor/commit/80245b2a72b8d76639b44a2315622f6743a7bc17): remove f-strings for 3.4 and 3.5 compat.
     - [6efdb6ab0](https://github.com/aluriak/clyngor/commit/6efdb6ab0f0304b28b35d6ceb16545226b2f9e3e): fix combination of .as_pyasp and .parse_args, where atoms in args were not transformed as pyasp Atom objects.
     - [fe4107573](https://github.com/aluriak/clyngor/commit/fe410757386e2c3e0881ecc90d7f18ee97672194): correctly parse atoms starting with underscores.
     - [d6507f17d](https://github.com/aluriak/clyngor/commit/d6507f17dbf27c6c309e3e4009a234b9d63134ba): careful parsing is automatically set when answer set [obviously needs it](clyngor/parsing.py#L266).
