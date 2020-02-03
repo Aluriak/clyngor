@@ -286,6 +286,14 @@ the official module can be used by clyngor if it is available.
 - ASP source code debugging generator (started in [clyngor-parser](clyngor-parser))
 
 
+## What is clyngor used for ?
+
+- bioinformatics, to encode biological pathway logic in [pathmodel](https://github.com/pathmodel/pathmodel) and [Menetools](https://github.com/cfrioux/MeneTools), and for [community detection](https://github.com/cfrioux/miscoto).
+- mathematics, to encode some [FCA]()-related task such as [AOC-poset generation](https://github.com/Aluriak/AOC-poset-generation) or [concept search](https://github.com/Aluriak/concept-generation), and [graph compression](https://github.com/Aluriak/PowerGrASP) or [graph manipulation](https://github.com/Aluriak/phasme) in the context of graph theory.
+- visualization, with [Draco](https://github.com/uwdata/draco), a formalization of visualization design knowledge as constraints, and [biseau](https://gitlab.inria.fr/lbourneu/biseau), an ASP-to-graph compiler.
+- web applications, for [a sudoku solver made with ASP](https://github.com/llaisdy/phoenix_live_view_sudoku/).
+
+
 ## Changelog
 
 - 0.4.0 (todo)
