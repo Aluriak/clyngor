@@ -56,6 +56,13 @@ def many_atoms_answers():
     ))
 
 @pytest.fixture
+def default_negation_answers():
+    return Answers((
+        'ok -ko',
+        '-occurs(apply(drychem,fire_in(bin)), 2) ok -ko',
+    ))
+
+@pytest.fixture
 def optimized_answers():
     return Answers((
         ('edge(4,"s…lp.") r_e_l(1,2)', 1, False, 1),
@@ -239,6 +246,13 @@ def test_tunning_atoms_as_string_and_sorted_more_complex(many_atoms_answers):
 def test_tunning_atoms_as_string_and_sorted_more_complex_careful_parsing(many_atoms_answers):
     answers = many_atoms_answers.atoms_as_string.sorted.first_arg_only.careful_parsing
     assert next(answers) == tuple(sorted('a b(4) b(3) a(1) vv(1) vv v(a) v(b)'.split()))
+    assert next(answers, None) is None
+
+
+def test_default_negation(default_negation_answers):
+    answers = default_negation_answers
+    assert next(answers) == {('ok', ()), ('-ko', ())}
+    assert next(answers) == {('-occurs', ('apply(drychem,fire_in(bin))', 2)), ('ok', ()), ('-ko', ())}
     assert next(answers, None) is None
 
 
