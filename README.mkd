@@ -298,6 +298,9 @@ the official module can be used by clyngor if it is available.
 
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
+- 0.3.28
+    - [706747045](https://github.com/aluriak/clyngor/commit/706747045cb96abcb9de1e2d729cd43c084cb36f): handle default negation on atoms, by keeping the prefixed dash
+    - [d4830ad52](https://github.com/aluriak/clyngor/commit/d4830ad521a6dcf9024f2c70f2f50e6b19f8c7a2): fix an import error
 - 0.3.25
     - [80245b2a7](https://github.com/aluriak/clyngor/commit/80245b2a72b8d76639b44a2315622f6743a7bc17): remove f-strings for 3.4 and 3.5 compat.
     - [6efdb6ab0](https://github.com/aluriak/clyngor/commit/6efdb6ab0f0304b28b35d6ceb16545226b2f9e3e): fix combination of .as_pyasp and .parse_args, where atoms in args were not transformed as pyasp Atom objects.
