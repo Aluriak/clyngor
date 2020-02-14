@@ -1,13 +1,13 @@
 t: tests
 tests: install
-	python -m pytest -vv clyngor --doctest-module -rs --failed-first
+	python -m pytest -vv clyngor --doctest-modules -rs --failed-first
 qt: quick-tests
 tq: quick-tests
 tf: failed-tests
 failed-tests:
-	python -m pytest -vv clyngor --doctest-module -rs --failed-first --last-failed --exitfirst
+	python -m pytest -vv clyngor --doctest-modules -rs --failed-first --last-failed --exitfirst
 quick-tests:
-	python -m pytest -vv clyngor --doctest-module --quick -rs --failed-first
+	python -m pytest -vv clyngor --doctest-modules --quick -rs --failed-first
 
 run:
 	python -m clyngor
