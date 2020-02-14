@@ -5,6 +5,7 @@ Note that all the interface is not available. Just the very basics.
 
 """
 
+import tempfile
 import itertools
 
 class Atom:
