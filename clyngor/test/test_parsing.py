@@ -43,6 +43,13 @@ def test_simple_case():
     assert stats == {'Models': '2', 'Calls': '1', 'CPU Time': '0.000s',
                      'Time': '0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)'}
 
+def test_parse_default_negation():
+    string = '-r(1) -r(2)'
+    expected = {
+        ('-r', (1,)), ('-r', (2,)),
+    }
+    assert Parser().parse_terms(string) == expected
+
 
 def test_parse_termset_default():
     string = r'a(b,10) c(d("a",d_d),"v,\"v\"",c) d(-2,0)'
