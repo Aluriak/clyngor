@@ -199,3 +199,21 @@ def test_undefined_warning():
     # NB: the following should NOT raise any error (default value)
     tuple(clyngor.solve((), inline='b:- c.', error_on_warning=False))
     tuple(clyngor.solve((), inline='b:- c.'))
+
+
+def test_default_negation():
+    "Will fail if official clingo module is used and default negation not handled"
+    CODE = """
+    p(1..2).
+    q(2..4).
+
+    -r(X):- not r(X), p(X).
+
+    #show r/1.
+    #show -r/1.
+    """
+    models = clyngor.solve(inline=CODE)
+    model = next(models, None)
+    assert next(models, None) is None
+    print(model)
+    assert model == {('-r', (1,)), ('-r', (2,))}

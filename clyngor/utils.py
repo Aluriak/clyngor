@@ -119,7 +119,8 @@ def clingo_symbol_as_python_value(term) -> object:
     "Convert a clingo.Symbol object to the python equivalent"
     if str(term.type) == 'Function':
         assert term.name is not None
-        return (term.name, clingo_value_to_python(term.arguments))
+        name = ('-' if term.negative else '') + term.name
+        return (name, clingo_value_to_python(term.arguments))
     elif str(term.type) == 'String':
         assert term.name is None
         return ('"' + term.string + '"', ())
