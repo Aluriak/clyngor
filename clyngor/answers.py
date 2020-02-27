@@ -290,7 +290,7 @@ class Answers:
                 mapping[pred].add(args)
                 if self._group_atoms_with_arity:
                     mapping[pred, len(args)].add(args)
-                    mapping[f'{pred}/{len(args)}'].add(args)
+                    mapping['{}/{}'.format(pred, str(len(args)))].add(args)
             if self._as_pyasp:
                 return {pred: as_pyasp.TermSet(args) for pred, args in mapping.items()}
             else:
