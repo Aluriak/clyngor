@@ -323,7 +323,7 @@ class ClingoAnswers(Answers):
 
 
     def __compute_answers(self):
-        kwargs = {'yield_': True, 'async': True}  # compat with 3.7
+        kwargs = {'yield_': True, 'async_': True}  # compat with 3.7
         with self._solver.solve(**kwargs) as models:
             for model in models:
                 answer_set = set(utils.clingo_symbol_as_python_value(a)
