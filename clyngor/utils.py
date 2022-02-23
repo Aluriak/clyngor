@@ -128,7 +128,7 @@ def clingo_symbol_as_python_value(term) -> object:
         assert term.name is None
         return (term.number, ())
     raise TypeError("Can't handle clingo.Symbol like {} of type {}."
-                    "".format(value, type(value)))
+                    "".format(term, term.type))
 
 def python_value_to_asp(val:str or int or list or tuple, *, args_of_predicate:bool=False) -> str or tuple:
     """Convert given python value in an ASP format"""
