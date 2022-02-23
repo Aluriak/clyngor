@@ -73,8 +73,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         def ident():      return ap.RegExMatch(r'[a-z_-][a-zA-Z0-9_]*')
         def number():     return ap.RegExMatch(r'-?[0-9]+')
         def text():       return '"', ap.RegExMatch(r'((\\")|([^"]))*'), '"'
-        def litteral():   return [text, number]
-        def subterm():    return [(ident, ap.Optional('(', args, ')')), litteral, aloneargs]
+        def subterm():    return [number, text, (ident, ap.Optional('(', args, ')')), aloneargs]
         def args():       return subterm, ap.ZeroOrMore(',', subterm), ap.Optional(',')
         def aloneargs():  return [single_value, one_uplet, n_uplet]
         def single_value():  return '(', subterm, ')'
@@ -82,7 +81,7 @@ class CollapsableAtomVisitor(ap.PTNodeVisitor):
         def n_uplet():    return '(', subterm, ap.OneOrMore(',', subterm), ')'
         # NB: litteral outputed by #show are not handled.
         def atom():       return ident, ap.Optional("(", args, ")")
-        def term():       return [litteral, atom]
+        def term():       return [number, text, atom]
         def terms():      return ap.ZeroOrMore(term)
         return terms
 
@@ -115,11 +114,11 @@ class Parser:
         ...
         ValueError
 
-        >>> Parser(parse_integer=False).parse_terms('a(3)')
-        frozenset({('a', ('3',))})
+        >>> Parser(parse_integer=False).parse_terms('a(-3)')
+        frozenset({('a', ('-3',))})
 
-        >>> Parser().parse_terms('a(3)')
-        frozenset({('a', (3,))})
+        >>> Parser(parse_integer=True).parse_terms('a(-2)')
+        frozenset({('a', (-2,))})
 
         """
         self.collapse_args = bool(collapse_args)
