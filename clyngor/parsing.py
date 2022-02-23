@@ -126,10 +126,10 @@ class Parser:
         self.discard_quotes = bool(discard_quotes)
         self.first_arg_only = bool(first_arg_only)
         self.atom_visitor = CollapsableAtomVisitor(
-            bool(collapse_args),
-            bool(collapse_atoms),
-            bool(discard_quotes),
-            bool(first_arg_only),
+            self.collapse_args,
+            self.collapse_atoms,
+            self.discard_quotes,
+            self.first_arg_only,
             parse_integer
         )
         self.grammar = self.atom_visitor.grammar()
