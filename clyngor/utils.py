@@ -123,7 +123,6 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
 
 def clingo_symbol_as_python_value_basefunc(term, typename: str) -> object:
     "Convert a clingo.Symbol object to the python equivalent"
-    print(' GABOWK:', term, typename)
     if typename == 'Function':
         assert term.name is not None
         name = ('-' if term.negative else '') + term.name
