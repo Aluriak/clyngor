@@ -14,7 +14,8 @@ from clyngor.propagators import Propagator, Variable, Main, Constraint
 def load_clingo_module() -> bool:
     global clingo_module
     try:
-        import clingo as clingo_module
+        import clingo
+        clingo_module = clingo
     except ImportError:
         clingo_module = None
 
@@ -30,6 +31,8 @@ def clingo_module_actived() -> bool:
 
 def use_clingo_module():
     if clingo_module is None:
+        load_clingo_module()
+    if clingo_module is None:  # loading didn't succeed
         raise RuntimeError("Clingo module was asked to be used (call to use_clingo_module), but it is not available.")
 
 def use_clingo_binary(path=None):
@@ -55,6 +58,8 @@ def have_lua_support() -> bool:
 
 
 load_clingo_module()  # just initialize clingo module state, whether it is available or not
-use_clingo_binary()  # use binary by default
+# use_clingo_binary()  # use binary by default
+# use_clingo_module()  # use module by default
+
 if CLINGO_BIN_PATH != 'clingo':
     assert get_clingo_binary() == CLINGO_BIN_PATH
