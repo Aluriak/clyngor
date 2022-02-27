@@ -173,6 +173,12 @@ def command(files:iter=(), options:iter=[], inline:str=None,
 
 def clingo_version(clingo_bin_path:str=None) -> dict:
     """Return clingo's version information in a dict"""
+    if clyngor.clingo_module_actived():
+        return {
+            'clingo version': clingo.__version__,
+            'python': '3' if clyngor.utils.try_python_availability_in_clingo_module() else None,
+            'lua': 'yes' if clyngor.utils.try_lua_availability_in_clingo_module() else None,
+        }
     clingo = subprocess.Popen(
         [clingo_bin_path or clyngor.CLINGO_BIN_PATH, '--version', '--outf=2'],
         stderr = subprocess.PIPE,
@@ -184,8 +190,8 @@ def clingo_version(clingo_bin_path:str=None) -> dict:
         'libgringo': re.compile(r'libgringo version ([0-9\.]+)'),
         'libclasp': re.compile(r'libclasp version ([0-9\.]+)'),
         'libpotassco': re.compile(r'libpotassco version ([0-9\.]+)'),
-        'python': re.compile(r'with[out]{0,3}\sPython\s?([0-9\.]+)?'),
-        'lua': re.compile(r'with[out]{0,3}\sLua\s?([0-9\.]+)?'),
+        'python': re.compile(r'with[out]{0,3}\sPython\s?([0-9\.]+)?'),  # later loop will yields None if python is available
+        'lua': re.compile(r'with[out]{0,3}\sLua\s?([0-9\.]+)?'),  # same for lua
     }
     stdout = clingo.communicate()[0].decode()
     values = {}

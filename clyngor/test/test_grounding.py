@@ -2,10 +2,10 @@
 
 import pytest
 from clyngor import grounded_program, solve_from_grounded, solve as solve_standard, opt_models_from_clyngor_answers
-from .definitions import clingo_noncompliant
+from .definitions import run_with_clingo_binary_only
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_simple():
     prg = '1{p(a;b;c)}1.'
     grounded = grounded_program(inline=prg)
@@ -14,7 +14,7 @@ def test_simple():
     assert found == expected
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_with_opts():
     ASP = r"""
 q(1..10).

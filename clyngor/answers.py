@@ -11,7 +11,7 @@ from clyngor import as_pyasp, parsing, utils
 def naive_parsing_of_answer_set(answer_set:str, *, discard_quotes:bool=False, parse_int:bool=True, parse_args:bool=True) -> [(str, tuple)]:
     """Yield (pred, args), naively parsed from given answer set encoded as clingo output string.
     Some atoms may be missing. Some others may be poorly parsed."""
-    # print('NAIVE_PARSING_OF_ANSWER_SET:', answer_set, f'\t discard_quotes={discard_quotes}, parse_int={parse_int}, parse_args={parse_args}')
+    # print('NAIVE_PARSING_OF_ANSWER_SET:', answer_set, f'\t keep_quotes={keep_quotes}, parse_int={parse_int}, parse_args={parse_args}')
     REG_ANSWER_SET = re.compile(r'([a-z_-][a-zA-Z0-9_]*|[0-9]+|"[^"]*")(\([^)]+\))?')
 
     for match in REG_ANSWER_SET.finditer(answer_set):
@@ -43,7 +43,7 @@ class Answers:
     """
 
     def __init__(self, answers:iter, command:str='', statistics:dict={},
-                 *, decoders:iter=(), with_optimization:bool=False, on_end:callable=None):
+                 *, decoders:iter=(), with_optimization:bool=False, on_end:callable=None, **kwargs):
         """Answer sets must be iterable of (predicate, args).
 
         decoders -- iterable of decoders to apply on ASP (see clyngor.decoder).
@@ -66,7 +66,7 @@ class Answers:
         self._group_atoms_with_arity = False
         self._as_pyasp = False
         self._sorted = False
-        self._discard_quotes = False
+        self._keep_quotes = True
         # TODO: break api to add keep quotes instead of discard quotes.
         self._careful_parsing = False
         self._collapse_atoms= False
@@ -77,6 +77,12 @@ class Answers:
         self._with_optimality = False
         self._with_answer_number = False
         self.__on_end = on_end or (lambda: None)
+
+        for k, v in kwargs.items():
+            if isinstance(getattr(self, '_' + k, None), bool):
+                setattr(self, '_' + k, bool(value))
+            elif k == 'discard_quotes':
+                setattr(self, '_keep_quotes', not bool(value))
 
     def __del__(self):
         """Call the on_end function, avoiding a too-many-file-open error.
@@ -147,9 +153,15 @@ class Answers:
         return self
 
     @property
+    def keep_quotes(self):
+        """Keep the quotes of the string"""
+        self._keep_quotes = True
+        return self
+
+    @property
     def discard_quotes(self):
         """Discard the quotes of the string"""
-        self._discard_quotes = True
+        self._keep_quotes = False
         return self
 
     @property
@@ -223,20 +235,22 @@ class Answers:
     def _parse_answer(self, answer_set:str) -> iter:
         """Yield atoms as (pred, args) from given answer set"""
         careful_parsing = self._careful_parsing or parsing.careful_parsing_required(answer_set)
+        # keep_quotes = self._keep_quotes or not self._collapse_atoms or not self._as_pyasp
+        discard_quotes = not (self._keep_quotes or self._collapse_atoms or self._as_pyasp)
         if isinstance(answer_set, str) and careful_parsing:
             # print('CAREFUL PARSING:', answer_set)
-            # _discard_quotes is incompatible with atoms_as_string and as_pyasp.
+            # _keep_quotes is incompatible with atoms_as_string and as_pyasp.
             # atom_as_string: remove the quotes delimiting arguments.
             # as_pyasp: remove the quotes for the arguments.
             yield from parsing.Parser(
                 self._collapse_atoms, self._collapse_args,
-                self._discard_quotes and not self._collapse_atoms,
+                discard_quotes,
                 self._first_arg_only,
                 parse_integer=self._parse_int
             ).parse_terms(answer_set)
         elif isinstance(answer_set, str):  # the good ol' split
-            # print('THE GOOD OLD SPLIT:', f"discard_quotes={self._discard_quotes}  collapse_atoms={self._collapse_atoms}")
-            yield from self.__finish_parsing(naive_parsing_of_answer_set(answer_set, discard_quotes=self._discard_quotes and not self._collapse_atoms, parse_int=self._parse_int, parse_args=True or self._collapse_args or self._first_arg_only))
+            # print('THE GOOD OLD SPLIT:', f"keep_quotes={self._keep_quotes}  collapse_atoms={self._collapse_atoms}")
+            yield from self.__finish_parsing(naive_parsing_of_answer_set(answer_set, discard_quotes=discard_quotes, parse_int=self._parse_int, parse_args=self._collapse_args or self._first_arg_only))
         elif isinstance(answer_set, (set, tuple)) and all(isinstance(atom, (str, int, tuple)) for atom in answer_set):  # already parsed
             # print('FROM SET OR TUPLE')
             if not self._parse_int:

@@ -1,10 +1,10 @@
 import pytest
 from clyngor import solve
-from .definitions import clingo_noncompliant
+from .definitions import run_with_clingo_binary_only
 
 
 @pytest.mark.slow
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_time_limit_with_solutions():
     """Sudoku yield thousands of solution in a second"""
     answers = solve([], inline=SUDOKU, options='--time-limit=1')
@@ -13,7 +13,7 @@ def test_time_limit_with_solutions():
 
 
 @pytest.mark.slow
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_time_limit_no_solutions():
     """Queens do not yield any solution in a second
     (at least on not so powerful machines)
@@ -29,7 +29,7 @@ def test_time_limit_no_solutions():
 
 
 @pytest.mark.slow
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_no_time_limit_queens():
     """Queens yield at least one solution when enough time is provided.
 

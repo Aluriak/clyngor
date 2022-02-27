@@ -120,6 +120,11 @@ class Parser:
         >>> Parser(parse_integer=True).parse_terms('a(-2)')
         frozenset({('a', (-2,))})
 
+        >>> Parser(discard_quotes=True).parse_terms('a("b")')
+        frozenset({('a', ('b',))})
+        >>> Parser().parse_terms('a("b")')
+        frozenset({('a', ('"b"',))})
+
         """
         self.collapse_args = bool(collapse_args)
         self.collapse_atoms = bool(collapse_atoms)
@@ -268,7 +273,7 @@ def careful_parsing_required(answer_set:str) -> bool:
     """
     in_paren = False
     in_quotes = False
-    ignore_next_quote = False
+    escape = False
     for char in answer_set:
         if char == '(':
             if in_paren or in_quotes:
@@ -277,13 +282,13 @@ def careful_parsing_required(answer_set:str) -> bool:
         elif char == ')':
             in_paren = False
         elif char == '"':
-            if ignore_next_quote:
-                ignore_next_quote = False
+            if escape:
+                escape = False
                 continue
             in_quotes = not in_quotes
         elif char == ',':
             if in_quotes:
                 return True  # comma in quotes requires careful parsing
         elif char == '\\':
-            ignore_next_quote = True
+            escape = True
     return False

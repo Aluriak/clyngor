@@ -2,7 +2,7 @@
 
 import textwrap
 import clyngor
-from .definitions import skipif_clingo_without_python, skipif_no_clingo_module
+from .definitions import onlyif_python_support, skipif_no_clingo_module
 
 
 ASP_CODE = """
@@ -43,7 +43,7 @@ class MyPropagator(clyngor.Propagator):
 
 
 @skipif_no_clingo_module
-@skipif_clingo_without_python
+@onlyif_python_support
 def test_the_subclass():
     prop = MyPropagator()
     ctl = prop.run_with(inline=ASP_CODE)
@@ -52,18 +52,21 @@ def test_the_subclass():
     assert prop.found_atoms == {'p': {(1,), (2,)}, 'q': {('a', 'b', ('p', (1,)))}}
 
 
-@skipif_clingo_without_python
+@onlyif_python_support
 def test_pyconstraint_from_embedded_code():
     possible_values = {1, 2, 3}
     for value_to_avoid in possible_values:
         source = PYCONSTRAINT_CODE_ARGUMENT.format(value_to_avoid=value_to_avoid)
         models = set(clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True))
+        print(source)
         assert len(models) == len(possible_values) - 1
         assert models == {
             frozenset({('b', (val,))})
             for val in possible_values if val != value_to_avoid
         }
 
+
+@onlyif_python_support
 def test_pyconstraint_recursion_problem():
     """Show that the python constraint handles recursive propagations and
     is able to discard models appropriatly.
@@ -100,17 +103,17 @@ def test_pyconstraint_recursion_problem():
     #end.
     {p(1..3)}.  % powerset of p(X).
     """)
-    models = clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True)
-    assert set(models) == {
+    models = set(clyngor.solve(inline=source, use_clingo_module=False, error_on_warning=True))
+    assert models == {
         frozenset(()),
         frozenset({('p', (1,))}),
         frozenset({('p', (2,))}),
         frozenset({('p', (3,))}),
     }, "this may fail because a bug was fixed"
+    return
     # the models that are really to be expected:
     #  (and given by a really working implementation)
-    return
-    assert set(models) == {
+    assert models == {
         frozenset(()),
         frozenset({('p', (1,))}),
         frozenset({('p', (3,))}),
@@ -119,7 +122,7 @@ def test_pyconstraint_recursion_problem():
 
 
 @skipif_no_clingo_module
-@skipif_clingo_without_python
+@onlyif_python_support
 def test_local_propagator_hidden_by_clingo():
     """Prove that main function (and therefore locally defined propagators)
     is ignored from code if called with clingo module
@@ -140,7 +143,7 @@ def test_local_propagator_hidden_by_clingo():
 
 
 @skipif_no_clingo_module
-@skipif_clingo_without_python
+@onlyif_python_support
 def test_pyconstraint_from_python():
     from clyngor import Constraint, Variable as V
     def formula(inputs) -> bool:

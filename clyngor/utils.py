@@ -2,9 +2,11 @@
 
 
 import os
+import sys
 import math
 import tempfile
 import functools
+import clyngor
 from clyngor import parsing
 
 try:
@@ -85,21 +87,25 @@ def remove_arguments_quotes(arguments:str):
 
 def clingo_value_to_python(value:object) -> int or str or tuple:
     """Convert a clingo.Symbol object to the python equivalent"""
-    if str(type(value)) == 'clingo.Symbol':
+    if False and str(type(value).__name__) == 'Symbol':
         return clingo_symbol_as_python_value(value)
-    elif isinstance(value, (int, str)):
+    elif isinstance(value, int):
         return value
+    elif isinstance(value, str):
+        return '"' + value + '"'
     elif isinstance(value, (tuple, list)):
         return tuple(map(clingo_value_to_python, value))
     elif type(value).__name__ == 'Symbol':
         try:
             typename = str(value.type).lower()
+            assert typename.startswith('symboltype.')
+            typename = typename[len('symboltype.'):]
             if typename == 'function':
                 if value.arguments:
                     pyvalue = (value.name, tuple(map(clingo_value_to_python, value.arguments)))
                 else:
                     pyvalue = value.name
-            else:
+            else:  # for any other type, get its python value directly
                 pyvalue = getattr(value, typename)
         except AttributeError as err:  # inf or sup
             if value.type == value.type.Infimum:
@@ -115,20 +121,33 @@ def clingo_value_to_python(value:object) -> int or str or tuple:
                     "".format(value, type(value)))
 
 
-def clingo_symbol_as_python_value(term) -> object:
+def clingo_symbol_as_python_value_basefunc(term, typename: str) -> object:
     "Convert a clingo.Symbol object to the python equivalent"
-    if str(term.type) == 'Function':
+    print(' GABOWK:', term, typename)
+    if typename == 'Function':
         assert term.name is not None
         name = ('-' if term.negative else '') + term.name
         return (name, clingo_value_to_python(term.arguments))
-    elif str(term.type) == 'String':
+    elif typename == 'String':
         assert term.name is None
         return ('"' + term.string + '"', ())
-    elif str(term.type) == 'Number':
+    elif typename == 'Number':
         assert term.name is None
         return (term.number, ())
     raise TypeError("Can't handle clingo.Symbol like {} of type {}."
-                    "".format(term, term.type))
+                    "".format(term, typename))
+
+
+def clingo_symbol_as_python_value(term) -> object:
+    if clingo:
+        types = {
+            clingo.SymbolType.Function: 'Function',
+            clingo.SymbolType.Number: 'Number',
+            clingo.SymbolType.String: 'String',
+        }
+        return clingo_symbol_as_python_value_basefunc(term, types.get(term.type, term.type))
+    else:
+        return clingo_symbol_as_python_value_basefunc(term, term.type)
 
 def python_value_to_asp(val:str or int or list or tuple, *, args_of_predicate:bool=False) -> str or tuple:
     """Convert given python value in an ASP format"""
@@ -302,3 +321,48 @@ def opt_models_from_clyngor_answers(answers:iter):
         elif answer_number == 1:
             optimal_reached = True
             yield model
+
+
+def try_python_availability_in_clingo(py3=True) -> bool:
+    func = try_python_availability_in_clingo_module if clyngor.clingo_module_actived() else try_python_availability_in_clingo_binary
+    return func(py3)
+
+def try_python_availability_in_clingo_binary(py3=True) -> bool:
+    py_ver = clyngor.clingo_version().get('python')
+    if not py_ver:  # NB: python is None, if not available
+        return bool(py_ver)
+    return py_ver[0] == ('3' if py3 else '2')
+
+def try_python_availability_in_clingo_module(py3=True) -> bool:
+    """True if clingo module seems to handle python (3 if py3 is truthy else 2).
+    Raise an ModuleNotFoundError if clingo module is not available
+    """
+    import clingo
+    ctl = clingo.Control()
+    try:
+        ctl.add("base", [], f"#script(python)\n import sys ; assert sys.version.info.major == {'3' if py3 else '2'}\n #end.")
+    except RuntimeError as err:  # case where python support is not implemented
+        return False
+    else:  # python support available
+        return True
+
+
+def try_lua_availability_in_clingo() -> bool:
+    return (try_lua_availability_in_clingo_module if clyngor.clingo_module_actived() else try_lua_availability_in_clingo_binary)()
+
+def try_lua_availability_in_clingo_binary() -> bool:
+    lua_ver = clyngor.clingo_version().get('lua')
+    return bool(lua_ver)  # NB: lua is None, if not available
+
+def try_lua_availability_in_clingo_module() -> bool:
+    """True if clingo module seems to handle lua.
+    Raise an ModuleNotFoundError if clingo module is not available
+    """
+    import clingo
+    ctl = clingo.Control()
+    try:
+        ctl.add("base", [], f"#script(lua) #end.")
+    except RuntimeError as err:  # case where lua support is not implemented
+        return False
+    else:  # lua support available
+        return True

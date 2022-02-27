@@ -4,7 +4,7 @@ import pytest
 import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
-from .definitions import clingo_noncompliant
+from .definitions import run_with_clingo_binary_only
 
 
 @pytest.fixture
@@ -103,25 +103,27 @@ def test_string_with_lot_of_crap():
 
 
 def test_string_without_escaped_quotes():
-    dangerous_string = r'"1,3-dimethyl-2-[2-oxopropyl thio]imidazolium chloride"'
-    for sol in clyngor.ASP('atom({}).'.format(dangerous_string)).careful_parsing:
+    dangerous_string = r'1,3-dimethyl-2-[2-oxopropyl thio]imidazolium chloride'
+    quoted_dangerous_string = f'"{dangerous_string}"'
+    for sol in clyngor.ASP('atom({}).'.format(quoted_dangerous_string)).careful_parsing:
         assert len(sol) == 1
         pred, args = next(iter(sol))
         assert pred == 'atom'
         assert len(args) == 1
-        assert args[0] == dangerous_string
+        assert args[0] == quoted_dangerous_string
 
 
 def test_lispy_construct():
-    dangerous_string = r'"1,3-dimethyl-2-[2-oxopropyl thio]imidazolium chloride"'
-    source = r'atom((((a,b),c),d),{},(1,(2,3))). yield(X,Y,Z):- atom(X,Y,Z).'.format(dangerous_string)
+    dangerous_string = r'1,3-dimethyl-2-[2-oxopropyl thio]imidazolium chloride'
+    quoted_dangerous_string = f'"{dangerous_string}"'
+    source = r'atom((((a,b),c),d),{},(1,(2,3))). yield(X,Y,Z):- atom(X,Y,Z).'.format(quoted_dangerous_string)
     for sol in clyngor.ASP(source).careful_parsing.by_predicate.parse_args:
         assert len(sol) == 2
         assert sol['atom'] == sol['yield']
         args = next(iter(sol['yield']))
         assert len(args) == 3
         assert args[0] == ('', (('', (('', ('a', 'b')), 'c')), 'd'))
-        assert args[1] == dangerous_string
+        assert args[1] == quoted_dangerous_string
         assert args[2] == ('', (1, ('', (2, 3))))
 
 
@@ -139,7 +141,7 @@ def test_no_input(capsys):
         assert tuple(clyngor.solve((), inline='')) == ()
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_syntax_error():
     assert not clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
@@ -152,7 +154,7 @@ def test_syntax_error():
     assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_syntax_error_semicolon():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").', force_tempfile=True))
@@ -163,7 +165,7 @@ def test_syntax_error_semicolon():
     assert excinfo.value.msg.endswith(' at line 1 and column 16-17')
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_syntax_error_brace():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- {{}}.', force_tempfile=True))
@@ -174,7 +176,7 @@ def test_syntax_error_brace():
     assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_syntax_error_brace_with_stdin():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- {{}}.'))
@@ -185,7 +187,7 @@ def test_syntax_error_brace_with_stdin():
     assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
 
 
-@clingo_noncompliant
+@run_with_clingo_binary_only
 def test_undefined_warning():
     assert not clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPWarning) as excinfo:

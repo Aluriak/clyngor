@@ -14,6 +14,7 @@ def test_careful_parsing_required():
     nos = (
         'a(1,2,3).',
         'a(1,"hello",3).',
+        'a("hello ",3). b("").',
     )
     for yes in yeses:
         print('YES:', yes)
@@ -44,9 +45,9 @@ def test_simple_case():
                      'Time': '0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)'}
 
 def test_parse_default_negation():
-    string = '-r(1) -r(2)'
+    string = '-r(1) -r(-2)'
     expected = {
-        ('-r', (1,)), ('-r', (2,)),
+        ('-r', (1,)), ('-r', (-2,)),
     }
     assert Parser().parse_terms(string) == expected
 
@@ -58,7 +59,10 @@ def test_parse_termset_default():
         ('c', ('d("a",d_d)', r'"v,\"v\""', 'c')),
         ('d', (-2, 0)),
     }
-    assert Parser().parse_terms(string) == expected
+    found = Parser().parse_terms(string)
+    print(frozenset(expected))
+    print(found)
+    assert found == expected
 
 def test_parse_tuple():
     string = 'a(b,(2,3,(a,b)))'
@@ -66,6 +70,24 @@ def test_parse_tuple():
         ('a', ('b', ('', (2, 3, ('', ('a', 'b')))))),
     }
     assert Parser().parse_terms(string) == expected
+
+def test_parse_empty_string_arg():
+    string = 'b("")'
+    expected = {
+        ('b', ('""',)),
+    }
+    assert Parser().parse_terms(string) == expected
+    assert sorted(answer_set_to_str(expected).split()) == sorted(string.split())
+
+def test_parse_string_with_space():
+    string = 'a("hello ",3) b("")'
+    expected = {
+        ('a', ('"hello "', 3)),
+        ('b', ('""',)),
+    }
+    assert Parser().parse_terms(string) == expected
+    str_reprs = ['b("") a("hello ",3)', 'a("hello ",3) b("")']
+    assert answer_set_to_str(expected) in str_reprs
 
 def test_parse_args_without_predicat():
     string = 'a((b,10)) c("",("",""))'

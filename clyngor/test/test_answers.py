@@ -22,6 +22,7 @@ def quotes_answers():
         'a("c") b("d","e")',
         'a("c") b("d","e")',
         'a("c") b("d","e")',
+        'a("c") b("d","e")',
     ))
 
 @pytest.fixture
@@ -94,6 +95,7 @@ def test_discard_quotes(quotes_answers):
     assert next(answers) == {'a': frozenset({'c'}), 'b': frozenset({'d'})}
     answers = quotes_answers.discard_quotes.by_predicate.first_arg_only.atoms_as_string
     assert next(answers) == {'a("c")', 'b("d")'}
+    assert next(answers) == {'a("c")', 'b("d")'}
     assert next(answers, None) is None
 
 def test_discard_quotes_careful_parsing(quotes_answers):
@@ -103,6 +105,8 @@ def test_discard_quotes_careful_parsing(quotes_answers):
     assert next(answers) == {('a', ('c',)), ('b', ('d','e',))}
     answers = quotes_answers.careful_parsing.discard_quotes.by_predicate
     assert next(answers) == {'a': frozenset({('c',)}), 'b': frozenset({('d', 'e')})}
+    answers = quotes_answers.keep_quotes.by_predicate.first_arg_only
+    assert next(answers) == {'a': frozenset({'"c"'}), 'b': frozenset({'"d"'})}
     answers = quotes_answers.discard_quotes.by_predicate.first_arg_only
     assert next(answers) == {'a': frozenset({'c'}), 'b': frozenset({'d'})}
     answers = quotes_answers.careful_parsing.discard_quotes.by_predicate.first_arg_only.atoms_as_string
@@ -185,12 +189,16 @@ def test_as_pyasp_termset_termset_by_predicate():
     assert next(answers) == {'a': TermSet((Atom(predicate='a',args=('"b"','"d"')),))}
 
 def test_discard_quotes_with_as_pyasp_termset():
+    answers = Answers(('a("b","d")',)).as_pyasp
+    assert next(answers) == TermSet((Atom(predicate='a',args=('"b"','"d"')),))
     answers = Answers(('a("b","d")',)).as_pyasp.discard_quotes
-    assert next(answers) == TermSet((Atom(predicate='a',args=('b','d')),))
+    assert next(answers) == TermSet((Atom(predicate='a',args=('"b"','"d"')),))
 
 def test_discard_quotes_with_as_pyasp_termset_and_careful_parsing():
+    answers = Answers(('a("b","d")',)).parse_args.as_pyasp.careful_parsing
+    assert next(answers) == TermSet((Atom(predicate='a',args=('"b"','"d"')),))
     answers = Answers(('a("b","d")',)).parse_args.as_pyasp.discard_quotes.careful_parsing
-    assert next(answers) == TermSet((Atom(predicate='a',args=('b','d')),))
+    assert next(answers) == TermSet((Atom(predicate='a',args=('"b"','"d"')),))  # as_pyasp overrides discard_quotes
 
 
 def test_multiple_tunning_no_arg(noarg_answers):
