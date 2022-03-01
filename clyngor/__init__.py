@@ -7,17 +7,18 @@ from clyngor.solving import solve, clingo_version, command
 from clyngor.grounding import solve_from_grounded, grounded_program
 from clyngor.inline import ASP
 from clyngor.decoder import decode
-from clyngor.upapi import converted_types, converted_types_or_symbols
 from clyngor.propagators import Propagator, Variable, Main, Constraint
 
 
 def load_clingo_module() -> bool:
-    global clingo_module
+    global clingo_module, clingo_module_available
     try:
         import clingo
         clingo_module = clingo
+        clingo_module_available = True
     except ImportError:
         clingo_module = None
+        clingo_module_available = False
 
 def have_clingo_module() -> bool:
     return clingo_module is not None
@@ -58,8 +59,12 @@ def have_lua_support() -> bool:
 
 
 load_clingo_module()  # just initialize clingo module state, whether it is available or not
-# use_clingo_binary()  # use binary by default
+use_clingo_binary()  # use binary by default
 # use_clingo_module()  # use module by default
 
 if CLINGO_BIN_PATH != 'clingo':
     assert get_clingo_binary() == CLINGO_BIN_PATH
+
+
+# last, clyngor depending modules
+from clyngor.upapi import converted_types, converted_types_or_symbols

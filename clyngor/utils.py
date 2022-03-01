@@ -365,3 +365,10 @@ def try_lua_availability_in_clingo_module() -> bool:
         return False
     else:  # lua support available
         return True
+
+
+def null_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(func, *args, **kwargs)
+    return wrapper

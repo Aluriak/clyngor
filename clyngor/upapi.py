@@ -5,7 +5,8 @@
 
 import math
 import inspect
-from functools import wraps, partial
+import clyngor
+from functools import wraps
 
 
 def _converted_types(ignore_bad_type:bool=True):
@@ -19,6 +20,8 @@ def _converted_types(ignore_bad_type:bool=True):
     ignore_bad_type -- Non-conformant types are ignored.
 
     """
+    if not clyngor.have_python_support() or not clyngor.clingo_module_available:
+        return clyngor.utils.null_decorator
     from clingo import symbol
     def clingo_to_python(val:symbol, annot:type) -> object:
         if annot is None or not type(val).__name__ == 'Symbol':
@@ -86,7 +89,6 @@ def _converted_types(ignore_bad_type:bool=True):
 
         return decorated
     return decorator
-
 
 converted_types = _converted_types(True)
 converted_types_or_symbols = _converted_types(False)
