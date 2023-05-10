@@ -195,12 +195,13 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
 
     """
     ASW_FLAG, OPT_FLAG, OPT_FOUND, PROGRESS = 'Answer: ', 'Optimization: ', 'OPTIMUM FOUND', 'Progression :'
+    UNSAT = 'UNSATISFIABLE'
     output = iter(output.splitlines() if isinstance(output, str) else output)
 
     # get the first lines
     line = next(output)
     infos = []
-    while not line.startswith(ASW_FLAG):
+    while not line.startswith(ASW_FLAG) and not line.startswith(UNSAT):
         infos.append(line)
         try:
             line = next(output)
@@ -218,6 +219,8 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
             yield 'optimum found', True
         elif line.startswith(PROGRESS) and yield_prgs:
             yield 'progression', line[len(PROGRESS):].strip()
+        elif line.startswith(UNSAT):
+            yield 'unsat', True
         elif not line.strip():  # empty line: statistics are beginning
             if not yield_stats: break  # stats are the last part of the output
             stats = {}

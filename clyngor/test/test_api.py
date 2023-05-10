@@ -219,3 +219,31 @@ def test_default_negation():
     assert next(models, None) is None
     print(model)
     assert model == {('-r', (1,)), ('-r', (2,))}
+
+
+def test_unsatisfiable():
+    "Should return an empty answers set"
+    CODE = """
+    p(1).
+    q(1).
+
+    :- p(X), q(X).
+    """
+    models = clyngor.solve(inline=CODE, stats=False)
+    model = next(models, None)
+    assert model is None
+    assert len(models.statistics) == 4
+
+
+def test_unsatisfiable_statistics():
+    "Should return an empty answers set but provide the statistics"
+    CODE = """
+    p(1).
+    q(1).
+
+    :- p(X), q(X).
+    """
+    models = clyngor.solve(inline=CODE, stats=True)
+    model = next(models, None)
+    assert model is None
+    assert len(models.statistics) > 4
