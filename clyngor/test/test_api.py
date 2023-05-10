@@ -146,11 +146,11 @@ def test_syntax_error():
     assert not clyngor.have_clingo_module()
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='invalid', force_tempfile=True))
-    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.filename.startswith(tempfile.gettempdir())
     assert excinfo.value.lineno == 2
     assert excinfo.value.offset == 1
     assert excinfo.value.payload['char_end'] == 2
-    assert excinfo.value.msg.startswith('unexpected EOF in file /tmp/tmp')
+    assert excinfo.value.msg.startswith(f'unexpected EOF in file {tempfile.gettempdir()}')
     assert excinfo.value.msg.endswith(' at line 2 and column 1-2')
 
 
@@ -158,10 +158,10 @@ def test_syntax_error():
 def test_syntax_error_semicolon():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- ;int(X,"adult").', force_tempfile=True))
-    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.filename.startswith(tempfile.gettempdir())
     assert excinfo.value.lineno == 1
     assert excinfo.value.offset == 16
-    assert excinfo.value.msg.startswith('unexpected ; in file /tmp/tmp')
+    assert excinfo.value.msg.startswith(f'unexpected ; in file {tempfile.gettempdir()}')
     assert excinfo.value.msg.endswith(' at line 1 and column 16-17')
 
 
@@ -169,10 +169,10 @@ def test_syntax_error_semicolon():
 def test_syntax_error_brace():
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='color(X,red):- {{}}.', force_tempfile=True))
-    assert excinfo.value.filename.startswith('/tmp/tmp')
+    assert excinfo.value.filename.startswith(tempfile.gettempdir())
     assert excinfo.value.lineno == 1
     assert excinfo.value.offset == 17
-    assert excinfo.value.msg.startswith('unexpected { in file /tmp/tmp')
+    assert excinfo.value.msg.startswith(f'unexpected {{ in file {tempfile.gettempdir()}')
     assert excinfo.value.msg.endswith(' at line 1 and column 17-18')
 
 
@@ -194,7 +194,7 @@ def test_undefined_warning():
         tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True, force_tempfile=True))
     assert excinfo.value.atom == 'c'
     assert len(excinfo.value.args) == 1
-    start = "atom 'c' does not occur in any rule head in file /tmp/tmp"
+    start = f"atom 'c' does not occur in any rule head in file {tempfile.gettempdir()}"
     assert excinfo.value.args[0].startswith(start)
     assert excinfo.value.args[0].endswith(" at line 1 and column 5-6")
 
