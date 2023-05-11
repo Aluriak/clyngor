@@ -251,7 +251,28 @@ def test_multiple_opt_values():
 
 def test_unsat():
     parsed = Parser().parse_clasp_output(OUTCLASP_UNSATISFIABLE.splitlines())
+    current = next(parsed, None)
+    assert current is not None
+    l_type, model = current
+    assert l_type == 'unsat' and model is True
     assert next(parsed, None) is None
+
+
+def test_unsat_stats():
+    parsed = Parser().parse_clasp_output(OUTCLASP_UNSATISFIABLE.splitlines(), yield_stats=True)
+    stats = {
+        'Models': '0',
+        'Calls': '1',
+        'Time': '0.001s (Solving: 0.00s 1st Model: 0.00s Unsat: 0.00s)',
+        'CPU Time': '0.000s'
+    }
+
+    for type, model in parsed:
+        assert type in ('unsat', 'statistics')
+        if type == 'unsat':
+            assert model is True
+        elif type == 'statistics':
+            assert model == stats
 
 
 def test_multithread_with_progression():
