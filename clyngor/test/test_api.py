@@ -5,6 +5,7 @@ import clyngor
 from clyngor import ASP, solve, command
 from clyngor import utils, CLINGO_BIN_PATH
 from .definitions import run_with_clingo_binary_only
+from .test_time_limit import QUEENS
 
 
 @pytest.fixture
@@ -247,3 +248,19 @@ def test_unsatisfiable_statistics():
     model = next(models, None)
     assert model is None
     assert len(models.statistics) > 4
+
+
+def test_unknown():
+    "Should return an empty answers set"
+    models = clyngor.solve(inline=QUEENS, stats=False, time_limit=1)
+    model = next(models, None)
+    assert model is None
+    assert len(models.statistics) == 5
+
+
+def test_unknown_statistics():
+    "Should return an empty answers set but provide the statistics"
+    models = clyngor.solve(inline=QUEENS, stats=True, time_limit=1)
+    model = next(models, None)
+    assert model is None
+    assert len(models.statistics) > 5

@@ -227,6 +227,8 @@ def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
             statistics.update(payload)
         elif ptype == 'unsat':
             pass  # don't care
+        elif ptype == 'unknown':
+            pass  # don't care
         elif ptype == 'info':
             pass  # don't care
         else:
