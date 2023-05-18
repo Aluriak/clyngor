@@ -42,7 +42,7 @@ class Answers:
 
     """
 
-    def __init__(self, answers:iter, command:str='', statistics:dict={},
+    def __init__(self, answers:iter, command:str='', statistics:dict={}, specific_statuses:dict={},
                  *, decoders:iter=(), with_optimization:bool=False, on_end:callable=None, **kwargs):
         """Answer sets must be iterable of (predicate, args).
 
@@ -77,6 +77,7 @@ class Answers:
         self._with_optimality = False
         self._with_answer_number = False
         self.__on_end = on_end or (lambda: None)
+        self.__specific_statuses = specific_statuses
 
         for k, v in kwargs.items():
             if isinstance(getattr(self, '_' + k, None), bool):
@@ -322,6 +323,14 @@ class Answers:
     @property
     def statistics(self) -> dict:
         return dict(self._statistics)
+
+    @property
+    def is_unsatisfiable(self) -> bool:
+        return self.__specific_statuses.get("unsat", False)
+
+    @property
+    def is_unknown(self) -> bool:
+        return self.__specific_statuses.get("unknown", False)
 
 
 class ClingoAnswers(Answers):
