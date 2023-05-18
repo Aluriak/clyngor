@@ -231,7 +231,11 @@ def test_unsatisfiable():
     :- p(X), q(X).
     """
     models = clyngor.solve(inline=CODE, stats=False)
+
     model = next(models, None)
+    assert models.is_unsatisfiable
+    assert not models.is_unknown
+
     assert model is None
     assert len(models.statistics) == 4
 
@@ -245,7 +249,11 @@ def test_unsatisfiable_statistics():
     :- p(X), q(X).
     """
     models = clyngor.solve(inline=CODE, stats=True)
+
     model = next(models, None)
+    assert models.is_unsatisfiable
+    assert not models.is_unknown
+
     assert model is None
     assert len(models.statistics) > 4
 
@@ -253,7 +261,11 @@ def test_unsatisfiable_statistics():
 def test_unknown():
     "Should return an empty answers set"
     models = clyngor.solve(inline=QUEENS, stats=False, time_limit=1)
+
     model = next(models, None)
+    assert not models.is_unsatisfiable
+    assert models.is_unknown
+
     assert model is None
     assert len(models.statistics) == 5
 
@@ -261,6 +273,12 @@ def test_unknown():
 def test_unknown_statistics():
     "Should return an empty answers set but provide the statistics"
     models = clyngor.solve(inline=QUEENS, stats=True, time_limit=1)
+
     model = next(models, None)
+    assert not models.is_unsatisfiable
+    assert models.is_unknown
+
     assert model is None
+    # NOTE: This test may sometimes fail if grounding does not take place within 1 second
+    # If this happens, just re-run again.
     assert len(models.statistics) > 5
