@@ -211,7 +211,8 @@ def parse_clasp_output(output:iter or str, *, yield_stats:bool=False,
     # first answer begins
     while True:
         if line.startswith(ASW_FLAG):
-            yield 'answer_number', int(line[len(ASW_FLAG):])
+            answer_number = line[len(ASW_FLAG):].split(" ")[0]  
+            yield 'answer_number', int(answer_number)
             yield 'answer', next(output)
         elif line.startswith(OPT_FLAG) and yield_opti:
             yield 'optimization', tuple(map(int, line[len(OPT_FLAG):].strip().split()))
