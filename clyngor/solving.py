@@ -115,15 +115,21 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         stderr = (line.decode() for line in clingo.stderr)
         if return_raw_output:  return ''.join(stdout), ''.join(stderr)
         statistics = {}
+        specific_statuses = {
+            'unsat': False,
+            'unknown': False,
+        }
 
         # remove the tempfile after the work.
         on_end = lambda: (clingo.stderr.close(), clingo.stdout.close())
         if inline and tempfile_to_del and delete_tempfile:
             on_end = lambda: (os.remove(tempfile_to_del), clingo.stderr.close(), clingo.stdout.close())
 
-        return Answers(_gen_answers(stdout, stderr, statistics, error_on_warning),
+        answers = _gen_answers(stdout, stderr, statistics, specific_statuses, error_on_warning)
+        return Answers(answers,
                        command=' '.join(run_command), on_end=on_end,
                        decoders=decoders, statistics=statistics,
+                       specific_statuses=specific_statuses,
                        with_optimization=True)
 
 
@@ -202,7 +208,7 @@ def clingo_version(clingo_bin_path:str=None) -> dict:
 
 
 
-def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
+def _gen_answers(stdout:iter, stderr:iter, statistics:dict, specific_statuses:dict,
                  error_on_warning:bool) -> (str, int or None, bool, int):
     """Yield 4-uplet (answer set, optimization, optimum found, answer number),
     and update given statistics dict with statistics payloads
@@ -226,7 +232,9 @@ def _gen_answers(stdout:iter, stderr:iter, statistics:dict,
         elif ptype == 'statistics':
             statistics.update(payload)
         elif ptype == 'unsat':
-            pass  # don't care
+            specific_statuses['unsat'] = True
+        elif ptype == 'unknown':
+            specific_statuses['unknown'] = True
         elif ptype == 'info':
             pass  # don't care
         else:
