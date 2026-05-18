@@ -1,7 +1,7 @@
 CLINGO_BIN_PATH = 'clingo'
 __version__ = '0.5.1'
 
-from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python, with_clingo_bin, opt_models_from_clyngor_answers, answer_set_to_str, answer_set_from_str
+from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python, with_clingo_bin, opt_models_from_clyngor_answers, answer_set_to_str, answer_set_from_str, try_python_availability_in_clingo, try_lua_availability_in_clingo
 from clyngor.answers import Answers, ClingoAnswers
 from clyngor.solving import solve, clingo_version, command
 from clyngor.grounding import solve_from_grounded, grounded_program
@@ -50,11 +50,11 @@ def get_clingo_binary() -> str:
 def have_python_support(py3:bool=True) -> bool or None:
     """True if clingo supports python 3 (or 2 if py3 is falsy).
     None if no python support at all."""
-    return utils.try_python_availability_in_clingo(py3)
+    return try_python_availability_in_clingo(py3)
 
 def have_lua_support() -> bool:
     """True if clingo supports lua"""
-    return utils.try_lua_availability_in_clingo(py3)
+    return try_lua_availability_in_clingo(py3)
     return bool(clingo_version()['lua'])
 
 
