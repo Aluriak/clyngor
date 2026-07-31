@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__actions_list",
+      "mcp__github__get_job_logs",
+      "mcp__github__list_issues",
+      "mcp__github__list_commits",
+      "mcp__github__list_releases",
+      "mcp__github__list_pull_requests",
+      "mcp__github__issue_read",
+      "mcp__github__pull_request_read",
+      "mcp__github__search_issues",
+      "mcp__github__search_code",
+      "mcp__Claude_Code_Remote__list_repos",
+      "mcp__Claude_Code_Remote__list_triggers"
+    ]
+  }
+}
