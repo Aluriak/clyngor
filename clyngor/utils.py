@@ -368,7 +368,7 @@ def try_lua_availability_in_clingo_module() -> bool:
 
 
 def null_decorator(func):
-    @wraps(func)
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(func, *args, **kwargs)
     return wrapper

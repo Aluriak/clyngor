@@ -56,3 +56,21 @@ def test_literal_outputs_by_show_working():
 
 
 # TODO: test solving.command
+
+
+def test_command_invalid_time_limit():
+    with pytest.raises(ValueError):
+        clyngor.command((), time_limit='not a number')
+
+
+def test_command_invalid_nb_model():
+    with pytest.raises(ValueError):
+        clyngor.command((), nb_model='not a number')
+    with pytest.raises(ValueError):
+        clyngor.command((), nb_model=-1)
+
+
+def test_solve_nothing_yields_no_model():
+    """Calling solve() without any file, inline code or stdin feed does
+    not invoke clingo at all, and yields no model."""
+    assert tuple(solve(())) == ()

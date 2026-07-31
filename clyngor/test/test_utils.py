@@ -86,3 +86,48 @@ def test_with_opts():
     answer = solve(inline=ASP, options='--opt-mode=optN')
     found = list(utils.opt_models_from_clyngor_answers(answer))
     assert found == [frozenset({('a', ())})]
+
+
+def test_have_lua_support_is_callable():
+    """Regression test: have_lua_support() crashed with a NameError
+    (undefined py3) whenever called."""
+    import clyngor
+    assert isinstance(clyngor.have_lua_support(), bool)
+
+
+def test_null_decorator():
+    """Regression test: null_decorator used functools.wraps without
+    qualifying it, crashing with a NameError whenever applied."""
+    @utils.null_decorator
+    def func(decorated, value):
+        return value * 2
+    assert func(21) == 42
+
+
+def test_with_clingo_bin_sets_and_restores():
+    import clyngor
+    default = clyngor.CLINGO_BIN_PATH
+
+    @utils.with_clingo_bin('some-clingo-path')
+    def path_during_call():
+        return clyngor.CLINGO_BIN_PATH
+
+    assert path_during_call() == 'some-clingo-path'
+    assert clyngor.CLINGO_BIN_PATH == default
+
+
+def test_save_load_answers_round_trip():
+    import os
+    answers = (
+        (('a', (1, 2)), ('b', ())),
+        (('c', (3,)),),
+    )
+    fname = utils.save_answers_in_file(answers)
+    try:
+        loaded = tuple(utils.load_answers_from_file(fname))
+    finally:
+        os.remove(fname)
+    assert loaded == (
+        frozenset({('a', (1, 2)), ('b', ())}),
+        frozenset({('c', (3,))}),
+    )

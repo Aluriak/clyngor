@@ -379,3 +379,15 @@ def test_pyasp_and_nested_atoms():
     expected_a = frozenset((Atom('a', (Atom('b', ('c', 'd')),)),))
     print('LBTL:', type(answer_a), answer_a)
     assert answer_a == expected_a, (answer_a, type(answer_a))
+
+
+def test_init_boolean_kwargs():
+    """Regression test: the kwargs handler of Answers.__init__ referenced
+    an undefined variable, so passing any boolean option kwarg crashed
+    with a NameError instead of setting the option."""
+    answers = Answers((), sorted=True)
+    assert answers._sorted is True
+    answers = Answers((), discard_quotes=True)
+    assert answers._keep_quotes is False
+    answers = Answers((), discard_quotes=False)
+    assert answers._keep_quotes is True

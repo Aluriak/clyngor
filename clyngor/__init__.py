@@ -54,8 +54,7 @@ def have_python_support(py3:bool=True) -> bool or None:
 
 def have_lua_support() -> bool:
     """True if clingo supports lua"""
-    return try_lua_availability_in_clingo(py3)
-    return bool(clingo_version()['lua'])
+    return try_lua_availability_in_clingo()
 
 
 load_clingo_module()  # just initialize clingo module state, whether it is available or not

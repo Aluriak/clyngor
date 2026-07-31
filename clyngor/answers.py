@@ -81,9 +81,9 @@ class Answers:
 
         for k, v in kwargs.items():
             if isinstance(getattr(self, '_' + k, None), bool):
-                setattr(self, '_' + k, bool(value))
+                setattr(self, '_' + k, bool(v))
             elif k == 'discard_quotes':
-                setattr(self, '_keep_quotes', not bool(value))
+                setattr(self, '_keep_quotes', not bool(v))
 
     def __del__(self):
         """Call the on_end function, avoiding a too-many-file-open error.
