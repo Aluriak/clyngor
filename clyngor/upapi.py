@@ -20,13 +20,15 @@ def _converted_types(ignore_bad_type:bool=True):
     ignore_bad_type -- Non-conformant types are ignored.
 
     NB: support availability is checked at decoration time, not at import
-    time: clyngor starts in binary mode, so an import-time check would
-    freeze the no-support fallback forever, even when the decorator is
-    used from a script embedded in a module-mode solving.
+    time: the default solver may well be on the binary at import, while
+    the decorator is used from a script embedded in a module-mode
+    solving. What matters here is the module, since these decorators only
+    ever see clingo.Symbol objects handed over by the clingo API.
 
     """
     def decorator_with_support_check(func):
-        if not clyngor.have_python_support() or not clyngor.clingo_module_available:
+        solver = clyngor.Solver(backend='module')
+        if not solver.module_available or not solver.has_python_support():
             return clyngor.utils.null_decorator(func)
         return decorator(func)
 

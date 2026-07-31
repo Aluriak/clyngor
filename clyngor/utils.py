@@ -274,8 +274,8 @@ def cleaned_path(path:str, error_if_invalid:bool=True) -> str:
 
 
 def with_clingo_bin(clingo_bin:str) -> callable:
-    """Generate a wrapper where, during func call, the CLINGO_BIN_PATH clyngor
-    variable is set of *clingo_bin*.
+    """Generate a wrapper where, during func call, the default solver uses
+    the clingo binary found at *clingo_bin*.
 
     Example:
 
@@ -283,17 +283,17 @@ def with_clingo_bin(clingo_bin:str) -> callable:
         def solve_problem(...):
             clyngor.solve(...)
 
-    Not thread safe.
+    Not thread safe, since it moves module-level state; passing a Solver
+    to solve() is. The binary is restored even if the call raises, which
+    was not the case when this juggled CLINGO_BIN_PATH by hand.
 
     """
     def wrapper(func):
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
             import clyngor
-            regular_bin, clyngor.CLINGO_BIN_PATH = clyngor.CLINGO_BIN_PATH, clingo_bin
-            ret = func(*args, **kwargs)
-            clyngor.CLINGO_BIN_PATH = regular_bin
-            return ret
+            with clyngor.using_solver(binary_path=clingo_bin):
+                return func(*args, **kwargs)
         return wrapped
     return wrapper
 
@@ -323,56 +323,45 @@ def opt_models_from_clyngor_answers(answers:iter):
 
 
 def try_python_availability_in_clingo(py3=True) -> bool:
-    func = try_python_availability_in_clingo_module if clyngor.clingo_module_actived() else try_python_availability_in_clingo_binary
-    return func(py3)
+    "Python support of the backend the default solver resolves to"
+    if clyngor.default_solver().uses_module:
+        return try_python_availability_in_clingo_module(py3)
+    return try_python_availability_in_clingo_binary(py3)
 
 def try_python_availability_in_clingo_binary(py3=True) -> bool:
     """False when no clingo binary is reachable: installing clyngor does
     not provide one (the pip clingo package ships no executable), so an
     absent binary is a supported setup, not an error."""
-    if clyngor.get_clingo_binary() is None:
+    solver = clyngor.default_solver().using(backend='binary')
+    if not solver.binary_available:
         return False
-    py_ver = clyngor.clingo_version().get('python')
-    if not py_ver:  # NB: python is None, if not available
-        return bool(py_ver)
-    return py_ver[0] == ('3' if py3 else '2')
+    return solver.has_python_support(py3)
 
 def try_python_availability_in_clingo_module(py3=True) -> bool:
     """True if clingo module seems to handle python (3 if py3 is truthy else 2).
-    Raise an ModuleNotFoundError if clingo module is not available
+    Raise a SolverUnavailableError if the clingo module is not available.
     """
-    import clingo
-    ctl = clingo.Control()
-    try:
-        ctl.add("base", [], "#script(python)\nimport sys\nassert sys.version_info.major == %s\n#end.\n" % ('3' if py3 else '2'))
-    except RuntimeError as err:  # case where python support is not implemented
-        return False
-    else:  # python support available
-        return True
+    return clyngor.Solver(backend='module').has_python_support(py3)
 
 
 def try_lua_availability_in_clingo() -> bool:
-    return (try_lua_availability_in_clingo_module if clyngor.clingo_module_actived() else try_lua_availability_in_clingo_binary)()
+    "Lua support of the backend the default solver resolves to"
+    if clyngor.default_solver().uses_module:
+        return try_lua_availability_in_clingo_module()
+    return try_lua_availability_in_clingo_binary()
 
 def try_lua_availability_in_clingo_binary() -> bool:
     "False when no clingo binary is reachable, see the python counterpart"
-    if clyngor.get_clingo_binary() is None:
+    solver = clyngor.default_solver().using(backend='binary')
+    if not solver.binary_available:
         return False
-    lua_ver = clyngor.clingo_version().get('lua')
-    return bool(lua_ver)  # NB: lua is None, if not available
+    return solver.has_lua_support()
 
 def try_lua_availability_in_clingo_module() -> bool:
     """True if clingo module seems to handle lua.
-    Raise an ModuleNotFoundError if clingo module is not available
+    Raise a SolverUnavailableError if the clingo module is not available.
     """
-    import clingo
-    ctl = clingo.Control()
-    try:
-        ctl.add("base", [], f"#script(lua) #end.")
-    except RuntimeError as err:  # case where lua support is not implemented
-        return False
-    else:  # lua support available
-        return True
+    return clyngor.Solver(backend='module').has_lua_support()
 
 
 def null_decorator(func):

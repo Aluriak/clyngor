@@ -63,6 +63,6 @@ def test_clingo_module_detection_and_state_BP():
 def test_clingo_module_detection_and_state_BnP():
     assert not clyngor.utils.try_python_availability_in_clingo()
     assert not clyngor.utils.try_python_availability_in_clingo_binary()
-    with pytest.raises(ImportError):
+    with pytest.raises(clyngor.SolverUnavailableError):
         clyngor.utils.try_python_availability_in_clingo_module()
 

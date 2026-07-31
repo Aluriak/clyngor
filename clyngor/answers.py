@@ -343,9 +343,9 @@ class ClingoAnswers(Answers):
     """
     def __init__(self, solver, statistics:callable=(lambda: {})):
         # requires the clingo module to be installed, but not necessarily
-        # activated in clyngor's global state: run_with() and other module
-        # based entry points work regardless of that toggle.
-        assert clyngor.clingo_module_available
+        # the backend the default solver resolves to: run_with() and other
+        # module based entry points work regardless of that choice.
+        assert clyngor.default_solver().module_available
         super().__init__(self.__compute_answers(), with_optimization=True, command='[clingo module call]')
         self._solver = solver
         self._statistics = lambda s=solver: s.statistics

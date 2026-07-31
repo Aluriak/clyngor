@@ -1,6 +1,10 @@
-CLINGO_BIN_PATH = 'clingo'
 __version__ = '0.5.2'
 
+import sys as _sys
+from types import ModuleType as _ModuleType
+from contextlib import contextmanager as _contextmanager
+
+from clyngor.solver import Solver, SolverUnavailableError
 from clyngor.utils import ASPSyntaxError, ASPWarning, parse_clingo_output, clingo_value_to_python, with_clingo_bin, opt_models_from_clyngor_answers, answer_set_to_str, answer_set_from_str, try_python_availability_in_clingo, try_lua_availability_in_clingo
 from clyngor.answers import Answers, ClingoAnswers
 from clyngor.solving import solve, clingo_version, command
@@ -10,47 +14,53 @@ from clyngor.decoder import decode
 from clyngor.propagators import Propagator, Variable, Main, Constraint
 
 
-def load_clingo_module() -> bool:
-    global clingo_module, clingo_module_available
+# The solver used by clyngor's module-level entry points when none is
+# given. Everything that used to be spread over CLINGO_BIN_PATH and
+# clingo_module now lives here, in one validated place; pass a Solver to
+# solve() (or use using_solver) rather than reaching for this one.
+_DEFAULT_SOLVER = Solver()
+
+
+def default_solver() -> Solver:
+    "Return the Solver used when none is given explicitly"
+    return _DEFAULT_SOLVER
+
+def set_default_solver(solver:Solver) -> Solver:
+    """Make *solver* the one used when none is given, and return the
+    previous one, so that callers can restore it."""
+    global _DEFAULT_SOLVER
+    if not isinstance(solver, Solver):
+        raise TypeError("A Solver instance is expected, not {!r}".format(solver))
+    previous, _DEFAULT_SOLVER = _DEFAULT_SOLVER, solver
+    return previous
+
+@_contextmanager
+def using_solver(solver:Solver=None, **changes):
+    """Context manager making *solver* the default one for its duration.
+
+    Any Solver field can be given as a keyword instead, to derive from
+    the current default:
+
+        with clyngor.using_solver(backend='module'):
+            ...
+
+    Not thread safe — it moves module-level state. Passing a Solver to
+    solve() is the thread-safe way to do this.
+
+    """
+    solver = default_solver() if solver is None else solver
+    if changes:
+        solver = solver.using(**changes)
+    previous = set_default_solver(solver)
     try:
-        import clingo
-        clingo_module = clingo
-        clingo_module_available = True
-        try:  # since clingo 5.5, embedded #script (python) blocks are an opt-in
-            from clingo.script import enable_python
-            enable_python()
-        except ImportError:
-            pass  # older module: scripts are always enabled
-    except ImportError:
-        clingo_module = None
-        clingo_module_available = False
+        yield solver
+    finally:
+        set_default_solver(previous)
 
-def have_clingo_module() -> bool:
-    return clingo_module is not None
 
-def deactivate_clingo_module():
-    global clingo_module
-    clingo_module = None
-
-def clingo_module_actived() -> bool:
-    return clingo_module is not None
-
-def use_clingo_module():
-    if clingo_module is None:
-        load_clingo_module()
-    if clingo_module is None:  # loading didn't succeed
-        raise RuntimeError("Clingo module was asked to be used (call to use_clingo_module), but it is not available.")
-
-def use_clingo_binary(path=None):
-    deactivate_clingo_module()
-    set_clingo_binary(path or CLINGO_BIN_PATH)
-
-def set_clingo_binary(path):
-    globals()['CLINGO_BIN_PATH'] = path
-
-def get_clingo_binary() -> str:
-    import shutil
-    return shutil.which(globals()['CLINGO_BIN_PATH'])
+def get_clingo_binary() -> str or None:
+    "Return the path to the binary of the default solver, if reachable"
+    return default_solver().resolved_binary_path
 
 def have_python_support(py3:bool=True) -> bool or None:
     """True if clingo supports python 3 (or 2 if py3 is falsy).
@@ -62,12 +72,72 @@ def have_lua_support() -> bool:
     return try_lua_availability_in_clingo()
 
 
-load_clingo_module()  # just initialize clingo module state, whether it is available or not
-use_clingo_binary()  # use binary by default
-# use_clingo_module()  # use module by default
+# The pre-1.0 interface to that state: mutators of module-level globals.
+# Kept working on top of the default solver, since they are what all
+# existing code calls, but they remain what they always were -- a
+# process-wide toggle nothing validates the interaction of.
 
-if CLINGO_BIN_PATH != 'clingo':
-    assert get_clingo_binary() == CLINGO_BIN_PATH
+def load_clingo_module() -> bool:
+    "True if the clingo module is importable"
+    return default_solver().module_available
+
+def have_clingo_module() -> bool:
+    "True if the default solver goes through the clingo module"
+    return default_solver().uses_module
+
+def clingo_module_actived() -> bool:
+    "True if the default solver goes through the clingo module"
+    return default_solver().uses_module
+
+def deactivate_clingo_module():
+    "Make the default solver use the clingo binary"
+    set_default_solver(default_solver().using(backend='binary'))
+
+def use_clingo_module():
+    "Make the default solver use the clingo module"
+    solver = default_solver().using(backend='module')
+    solver.resolve()  # raises SolverUnavailableError (a RuntimeError) if absent
+    set_default_solver(solver)
+
+def use_clingo_binary(path:str=None):
+    "Make the default solver use the clingo binary found at *path*"
+    solver = default_solver().using(backend='binary')
+    set_default_solver(solver.using(binary_path=path) if path else solver)
+
+def set_clingo_binary(path:str):
+    "Set the binary path of the default solver"
+    set_default_solver(default_solver().using(binary_path=path))
+
+
+class _ClyngorModule(_ModuleType):
+    """Keeps the pre-1.0 module attributes working.
+
+    `clyngor.CLINGO_BIN_PATH = path` was a documented way to point clyngor
+    at a binary, and a module cannot intercept an assignment to itself
+    unless its class does — without this, such an assignment would
+    silently write an attribute nobody reads anymore.
+
+    """
+
+    def __getattr__(self, name):
+        if name == 'CLINGO_BIN_PATH':
+            return default_solver().binary_path
+        if name == 'clingo_module':
+            solver = default_solver()
+            return solver.module() if solver.uses_module else None
+        if name == 'clingo_module_available':
+            return default_solver().module_available
+        raise AttributeError("module {!r} has no attribute {!r}"
+                             "".format(__name__, name))
+
+    def __setattr__(self, name, value):
+        if name == 'CLINGO_BIN_PATH':
+            set_clingo_binary(value)
+        else:
+            super().__setattr__(name, value)
+
+
+_sys.modules[__name__].__class__ = _ClyngorModule
 
 
 # last, clyngor depending modules

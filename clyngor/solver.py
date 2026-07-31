@@ -42,6 +42,11 @@ BACKENDS = (AUTO, BINARY, MODULE)
 DEFAULT_BINARY_PATH = 'clingo'
 
 
+# Enabling embedded python in the clingo module registers a handler in
+# its C library; see Solver.module.
+_python_enabled = False
+
+
 class SolverUnavailableError(RuntimeError):
     """The backend a Solver asks for cannot be reached.
 
@@ -235,6 +240,13 @@ class Solver:
         module users, so enable them here — clyngor documents #script as
         supported.
 
+        Exactly once per process. It registers a script handler in
+        clingo's C library, so there is nothing to gain from doing it
+        again, and something to lose: calling it on every access
+        segfaults the interpreter later on, in an unrelated solving
+        (reproducible by dropping the guard below and running the test
+        suite, which then dies in test_upapi).
+
         """
         if not self.module_available:
             raise SolverUnavailableError(
@@ -242,12 +254,15 @@ class Solver:
                 "`pip install clingo`."
             )
         import clingo
-        try:
-            from clingo.script import enable_python
-        except ImportError:
-            pass  # older module: scripts are always enabled
-        else:
-            enable_python()
+        global _python_enabled
+        if not _python_enabled:
+            _python_enabled = True
+            try:
+                from clingo.script import enable_python
+            except ImportError:
+                pass  # older module: scripts are always enabled
+            else:
+                enable_python()
         return clingo
 
     def _module_runs_script(self, language: str, py3: bool = True) -> bool:

@@ -7,18 +7,13 @@ import clyngor
 
 
 @pytest.fixture(autouse=True)
-def _restore_clyngor_global_state():
-    """clyngor's module-level state (activated clingo module, binary path)
-    is mutable and some tests legitimately flip it; make sure no test can
-    leak its state into the next one, even by crashing."""
-    module_was_active = clyngor.clingo_module_actived()
-    bin_path = clyngor.CLINGO_BIN_PATH
+def _restore_clyngor_default_solver():
+    """The default solver is module-level state and some tests legitimately
+    replace it; make sure no test can leak its own into the next one, even
+    by crashing."""
+    solver = clyngor.default_solver()
     yield
-    clyngor.CLINGO_BIN_PATH = bin_path
-    if module_was_active and not clyngor.clingo_module_actived():
-        clyngor.use_clingo_module()
-    elif not module_was_active and clyngor.clingo_module_actived():
-        clyngor.deactivate_clingo_module()
+    clyngor.set_default_solver(solver)
 
 
 def pytest_configure(config):

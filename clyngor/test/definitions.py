@@ -4,13 +4,13 @@ Two orthogonal notions are distinguished here:
 
 - the clingo module being *importable*: a property of the environment,
   fixed for the whole test session. This is what skip conditions rely on.
-- the clingo module being *activated*: clyngor's global state, mutable at
-  any time (and deactivated by default at import). This is what the
-  run_with_* decorators manipulate, exception-safely, around each test.
+- the clingo module being the backend of the *default solver*: replaceable
+  at any time. This is what the run_with_* decorators do, exception-safely,
+  around each test.
 
-Conflating the two is what made skip conditions misfire: clyngor starts
-in binary mode, so have_clingo_module() is False at collection time even
-when the module is installed.
+Conflating the two is what made skip conditions misfire: the default
+solver prefers the binary, so have_clingo_module() is False at collection
+time even when the module is installed.
 
 """
 import importlib.util
@@ -41,38 +41,28 @@ def skipif_no_clingo_binary(func):
 
 
 def run_with_clingo_binary_only(func):
-    """Decorator deactivating clingo module handling while running
-    the test function, then restoring the previous state.
+    """Decorator making the default solver use the clingo binary while
+    running the test function, then restoring the previous one.
 
     Skips when no clingo binary is reachable.
 
     """
     @wraps(func)
     def wrapped(*args, **kwargs):
-        module_was_active = clyngor.clingo_module_actived()
-        clyngor.deactivate_clingo_module()
-        try:
+        with clyngor.using_solver(backend='binary'):
             return func(*args, **kwargs)
-        finally:
-            if module_was_active:
-                clyngor.use_clingo_module()
     return skipif_no_clingo_binary(wrapped)
 
 
 def run_with_clingo_module_only(func):
-    """Decorator activating clingo module handling while running
-    the test function, then restoring the previous state.
+    """Decorator making the default solver use the clingo module while
+    running the test function, then restoring the previous one.
 
     """
     @wraps(func)
     def wrapped(*args, **kwargs):
-        module_was_active = clyngor.clingo_module_actived()
-        clyngor.use_clingo_module()
-        try:
+        with clyngor.using_solver(backend='module'):
             return func(*args, **kwargs)
-        finally:
-            if not module_was_active:
-                clyngor.deactivate_clingo_module()
     return onlyif_clingo_module(wrapped)
 
 

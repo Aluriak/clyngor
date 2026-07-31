@@ -3,7 +3,7 @@
 """
 
 
-import re
+
 import os
 import json
 import shlex
@@ -25,7 +25,8 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
           use_clingo_module:bool=True, grounding_observers:iter=(),
           propagators:iter=(), solver_conf:object=None,
           running_sequence:callable=_default_running_sequence,
-          programs:iter=(['base', ()],), return_raw_output:bool=False) -> iter:
+          programs:iter=(['base', ()],), return_raw_output:bool=False,
+          solver:object=None) -> iter:
     """Run the solver on given files, with given options, and return
     an Answers instance yielding answer sets.
 
@@ -37,9 +38,11 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     print_command -- print full command to stdout before running it
     clean_path -- clean the path of given files before using them
     stats -- will ask clingo for all stats, instead of just the minimal ones
-    clingo_bin_path -- the path to the clingo binary
+    solver -- clyngor.Solver deciding how to reach clingo (default: the
+              module-level one, see clyngor.default_solver)
+    clingo_bin_path -- the path to the clingo binary, overriding the solver's
     error_on_warning -- raise an ASPWarning when encountering a clingo warning
-    use_clingo_module -- will use the clingo module (if available)
+    use_clingo_module -- False restricts the solver to the clingo binary
     force_tempfile -- use tempfile, even if only inline code is given
     delete_tempfile -- delete used tempfiles
     return_raw_output -- don't parse anything, just return iterators over stdout
@@ -60,11 +63,15 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
     constants -- mapping name -> value of constants for the grounding
 
     """
+    solver = _solver_of(solver, clingo_bin_path)
+    if not use_clingo_module or return_raw_output:
+        # raw output is the binary's, and the caller may just be refusing
+        # the restrictions of the module path (time_limit, constants).
+        solver = solver.using(backend='binary')
     files = [files] if isinstance(files, str) else files
     files = tuple(map(cleaned_path, files) if clean_path else files)
     stdin_feed = None  # data to send to stdin
-    use_clingo_module = use_clingo_module and clyngor.have_clingo_module() and not return_raw_output
-    if use_clingo_module:
+    if solver.uses_module:
         # the clingo API do not handle stdin feeding
         force_tempfile = True
     if inline and not files and not force_tempfile:  # avoid tempfile if possible
@@ -76,7 +83,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
             files = tuple(files) + (tempfile_to_del,)
             assert files, fd.name
     run_command = command(files, options, inline, nb_model, time_limit,
-                          constants, stats, clingo_bin_path=clingo_bin_path)
+                          constants, stats, solver=solver)
 
     if print_command:
         print(run_command)
@@ -87,7 +94,9 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
         return Answers((), command=' '.join(run_command))
 
 
-    if use_clingo_module:
+    # NB: resolve() only here, so that a call with nothing to solve
+    # answers above without requiring any clingo at all.
+    if solver.resolve() == 'module':
         if time_limit != 0 or constants:
             raise ValueError("Options 'time_limit' and 'constants' are not "
                              "handled when used with python clingo module.")
@@ -95,7 +104,7 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
             raise NotImplementedError("Solver configuration handling is currently"
                                       "not implemented")
         options = list(shlex.split(options) if isinstance(options, str) else options)
-        ctl = clyngor.clingo_module.Control(options)
+        ctl = solver.module().Control(options)
         main = running_sequence(programs=programs, files=files, nb_model=nb_model,
                                 propagators=propagators, observers=grounding_observers,
                                 generator=True)
@@ -133,15 +142,24 @@ def solve(files:iter=(), options:iter=[], inline:str=None,
                        with_optimization=True)
 
 
+def _solver_of(solver:object, clingo_bin_path:str=None) -> object:
+    """Return the Solver to work with: the given one, the module-level
+    default otherwise, with *clingo_bin_path* applied when given."""
+    solver = clyngor.default_solver() if solver is None else solver
+    return solver.using(binary_path=clingo_bin_path) if clingo_bin_path else solver
+
+
 def command(files:iter=(), options:iter=[], inline:str=None,
             nb_model:int=0, time_limit:int=0, constants:dict={},
-            stats:bool=True, clingo_bin_path:str=None) -> iter:
+            stats:bool=True, clingo_bin_path:str=None,
+            solver:object=None) -> iter:
     """Return the shell command running the solver on given files,
     with given options.
 
     files -- iterable of files feeding the solver
     options -- string or iterable of options for clingo
-    clingo_bin_path -- the path to the clingo binary
+    solver -- clyngor.Solver providing the binary (default: the module-level one)
+    clingo_bin_path -- the path to the clingo binary, overriding the solver's
 
     Shortcut to clingo's options:
     nb_model -- number of model to output (0 for all (default), None to disable)
@@ -174,37 +192,17 @@ def command(files:iter=(), options:iter=[], inline:str=None,
     if stats:
         options.append('--stats')
 
-    return [clingo_bin_path or clyngor.CLINGO_BIN_PATH, *options, *files]
+    return [_solver_of(solver, clingo_bin_path).binary_path, *options, *files]
 
 
-def clingo_version(clingo_bin_path:str=None) -> dict:
-    """Return clingo's version information in a dict"""
-    if clyngor.clingo_module_actived():
-        return {
-            'clingo version': clingo.__version__,
-            'python': '3' if clyngor.utils.try_python_availability_in_clingo_module() else None,
-            'lua': 'yes' if clyngor.utils.try_lua_availability_in_clingo_module() else None,
-        }
-    clingo = subprocess.Popen(
-        [clingo_bin_path or clyngor.CLINGO_BIN_PATH, '--version', '--outf=2'],
-        stderr = subprocess.PIPE,
-        stdout = subprocess.PIPE,
-    )
-    fields = {
-        'address model': re.compile(r'Address model: ([3264]{2})-bit'),
-        'clingo version': re.compile(r'clingo version ([0-9\.]+)'),
-        'libgringo': re.compile(r'libgringo version ([0-9\.]+)'),
-        'libclasp': re.compile(r'libclasp version ([0-9\.]+)'),
-        'libpotassco': re.compile(r'libpotassco version ([0-9\.]+)'),
-        'python': re.compile(r'with[out]{0,3}\sPython\s?([0-9\.]+)?'),  # later loop will yields None if python is available
-        'lua': re.compile(r'with[out]{0,3}\sLua\s?([0-9\.]+)?'),  # same for lua
-    }
-    stdout = clingo.communicate()[0].decode()
-    values = {}
-    for field, reg in fields.items():
-        match = reg.search(stdout)
-        values[field] = match.groups()[0] if match else None
-    return values
+def clingo_version(clingo_bin_path:str=None, solver:object=None) -> dict:
+    """Return clingo's version information in a dict.
+
+    The keys depend on the backend the solver resolves to: see
+    clyngor.Solver.version.
+
+    """
+    return _solver_of(solver, clingo_bin_path).version()
 
 
 
