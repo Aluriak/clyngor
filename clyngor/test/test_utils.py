@@ -1,3 +1,4 @@
+import pytest
 
 import tempfile
 from .test_api import asp_code  # fixture
@@ -107,14 +108,28 @@ def test_null_decorator():
 
 def test_with_clingo_bin_sets_and_restores():
     import clyngor
-    default = clyngor.CLINGO_BIN_PATH
+    default = clyngor.default_solver()
 
     @utils.with_clingo_bin('some-clingo-path')
     def path_during_call():
-        return clyngor.CLINGO_BIN_PATH
+        return clyngor.default_solver().binary_path
 
     assert path_during_call() == 'some-clingo-path'
-    assert clyngor.CLINGO_BIN_PATH == default
+    assert clyngor.default_solver() == default
+
+
+def test_with_clingo_bin_restores_on_error():
+    "It used to skip its own restoration whenever the call raised"
+    import clyngor
+    default = clyngor.default_solver()
+
+    @utils.with_clingo_bin('some-clingo-path')
+    def failing_call():
+        raise ZeroDivisionError
+
+    with pytest.raises(ZeroDivisionError):
+        failing_call()
+    assert clyngor.default_solver() == default
 
 
 def test_save_load_answers_round_trip():

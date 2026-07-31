@@ -74,38 +74,65 @@ def have_lua_support() -> bool:
 
 # The pre-1.0 interface to that state: mutators of module-level globals.
 # Kept working on top of the default solver, since they are what all
-# existing code calls, but they remain what they always were -- a
-# process-wide toggle nothing validates the interaction of.
+# existing code calls, but deprecated: they remain what they always were,
+# a process-wide toggle nothing validates the interaction of.
+
+def _deprecated(what:str, instead:str):
+    from warnings import warn
+    warn("clyngor.{} is deprecated since 1.0, and will be removed in a "
+         "later release: {}.".format(what, instead),
+         DeprecationWarning, stacklevel=3)
+
 
 def load_clingo_module() -> bool:
     "True if the clingo module is importable"
+    _deprecated('load_clingo_module()',
+                "the clingo module is looked up when needed; ask "
+                "clyngor.Solver().module_available to know whether it is there")
     return default_solver().module_available
 
 def have_clingo_module() -> bool:
     "True if the default solver goes through the clingo module"
+    _deprecated('have_clingo_module()',
+                "use clyngor.default_solver().uses_module -- or "
+                "Solver().module_available for the question this one reads like")
     return default_solver().uses_module
 
 def clingo_module_actived() -> bool:
     "True if the default solver goes through the clingo module"
+    _deprecated('clingo_module_actived()',
+                "use clyngor.default_solver().uses_module")
     return default_solver().uses_module
 
 def deactivate_clingo_module():
     "Make the default solver use the clingo binary"
+    _deprecated('deactivate_clingo_module()',
+                "use clyngor.using_solver(backend='binary'), or pass "
+                "solver=Solver(backend='binary') to solve()")
     set_default_solver(default_solver().using(backend='binary'))
 
 def use_clingo_module():
     "Make the default solver use the clingo module"
+    _deprecated('use_clingo_module()',
+                "use clyngor.using_solver(backend='module'), or pass "
+                "solver=Solver(backend='module') to solve()")
     solver = default_solver().using(backend='module')
     solver.resolve()  # raises SolverUnavailableError (a RuntimeError) if absent
     set_default_solver(solver)
 
 def use_clingo_binary(path:str=None):
     "Make the default solver use the clingo binary found at *path*"
+    _deprecated('use_clingo_binary()',
+                "use clyngor.using_solver(backend='binary', binary_path=...), "
+                "or pass solver=Solver(backend='binary', binary_path=...) to solve()")
     solver = default_solver().using(backend='binary')
     set_default_solver(solver.using(binary_path=path) if path else solver)
 
 def set_clingo_binary(path:str):
     "Set the binary path of the default solver"
+    _deprecated('set_clingo_binary()',
+                "use clyngor.using_solver(binary_path=...), or pass "
+                "solver=Solver(binary_path=...) to solve()")
     set_default_solver(default_solver().using(binary_path=path))
 
 
@@ -121,18 +148,27 @@ class _ClyngorModule(_ModuleType):
 
     def __getattr__(self, name):
         if name == 'CLINGO_BIN_PATH':
+            _deprecated('CLINGO_BIN_PATH',
+                        "use clyngor.default_solver().binary_path")
             return default_solver().binary_path
         if name == 'clingo_module':
+            _deprecated('clingo_module',
+                        "use clyngor.default_solver().module()")
             solver = default_solver()
             return solver.module() if solver.uses_module else None
         if name == 'clingo_module_available':
+            _deprecated('clingo_module_available',
+                        "use clyngor.default_solver().module_available")
             return default_solver().module_available
         raise AttributeError("module {!r} has no attribute {!r}"
                              "".format(__name__, name))
 
     def __setattr__(self, name, value):
         if name == 'CLINGO_BIN_PATH':
-            set_clingo_binary(value)
+            _deprecated('CLINGO_BIN_PATH',
+                        "use clyngor.using_solver(binary_path=...), or pass "
+                        "solver=Solver(binary_path=...) to solve()")
+            set_default_solver(default_solver().using(binary_path=value))
         else:
             super().__setattr__(name, value)
 

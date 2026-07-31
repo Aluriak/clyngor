@@ -3,7 +3,7 @@ import tempfile
 import pytest
 import clyngor
 from clyngor import ASP, solve, command
-from clyngor import utils, CLINGO_BIN_PATH
+from clyngor import utils
 from .definitions import run_with_clingo_binary_only
 from .test_time_limit import QUEENS
 
@@ -59,18 +59,19 @@ def test_api_solve():
 
 
 def test_api_command():
+    binary = clyngor.default_solver().binary_path
     files = ('a.lp', 'b.lp')
     cmd = command(files, nb_model=3, stats=False)
-    assert cmd == [CLINGO_BIN_PATH, '-n 3', *files]
+    assert cmd == [binary, '-n 3', *files]
 
     cmd = command(files, nb_model=None)
-    assert cmd == [CLINGO_BIN_PATH, '--stats', *files]
+    assert cmd == [binary, '--stats', *files]
 
     files = ('a.lp', 'b.lp', 'c')
-    clyngor.CLINGO_BIN_PATH = '/usr/bin/clingo'  # NB: this have serious side effects. If any fail happen before the restauration, all other tests may fail.
-    cmd = command(files, nb_model=0)
-    clyngor.CLINGO_BIN_PATH = 'clingo'
+    with clyngor.using_solver(binary_path='/usr/bin/clingo'):
+        cmd = command(files, nb_model=0)
     assert cmd == ['/usr/bin/clingo', '-n 0', '--stats', *files]
+    assert clyngor.default_solver().binary_path == binary
 
 
 @run_with_clingo_binary_only
@@ -145,7 +146,7 @@ def test_no_input(capsys):
 
 @run_with_clingo_binary_only
 def test_syntax_error():
-    assert not clyngor.have_clingo_module()
+    assert clyngor.default_solver().uses_binary
     with pytest.raises(clyngor.ASPSyntaxError) as excinfo:
         tuple(clyngor.solve((), inline='invalid', force_tempfile=True))
     assert excinfo.value.filename.startswith(tempfile.gettempdir())
@@ -191,7 +192,7 @@ def test_syntax_error_brace_with_stdin():
 
 @run_with_clingo_binary_only
 def test_undefined_warning():
-    assert not clyngor.have_clingo_module()
+    assert clyngor.default_solver().uses_binary
     with pytest.raises(clyngor.ASPWarning) as excinfo:
         tuple(clyngor.solve((), inline='b:- c.', error_on_warning=True, force_tempfile=True))
     assert excinfo.value.atom == 'c'
