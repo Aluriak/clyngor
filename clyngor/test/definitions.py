@@ -26,9 +26,25 @@ def clingo_module_importable() -> bool:
     return importlib.util.find_spec('clingo') is not None
 
 
+def clingo_binary_available() -> bool:
+    """True if a clingo binary is reachable. Installing clyngor does not
+    provide one (the pip clingo package ships no executable), so a
+    module-only deployment is legitimate and must not fail the suite."""
+    return clyngor.get_clingo_binary() is not None
+
+
+def skipif_no_clingo_binary(func):
+    return pytest.mark.skipif(
+        not clingo_binary_available(),
+        reason="Require a clingo binary in the PATH"
+    )(func)
+
+
 def run_with_clingo_binary_only(func):
     """Decorator deactivating clingo module handling while running
     the test function, then restoring the previous state.
+
+    Skips when no clingo binary is reachable.
 
     """
     @wraps(func)
@@ -40,7 +56,7 @@ def run_with_clingo_binary_only(func):
         finally:
             if module_was_active:
                 clyngor.use_clingo_module()
-    return wrapped
+    return skipif_no_clingo_binary(wrapped)
 
 
 def run_with_clingo_module_only(func):

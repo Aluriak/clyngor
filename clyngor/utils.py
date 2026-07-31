@@ -327,6 +327,11 @@ def try_python_availability_in_clingo(py3=True) -> bool:
     return func(py3)
 
 def try_python_availability_in_clingo_binary(py3=True) -> bool:
+    """False when no clingo binary is reachable: installing clyngor does
+    not provide one (the pip clingo package ships no executable), so an
+    absent binary is a supported setup, not an error."""
+    if clyngor.get_clingo_binary() is None:
+        return False
     py_ver = clyngor.clingo_version().get('python')
     if not py_ver:  # NB: python is None, if not available
         return bool(py_ver)
@@ -350,6 +355,9 @@ def try_lua_availability_in_clingo() -> bool:
     return (try_lua_availability_in_clingo_module if clyngor.clingo_module_actived() else try_lua_availability_in_clingo_binary)()
 
 def try_lua_availability_in_clingo_binary() -> bool:
+    "False when no clingo binary is reachable, see the python counterpart"
+    if clyngor.get_clingo_binary() is None:
+        return False
     lua_ver = clyngor.clingo_version().get('lua')
     return bool(lua_ver)  # NB: lua is None, if not available
 
