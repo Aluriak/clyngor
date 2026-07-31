@@ -8,3 +8,4 @@ clyngor.egg-info/
 dist/
 venv-*/
 venv/
+.coverage
