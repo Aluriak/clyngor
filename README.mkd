@@ -71,7 +71,51 @@ Currently, there is only one way to see all chaining operator available:
 
 
 
-## Official Python API
+## Choosing how clingo is reached
+clyngor can reach clingo in two ways: by running the **binary** as a subprocess and parsing its
+output, or through the official **clingo python module** and its API objects.
+Which one is used, and where the binary lives, is described by a `Solver`:
+
+```python
+import clyngor
+from clyngor import Solver
+
+clyngor.solve('file.lp', solver=Solver(backend='module'))
+clyngor.solve('file.lp', solver=Solver(binary_path='path/to/clingo'))
+```
+
+A `Solver` is immutable — derive a new one with `using()` — and validates itself at construction,
+rather than at solving time:
+
+```python
+Solver().using(backend='module')             # Solver(backend='module', binary_path='clingo')
+Solver(backend='pyclingo')                   # ValueError: backend must be one of 'auto', ...
+```
+
+Its `backend` is one of:
+
+| backend | behavior |
+|---|---|
+| `'auto'` (default) | the binary if there is one, the clingo module otherwise |
+| `'binary'` | the binary, raising `SolverUnavailableError` if it is unreachable |
+| `'module'` | the clingo module, raising `SolverUnavailableError` if it is not installed |
+
+`'auto'` means `pip install clingo` alone is a working setup: that package ships no executable,
+and clyngor falls back to the module rather than failing.
+
+When no solver is passed, clyngor uses a module-level default one, which you may read with
+`clyngor.default_solver()`, replace with `clyngor.set_default_solver(...)`, or swap for the
+duration of a block:
+
+```python
+with clyngor.using_solver(backend='module'):
+    clyngor.solve('file.lp')  # goes through the clingo module
+```
+
+Note that a default solver is process-wide state, so `using_solver` is not thread safe;
+passing a `Solver` to `solve()` is.
+
+### The clingo module as a backend
 If the used version of clingo is compiled with python, you can put python code into your ASP code as usual.
 But if you also have the [clingo package](https://potassco.org/clingo/python-api/current/clingo.html)
 installed and importable, clyngor can use it for various tasks.
@@ -80,9 +124,10 @@ Using the official API leads to the following changes :
 
 - both robust and quick parsing, instead of the simple vs slow method
 - some options are not supported : constants, [time-limit](clyngor/test/test_time_limit.py), parsing error handling, [decoupled grounding/solving](clyngor/test/test_grounding.py)
+- statistics come as clingo's nested dicts, where the binary yields the flat mapping parsed out of its output
+- `is_unsatisfiable` and `is_unknown` are not reported
 
-You can activate the use of the clingo module by calling once `clyngor.activate_clingo_module()`
-or calling `clyngor.solve` with argument `use_clingo_module` set to `True`.
+Passing `use_clingo_module=False` to `clyngor.solve` restricts it to the binary, whatever the solver says.
 
 
 ## Python embedding
@@ -207,11 +252,17 @@ For an ORM approach, give a try to [clorm](https://github.com/daveraja/clorm).
 
     pip install clyngor
 
-You must have [`clingo`](https://potassco.org/doc/start/) in your path. Depending on your OS, it might be done with a system installation,
-or through [downloading](https://github.com/potassco/clingo/releases) and (compilation and) manual installation.
+You need clingo, in either of its two forms:
 
-You may also want to install the [python clingo module](https://potassco.org/clingo/python-api/current/clingo.html),
-which is [an optional dependancy](#official-api-embedding).
+- the [`clingo` binary](https://potassco.org/doc/start/) in your path — through a system
+  installation depending on your OS, through [downloading](https://github.com/potassco/clingo/releases)
+  and (compilation and) manual installation, or with `pip install clyngor-with-clingo`, which ships one.
+- the [python clingo module](https://potassco.org/clingo/python-api/current/clingo.html),
+  with `pip install clingo`. That package ships no executable, so clyngor then solves through the
+  module — see [choosing how clingo is reached](#choosing-how-clingo-is-reached).
+
+Having both is the most comfortable: clyngor prefers the binary, which supports options the module
+path rejects, and uses the module for what only it can do.
 
 
 ## Tips
@@ -229,14 +280,22 @@ which provides high level routines to save and load answer sets.
 
 ```python
 import clyngor
-clyngor.CLINGO_BIN_PATH = 'path/to/clingo'
+from clyngor import Solver
+
+clyngor.solve('file.lp', solver=Solver(binary_path='path/to/clingo'))
 ```
 
 Note that it will be the very first parameter to [`subprocess.Popen`](https://docs.python.org/3/library/subprocess.html#popen-constructor).
-The `solve` function also support the `clingo_bin_path` parameter.
+The `solve` function also supports the `clingo_bin_path` parameter, which overrides the solver's.
 
-The third solution is to use the decorator `with_clingo_bin`, which modify the global variable
-during the execution of a specific function:
+To point every call of a whole block at a given binary:
+
+```python
+with clyngor.using_solver(binary_path='clingo454'):
+    clyngor.solve(...)  # will use clingo454, unless clingo_bin_path or solver is given
+```
+
+The decorator `with_clingo_bin` does the same around a function:
 
 ```python
 import clyngor
@@ -280,6 +339,9 @@ Clyngor was designed to not require the official module, because it required a m
 However, because of the obvious interest in features and performances,
 the official module can be used by clyngor if it is available.
 
+Since 1.0, it is also what clyngor falls back to when no binary is reachable, so the module alone is
+enough to solve. Which one is used is decided by the [solver](#choosing-how-clingo-is-reached).
+
 
 ## Further ideas
 - [timeout](https://stackoverflow.com/a/12698328/3077939) in addition to time-limit
@@ -296,6 +358,35 @@ the official module can be used by clyngor if it is available.
 
 ## Changelog
 
+- 1.0.0
+    - **how clingo is reached is now an explicit object**, `clyngor.Solver`, instead of module-level
+      mutable state. See [choosing how clingo is reached](#choosing-how-clingo-is-reached).
+    - **clyngor falls back to the clingo module when no binary is reachable**, instead of failing with
+      a `FileNotFoundError`. `pip install clingo` alone is now a working setup.
+    - an unreachable clingo raises `clyngor.SolverUnavailableError` (a `RuntimeError`), naming what was
+      looked for and how to fix it, where a bare `FileNotFoundError` used to escape from `subprocess`,
+      or a probe used to answer `False` — conflating "no python support" with "no clingo at all".
+    - `clingo_version()` no longer raises `UnboundLocalError` when the clingo module is the backend.
+    - `with_clingo_bin` restores the previous binary even when the decorated call raises.
+    - the pre-1.0 toggles still work, and warn. To migrate:
+
+      | before | after |
+      |---|---|
+      | `clyngor.use_clingo_module()` | `clyngor.using_solver(backend='module')` |
+      | `clyngor.use_clingo_binary(path)` | `clyngor.using_solver(backend='binary', binary_path=path)` |
+      | `clyngor.deactivate_clingo_module()` | `clyngor.using_solver(backend='binary')` |
+      | `clyngor.CLINGO_BIN_PATH = path` | `clyngor.using_solver(binary_path=path)` |
+      | `clyngor.set_clingo_binary(path)` | `clyngor.using_solver(binary_path=path)` |
+      | `clyngor.have_clingo_module()` | `clyngor.default_solver().uses_module` |
+      | `clyngor.clingo_module_actived()` | `clyngor.default_solver().uses_module` |
+      | `clyngor.clingo_module_available` | `clyngor.default_solver().module_available` |
+      | `clyngor.load_clingo_module()` | nothing: the module is looked up when needed |
+
+      All of them move process-wide state. Passing `solver=Solver(...)` to `clyngor.solve` needs none
+      of it, and is the thread-safe way to pick a backend.
+    - `pyPEG2` is no longer an install dependency: nothing in the `clyngor` package imports it, it
+      belongs to the sibling [clyngor-parser](clyngor-parser) project. `pytest` moved to the `test` extra.
+    - tests run in CI, across python 3.9/3.11/3.13 and the three backend configurations.
 - 0.4.0 (todo)
     - see [further ideas](#Further-ideas)
 - 0.3.28
