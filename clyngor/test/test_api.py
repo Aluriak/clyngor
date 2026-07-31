@@ -73,6 +73,7 @@ def test_api_command():
     assert cmd == ['/usr/bin/clingo', '-n 0', '--stats', *files]
 
 
+@run_with_clingo_binary_only
 def test_api_asp(asp_code):
     answers = ASP(asp_code, use_clingo_module=False)  # clingo module offers a *really* different statistics set
     found = set()
@@ -222,6 +223,7 @@ def test_default_negation():
     assert model == {('-r', (1,)), ('-r', (2,))}
 
 
+@run_with_clingo_binary_only
 def test_unsatisfiable():
     "Should return an empty answers set"
     CODE = """
@@ -240,6 +242,7 @@ def test_unsatisfiable():
     assert len(models.statistics) == 4
 
 
+@run_with_clingo_binary_only
 def test_unsatisfiable_statistics():
     "Should return an empty answers set but provide the statistics"
     CODE = """
@@ -258,6 +261,7 @@ def test_unsatisfiable_statistics():
     assert len(models.statistics) > 4
 
 
+@run_with_clingo_binary_only
 def test_unknown():
     "Should return an empty answers set"
     models = clyngor.solve(inline=QUEENS, stats=False, time_limit=1)
@@ -270,6 +274,7 @@ def test_unknown():
     assert len(models.statistics) == 5
 
 
+@run_with_clingo_binary_only
 def test_unknown_statistics():
     "Should return an empty answers set but provide the statistics"
     models = clyngor.solve(inline=QUEENS, stats=True, time_limit=1)

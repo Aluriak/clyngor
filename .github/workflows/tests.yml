@@ -17,8 +17,11 @@ jobs:
         # clyngor can solve either by running the clingo binary or through
         # the official clingo python module, and the two code paths differ
         # enough (parsed stdout vs API objects, statistics shape, embedded
-        # #script support) that both need to be exercised.
-        backend: [binary, binary+module]
+        # #script support) that both need to be exercised. 'module' is the
+        # deployment that pip-installed clingo -- which ships no
+        # executable -- and has no binary anywhere: solving there relies
+        # entirely on the fallback of Solver(backend='auto').
+        backend: [binary, module, binary+module]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +32,7 @@ jobs:
 
       - name: Install the clingo binary
         # ubuntu ships clingo inside the gringo package
+        if: matrix.backend != 'module'
         run: sudo apt-get update && sudo apt-get install -y gringo
 
       - name: Install python dependencies
@@ -44,7 +48,7 @@ jobs:
 
       - name: Report the environment under test
         run: |
-          clingo --version | head -3
+          command -v clingo && clingo --version | head -3 || echo 'clingo binary: absent'
           python -c "import importlib.util as u; print('clingo module:', u.find_spec('clingo') is not None)"
 
       - name: Run tests

@@ -5,6 +5,8 @@ former module-level mutable state.
 
 import pytest
 
+import clyngor
+
 from clyngor.solver import (Solver, SolverUnavailableError,
                             AUTO, BINARY, MODULE)
 from .definitions import (clingo_module_importable, clingo_binary_available,
@@ -152,6 +154,41 @@ def test_support_probes_of_an_unreachable_binary_raise():
         solver.has_python_support()
     with pytest.raises(SolverUnavailableError):
         solver.has_lua_support()
+
+
+@onlyif_clingo_module
+def test_solve_falls_back_to_the_module_without_a_binary():
+    """The point of the fallback: clingo pip-installed, no executable
+    anywhere, and solving still works instead of raising."""
+    solver = Solver(binary_path=UNREACHABLE)  # backend='auto'
+    assert solver.uses_module
+    models = tuple(clyngor.solve(inline='a. b:- a.', solver=solver))
+    assert models == (frozenset({('a', ()), ('b', ())}),)
+
+
+def test_solve_with_an_unreachable_binary_says_so():
+    """It used to be a bare FileNotFoundError on 'clingo', from deep
+    inside subprocess."""
+    solver = Solver(backend=BINARY, binary_path=UNREACHABLE)
+    with pytest.raises(SolverUnavailableError):
+        tuple(clyngor.solve(inline='a.', solver=solver))
+
+
+@skipif_no_clingo_binary
+def test_explicit_solver_wins_over_the_default_one():
+    """Passing a Solver is the thread-safe way to pick a backend: it does
+    not look at, nor touch, the module-level default."""
+    with clyngor.using_solver(backend=MODULE if clingo_module_importable() else BINARY):
+        answers = clyngor.solve(inline='a.', solver=Solver(backend=BINARY))
+        assert tuple(answers) == (frozenset({('a', ())}),)
+        assert answers.command.split()[0] == 'clingo'
+
+
+def test_solve_nothing_needs_no_solver_at_all():
+    """Solving nothing yields no model without invoking clingo, so it
+    must not require one to exist either."""
+    solver = Solver(backend=BINARY, binary_path=UNREACHABLE)
+    assert tuple(clyngor.solve((), solver=solver)) == ()
 
 
 @onlyif_clingo_module
