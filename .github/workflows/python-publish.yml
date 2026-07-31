@@ -11,7 +11,9 @@ name: Upload Python Package
 on:
   push:
     tags:
-      - 'v*.*.*'
+      # both conventions are in this repo's history: 0.4.3, then v0.5.2
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: read
@@ -29,9 +31,23 @@ jobs:
 
       - name: Build release distributions
         run: |
-          # NOTE: put your own distribution build steps here.
-          python -m pip install build
+          python -m pip install build twine
           python -m build
+
+      - name: Check the distributions
+        # The version lives in clyngor/__init__.py and the tag is typed by
+        # hand, so they can disagree -- and PyPI would happily accept
+        # whatever was built, under a number nobody meant to release.
+        run: |
+          set -e
+          tag="${GITHUB_REF_NAME#v}"
+          built=$(ls dist/*.tar.gz | sed -E 's|.*/clyngor-(.+)\.tar\.gz|\1|')
+          echo "tag: $tag, built: $built"
+          if [ "$tag" != "$built" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match clyngor.__version__ ($built)"
+            exit 1
+          fi
+          python -m twine check --strict dist/*
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4

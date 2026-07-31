@@ -1,5 +1,4 @@
-include LICENCE MANIFEST.in README.mkd
+# The wheel content is decided by pyproject.toml; this only trims the sdist.
 exclude *.png Makefile
-recursive-include clyngor *.py
 prune clyngor-parser
 prune examples

@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clyngor"
+description = "Python wrapper around Clingo/Answer Set Programming"
+readme = {file = "README.mkd", content-type = "text/markdown"}
+authors = [{name = "Lucas Bourneuf", email = "lucas.bourneuf@laposte.net"}]
+license = "GPL-3.0-or-later"
+license-files = ["LICENCE"]
+keywords = ["Answer Set Programming", "wrapper", "clingo"]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "Arpeggio>=1.6.1",
+    # the module, which ships no executable: it is what clyngor falls back
+    # to when no clingo binary is reachable (see Solver, backend='auto')
+    "clingo>=5.5.1",
+]
+# read statically from clyngor/__init__.py, which stays the one place
+# where the version is written
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = ["pytest>=3.2.1"]
+
+[project.urls]
+Homepage = "https://github.com/aluriak/clyngor"
+Changelog = "https://github.com/aluriak/clyngor#changelog"
+Issues = "https://github.com/aluriak/clyngor/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "clyngor.__version__"}
+
+[tool.setuptools.packages.find]
+# clyngor and clyngor.test. NB: clyngor-parser/ is a separate project,
+# and is not picked up -- it is not a package of this distribution.
+include = ["clyngor*"]
+
+[tool.setuptools]
+zip-safe = false

@@ -13,12 +13,14 @@ run:
 	python -m clyngor
 
 
-fullrelease:
-	fullrelease
-install_deps:
-	python -c "import configparser; c = configparser.ConfigParser(); c.read('setup.cfg'); print(c['options']['install_requires'])" | xargs pip install -U
+# Publishing is done by .github/workflows/python-publish.yml, on a tag.
+# These are for building and checking the distributions by hand.
+build:
+	python -m build
+check: build
+	python -m twine check --strict dist/*
 install:
-	python setup.py install
+	python -m pip install -e '.[test]'
 
 
 example_pyconstraint: install
