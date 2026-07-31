@@ -12,7 +12,17 @@
       "mcp__github__search_issues",
       "mcp__github__search_code",
       "mcp__Claude_Code_Remote__list_repos",
-      "mcp__Claude_Code_Remote__list_triggers"
+      "mcp__Claude_Code_Remote__list_triggers",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git format-patch *)",
+      "Bash(mkdir *)",
+      "mcp__github__actions_run_trigger",
+      "mcp__Claude_Code_Remote__send_later",
+      "mcp__Claude_Code_Remote__add_repo"
     ]
   }
 }
