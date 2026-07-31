@@ -60,10 +60,41 @@ def run_with_clingo_module_only(func):
     return onlyif_clingo_module(wrapped)
 
 
+def binary_has_python_support() -> bool:
+    """True if the clingo *binary* was compiled with python support."""
+    return bool(clyngor.utils.try_python_availability_in_clingo_binary(py3=True))
+
+
+def module_has_python_support() -> bool:
+    """True if the clingo *module* can run embedded #script (python)."""
+    if not clingo_module_importable():
+        return False
+    return bool(clyngor.utils.try_python_availability_in_clingo_module(py3=True))
+
+
 def skipif_clingo_without_python(func):
+    """NB: mode-specific, because binary and module support differ. This
+    one is about the binary; module-mode tests want
+    onlyif_module_python_support. Using clyngor.have_python_support()
+    here would read whichever mode happens to be active at *collection*
+    time, which is not the mode the test itself runs in."""
     return pytest.mark.skipif(
-        not clyngor.have_python_support(py3=True),
-        reason="Require clingo with python3 support"
+        not binary_has_python_support(),
+        reason="Require a clingo binary with python3 support"
+    )(func)
+
+
+def onlyif_module_python_support(func):
+    return pytest.mark.skipif(
+        not module_has_python_support(),
+        reason="Require the clingo module to support embedded python"
+    )(func)
+
+
+def onlyif_no_module_python_support(func):
+    return pytest.mark.skipif(
+        module_has_python_support(),
+        reason="Require the clingo module NOT to support embedded python"
     )(func)
 
 
@@ -80,8 +111,8 @@ onlyif_python_support = skipif_clingo_without_python
 
 def onlyif_no_python_support(func):
     return pytest.mark.skipif(
-        clyngor.have_python_support(py3=True),
-        reason="Requires clingo not to support python"
+        binary_has_python_support(),
+        reason="Requires the clingo binary not to support python"
     )(func)
 
 def onlyif_no_clingo_module(func):

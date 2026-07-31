@@ -339,7 +339,7 @@ def try_python_availability_in_clingo_module(py3=True) -> bool:
     import clingo
     ctl = clingo.Control()
     try:
-        ctl.add("base", [], f"#script(python)\n import sys ; assert sys.version.info.major == {'3' if py3 else '2'}\n #end.")
+        ctl.add("base", [], "#script(python)\nimport sys\nassert sys.version_info.major == %s\n#end.\n" % ('3' if py3 else '2'))
     except RuntimeError as err:  # case where python support is not implemented
         return False
     else:  # python support available
@@ -368,7 +368,8 @@ def try_lua_availability_in_clingo_module() -> bool:
 
 
 def null_decorator(func):
+    "Behave like the decorated function was not decorated at all"
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        return func(func, *args, **kwargs)
+        return func(*args, **kwargs)
     return wrapper

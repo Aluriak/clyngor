@@ -3,7 +3,7 @@
 import pytest
 import clyngor
 from clyngor.upapi import converted_types
-from .definitions import onlyif_python_support
+from .definitions import run_with_clingo_module_only
 
 
 ASP_BASIC = """
@@ -65,7 +65,7 @@ r(X):- (X)=@h("a",4).
 
 """
 
-@onlyif_python_support
+@run_with_clingo_module_only
 def test_all_decorator_usage():
     models = tuple(clyngor.solve(inline=ASP_ALL).by_predicate)
     print(ASP_ALL)
@@ -77,7 +77,7 @@ def test_all_decorator_usage():
         'r': frozenset({('"abababa"',)}),
     }
 
-@onlyif_python_support
+@run_with_clingo_module_only
 def test_basic_decorator_usage():
     models = tuple(clyngor.solve(inline=ASP_BASIC).by_predicate)
     print(ASP_BASIC)
@@ -87,7 +87,7 @@ def test_basic_decorator_usage():
         'r': frozenset({('"ss"',)}),
     }
 
-@onlyif_python_support
+@run_with_clingo_module_only
 def test_double_args_support():
     models = tuple(clyngor.solve(inline=ASP_DOUBLE_ARGS).by_predicate)
     print(ASP_DOUBLE_ARGS)

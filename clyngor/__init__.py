@@ -16,6 +16,11 @@ def load_clingo_module() -> bool:
         import clingo
         clingo_module = clingo
         clingo_module_available = True
+        try:  # since clingo 5.5, embedded #script (python) blocks are an opt-in
+            from clingo.script import enable_python
+            enable_python()
+        except ImportError:
+            pass  # older module: scripts are always enabled
     except ImportError:
         clingo_module = None
         clingo_module_available = False

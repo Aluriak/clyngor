@@ -229,8 +229,12 @@ class Answers:
         self.clean_resources()
 
     def clean_resources(self):
-        self.__on_end()
+        # NB: getattr, because __del__ may run on a partially built
+        # instance whose __init__ was interrupted before setting the field.
+        on_end = getattr(self, '_Answers__on_end', None)
         self.__on_end = lambda: None  # don't call it again
+        if on_end is not None:
+            on_end()
 
 
     def _parse_answer(self, answer_set:str) -> iter:
@@ -338,7 +342,10 @@ class ClingoAnswers(Answers):
 
     """
     def __init__(self, solver, statistics:callable=(lambda: {})):
-        assert clyngor.have_clingo_module()
+        # requires the clingo module to be installed, but not necessarily
+        # activated in clyngor's global state: run_with() and other module
+        # based entry points work regardless of that toggle.
+        assert clyngor.clingo_module_available
         super().__init__(self.__compute_answers(), with_optimization=True, command='[clingo module call]')
         self._solver = solver
         self._statistics = lambda s=solver: s.statistics

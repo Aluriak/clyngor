@@ -97,9 +97,10 @@ def test_have_lua_support_is_callable():
 
 def test_null_decorator():
     """Regression test: null_decorator used functools.wraps without
-    qualifying it, crashing with a NameError whenever applied."""
+    qualifying it (NameError whenever applied), and was passing the
+    decorated function as first argument instead of being a no-op."""
     @utils.null_decorator
-    def func(decorated, value):
+    def func(value):
         return value * 2
     assert func(21) == 42
 

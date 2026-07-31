@@ -43,8 +43,9 @@ class MyPropagator(clyngor.Propagator):
 
 
 @skipif_no_clingo_module
-@onlyif_python_support
 def test_the_subclass():
+    # No embedded #script here: the propagator lives on the python side,
+    # so the clingo module alone is enough, no python-in-clingo needed.
     prop = MyPropagator()
     ctl = prop.run_with(inline=ASP_CODE)
     for answer in ctl:
@@ -143,8 +144,8 @@ def test_local_propagator_hidden_by_clingo():
 
 
 @skipif_no_clingo_module
-@onlyif_python_support
 def test_pyconstraint_from_python():
+    # Same as test_the_subclass: python-side constraint, module is enough.
     from clyngor import Constraint, Variable as V
     def formula(inputs) -> bool:
         return inputs['b', (2,)]
