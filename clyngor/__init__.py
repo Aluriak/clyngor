@@ -1,4 +1,4 @@
-__version__ = '0.5.2'
+__version__ = '1.0.0'
 
 import sys as _sys
 from types import ModuleType as _ModuleType
